@@ -1,0 +1,225 @@
+---
+title: "独立2群の検定ひな型"
+author: "あなたの名前"
+date: "2025-11-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### データ読み込み
+
+データファイルを開く。<br>
+今回はタブ区切りなので以下のような命令を使う。
+```{r}
+kadai <- read.delim("kadai.txt", stringsAsFactors=TRUE)
+# 列Genotypeは文字列（string）だがfactor（因子）として読み込まれる
+```
+
+
+## 課題1: SW5がGenotypeごとに異なるかどうかを検定しなさい。
+### データの分布を確認（SW5）
+ヒストグラムで「層別のプロット」を描く
+
+```{r}
+#### グラフを描いている
+# boxplotを描いてみる
+boxplot(kadai$SW5~kadai$Genotype)
+# boxplotの上にドットプロットを重ねて描く
+stripchart(kadai$SW5~kadai$Genotype,
+vertical=TRUE, # 縦に
+method="jitter", # 近い点はランダムにずらす
+add=TRUE) # 前のグラフに追加（上書き）
+```
+
+<font color="Red">
+%%%%%グラフの印象は？%%%%%%
+</font>
+
+
+### 等分散性の検定
+
+AとBが等分散かどうかを検定する。
+```{r}
+# 等分散性の検定
+var.test(kadai$SW5~kadai$Genotype)
+```
+
+
+<font color="Red">
+P=0.786(>0.05)なので有意ではない（等分散とみなせる）
+<br>
+</font>
+
+### 等分散性を仮定したt検定（Studentのt検定）
+
+等分散性を仮定して独立2群の平均の差を検定するStudentのt検定を行う。
+```{r}
+# 等分散を仮定した独立2群のt検定
+t.test(kadai$SW5~kadai$Genotype,
+alternative="two.sided", # 両側検定
+#paired=FALSE, # 対応なし（独立2群）~を使う場合は指定できない。
+var.equal=TRUE, # 等分散を仮定する
+conf.level=0.95) # 有意水準5%
+```
+
+<font color="Red">
+p=0.131（>0.05）なので、遺伝子型AとBとでSW5の差はない。<br>
+</font>
+
+
+### 等分散性を仮定しないt検定（Welchのt検定）
+
+等分散性を考慮しないで独立2群の平均の差を検定するWelchのt検定を行う。
+```{r}
+# Welchの等分散を仮定しない独立2群のt検定
+t.test(kadai$SW5~kadai$Genotype,
+alternative="two.sided", # 両側検定
+#paired=FALSE, # 対応なし（独立2群）~を使う場合は指定できない。
+var.equal=FALSE, # 等分散を仮定しない
+conf.level=0.95) # 有意水準5%
+```
+
+等分散の場合、等分散のt検定とWelchのt検定のp値はほぼ同じになる。
+
+<font color="Red">
+p=0.139(>0.05)なので、遺伝子型AとBとでSW5の差はない。<br>
+</font>
+
+## 課題2: SW35がGenotypeごとに異なるかどうかを検定しなさい。
+
+### データの分布を確認（SW35）
+ヒストグラムで「層別のプロット」を描く
+
+```{r}
+# boxplot
+boxplot(kadai$SW35~kadai$Genotype)
+# boxplotの上にドットプロットを重ねて描く
+stripchart(kadai$SW35~kadai$Genotype,
+vertical=TRUE, # 縦に
+method="jitter", # 近い点はランダムにずらす
+add=TRUE) # 前のグラフに追加（上書き）
+```
+
+<font color="Red">
+グラフから受ける印象: <br>
+%%%%%書いてね%%%%%
+</font>
+
+
+### 等分散性の検定
+
+AとBが等分散かどうかを検定する。
+```{r}
+# 等分散性の検定
+var.test(kadai$SW35~kadai$Genotype)
+```
+
+
+<font color="Red">
+P=??????（<=>0.05）で有意ではない（等分散とみなせる）<br>
+</font>
+
+### 等分散性を仮定したt検定（Studentのt検定）
+
+等分散性を仮定して独立2群の平均の差を検定するStudentのt検定を行う。
+```{r}
+# 等分散を仮定した独立2群のt検定
+t.test(kadai$SW35~kadai$Genotype,
+alternative="two.sided", # 両側検定
+#paired=FALSE, # 対応なし（独立2群）~を使う場合は指定できない。
+var.equal=TRUE, # 等分散を仮定する
+conf.level=0.95) # 有意水準5%
+```
+
+<font color="Red">
+p=??????（<=>0.05）なので、遺伝子型AとBとでSW35の差は?????。<br>
+</font>
+
+
+### 等分散性を仮定しないt検定（Welchのt検定）
+
+等分散性を考慮しないで独立2群の平均の差を検定するWelchのt検定を行う。
+```{r}
+# Welchの等分散を仮定しない独立2群のt検定
+t.test(kadai$SW35~kadai$Genotype,
+alternative="two.sided", # 両側検定
+#paired=FALSE, # 対応なし（独立2群）~を使う場合は指定できない。
+var.equal=FALSE, # 等分散を仮定しない
+conf.level=0.95) # 有意水準5%
+```
+
+<font color="Red">
+p=?????なので、遺伝子型AとBとでSW35の差は?????。<br>
+</font>
+
+## 課題3: SW5-SW35（SW5_35）がGenotypeごとに異なるかどうかを検定しなさい。
+
+### データの分布を確認（SW5_35）
+ヒストグラムで「層別のプロット」を描く
+
+```{r}
+# boxplot
+boxplot(kadai$SW5_35~kadai$Genotype)
+# boxplotの上にドットプロットを重ねて描く
+stripchart(kadai$SW5_35~kadai$Genotype,
+vertical=TRUE, # 縦に
+method="jitter", # 近い点はランダムにずらす
+add=TRUE) # 前のグラフに追加（上書き）
+```
+
+<font color="Red">
+グラフから受ける印象: <br>
+%%%%%書いてね
+</font>
+
+
+### 等分散性の検定
+
+AとBが等分散かどうかを検定する。
+```{r}
+# 等分散性の検定
+var.test(kadai$SW5_35~kadai$Genotype)
+```
+
+
+<font color="Red">
+P=?????(>0.05)で有意ではない（等分散とみなせる）<br>
+</font>
+
+### 等分散性を仮定したt検定（Studentのt検定）
+
+等分散性を仮定して独立2群の平均の差を検定するStudentのt検定を行う。
+```{r}
+# 等分散を仮定した独立2群のt検定
+t.test(kadai$SW5_35~kadai$Genotype,
+alternative="two.sided", # 両側検定
+#paired=FALSE, # 対応なし（独立2群）~を使う場合は指定できない。
+var.equal=TRUE, # 等分散を仮定する
+conf.level=0.95) # 有意水準5%
+```
+
+<font color="Red">
+p=??????なので、遺伝子型AとBとでSW5-SW35の値に差は?????。<br>
+</font>
+
+
+### 等分散性を仮定しないt検定（Welchのt検定）
+
+等分散性を考慮しないで独立2群の平均の差を検定するWelchのt検定を行う。
+```{r}
+# Welchの等分散を仮定しない独立2群のt検定
+t.test(kadai$SW5_35~kadai$Genotype,
+alternative="two.sided", # 両側検定
+#paired=FALSE, # 対応なし（独立2群）~を使う場合は指定できない。
+var.equal=FALSE, # 等分散を仮定しない
+conf.level=0.95) # 有意水準5%
+```
+
+<font color="Red">
+p=??????なので、遺伝子型AとBとでSW5-SW35の値に差は?????。<br>
+</font>
+

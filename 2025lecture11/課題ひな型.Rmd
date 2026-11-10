@@ -1,0 +1,125 @@
+---
+title: "第11回の課題"
+author: "あなたの名前あなたの名前あなたの名前あなたの名前あなたの名前"
+date: "2025-12-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+``` 
+
+ライブラリ読み込み
+```{r}
+require(nortest)
+require(multcomp)
+```
+
+## 課題1　5群の平均の比較（対応なし、等分散でない）
+
+年齢別の血中ホルモンAの濃度（SH）
+このデータは等分散性を満たさない。
+
+健常成人 32 名について血中ホルモン A を測定し、その年齢別分布をみた。A の値（SH）と年齢に関連があるかどうかをKrusukal-Wallis 検定により検定しなさい。
+
+このシートの左端がデータ（スタック形式）のひな型になっているので利用して良い。年齢層（因子, Rage）は記号（A-E）で表している。
+
+### データを読み込む
+このRmdファイルと同じフォルダにあるファイルを置いてRstudioのImport Datasetを用いる。
+Rstudioにコードが残る。以下の感じになる。
+
+```{r}
+kadai1 <- read.delim("kadai1.tsv", stringsAsFactors=TRUE)
+```
+
+正しく読み込まれたか確認する。
+
+```{r}
+kadai1 # データフレームをそのまま表示
+summary(kadai1) # データの要約を表示
+```
+
+
+### Kruskal-Wallis検定
+
+```{r}
+#（検定のコード）
+kruskal.test(kadai1$SH~kadai1$Age)
+```
+
+<span style="color: red;">検定の解釈をここに書く</span>
+
+### 多重比較
+
+<span style="color: red;"> Krusskal-WallisはANOVAに相当する。多重比較はKrusskal-Wallisの結果に関係なく行ってよい。</span>
+
+総当たりWilcoxon順位和検定（対応なし、繰り返し検定の結果をHolm補正）のコマンドは以下の通り。
+```{r}
+pairwise.wilcox.test(kadai1$SH, kadai1$Age, p.adj="holm")
+```
+
+<span style="color: red;">検定の解釈をここに書く</span>
+
+参考：課題1のデータは正規性の検定をクリアするのでWelchの等分散を仮定しないANOVAが使える。
+```{r}
+oneway.test(SH ~ Age, data=kadai1) # Welch test
+```
+
+
+## 課題2 4群の比較（対応なし）
+
+肥満度と寿命（Life）の関係について調べたい。
+
+左の表は22名の肥満度と寿命を調査したものである。ここでは、肥満度を別表のようにA-Dの4群にカテゴリー分けし、肥満度と寿命に関係があるかを調べることとする。
+
+左の表を完成させてFatIndexとLifeとの間でKruskal-Wallis検定を行い、肥満度と寿命に関係があるかどうかを調べなさい。
+
+```{r}
+kadai2 <- read.delim("kadai2.tsv", stringsAsFactors=TRUE)
+```
+
+### Kruskal-Wallis検定
+
+```{r}
+#（検定のコード）
+kruskal.test(kadai2$Life ~ kadai2$FatIndex)
+```
+
+<span style="color: red;">検定の解釈をここに書く</span>
+
+### 多重比較
+
+<span style="color: red;"> 肥満度と寿命の関係と個別に比較する（どの程度の肥満度だと寿命が短くなるのか？）。</span>
+
+総当たりWilcoxon順位和検定（対応なし、繰り返し検定の結果をHolm補正）のコマンドは以下の通り。
+```{r}
+pairwise.wilcox.test(kadai2$Life, kadai2$FatIndex,p.adj="holm")
+```
+
+<span style="color: red;">多重比較の結果の説明をここに書く</span>
+
+**ちなみにこのデータはANOVAを行う条件を満たす。**検定（1-way ANOVAおよび多重比較（Tukey））の実行例を示す。
+
+```{r}
+# 正規性の検定 (n=2のグループもあるので検定を行うこと自体正しくないかも)
+tapply(kadai2$Life,kadai2$FatIndex,shapiro.test)
+# 等分散性の検定
+bartlett.test(Life ~ FatIndex, data=kadai2)
+```
+### One-way ANOVA
+```{r}
+summary(aov(kadai2$Life~kadai2$FatIndex))
+```
+### 多重比較
+
+```{r}
+result1<-aov(Life~FatIndex,data=kadai2)
+result2<-glht(result1, linfct = mcp(FatIndex = "Tukey"))
+summary(result2)
+cld(result2)
+plot(cld(result2)) # abcつきの箱ひげ図を描く
+# Holm補正による総当たりt検定も見ておく
+pairwise.t.test(kadai2$Life,kadai2$FatIndex,p.adjust.method="holm") 
+```
+
+<span style="color: red;">Kruskal-Warrisとパラメトリック検定の違いを観察して書く。</span>

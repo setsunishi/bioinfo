@@ -1,0 +1,295 @@
+---
+title: "ノンパラメトリック検定"
+author: "土井"
+date: "2025-12-17"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## おさらい　前回の課題3を使って
+
+## 反復測定による一元配置分散分析を復習する
+
+前回の課題3では、味・衣の2因子を繰り返しありの二元配置で検定するよう指示した。つまり同じ人がスコアをつけたのではなく、60行別々の人が食べたとみなした。
+
+まずは前回の課題3の解答
+
+独立な2因子の二元配置分散分析
+
+```{r}
+# 課題3_2（オプション）を読み込み
+kadai3_2<-read.delim("kadai3_2_option.tsv", stringsAsFactors=T)
+# 繰り返しあり・独立2因子の2元配置分散分析
+summary(aov(Score~Aji*Koromo,data=kadai3_2))
+```
+
+Aji:Koromo
+(味と衣の相互作用)のみ有意になる。この後、因子をAjiKoromoのフラットな1因子に展開し、多重比較を行う。
+
+すでに味と衣を展開した列`AjiKoromo`があるのでそれを使う。
+
+```{r}
+library(multcomp)
+result1 <- aov(Score~AjiKoromo,data=kadai3_2) # 分散分析の結果をresult1に格納
+summary(result1) # 結果を表示する
+result2 <- glht(result1, linfct = mcp(AjiKoromo = "Tukey")) # Tukey-Kramerの結果をresult2に格納
+summary(result2) # 結果を表示する
+cld(result2) # compact letter displayで多重比較の結果を表示
+par(mar=c(5.1, 4.1, 6, 2.1)) # 上のマージンを広げる
+par(family = "HiraKakuProN-W6") #グラフで日本語を使うおまじないMac
+plot(cld(result2)) # compact letter displayつきの箱ひげ図を描く
+```
+
+MacではX軸のラベルがうまく表示されない。
+
+多重比較では、辛口・クリスピーがベストとわかる。
+
+ほかの3つから1つを選ぶなら普通味普通の衣を選びたい（これは人により異なるかもだが、老舗なら普通味普通の衣を残すはず）ですかね。
+
+## でも課題3ではちょっと違和感がある
+
+味・衣の2因子を繰り返しありの二元配置で検定するよう指示した。つまり同じ人がスコアをつけたのではなく、60行別々の人が食べたとみなした。
+
+ところで、このような試験では、一人の人が複数または全部の味にスコアをつける場合が多いと想定される。なので15名の評価者（Panel）が2x2=4種類食べたデータにしてみる。
+
+ファイル`kadai3_2_option.tsv`ではすでにPanelの列があり、A-Oが入力されている。
+
+まずはシンプルなAjiKoromoで解析してみる。
+
+これは**反復測定による一元配置分散分析**になる。そして用語の定義で誤解を招き易いが、対応ありの2元配置や反復なしの2元配置と同じになる。
+
+とりあえず、 AjiKoromo（味と衣を展開したもの）
+Panel=A-Oの15名（今回は対応がある）
+の2因子（対応あり）でANOVAを実行する。
+
+ANOVAのコマンドは前回さらっと説明した。
+
+```{r}
+# 対応ありの2元配置分散分析=繰り返しありの1元配置分散分析
+summary(aov(Score~AjiKoromo+Panel,data=kadai3_2))
+```
+
+2つの因子の間の文字が`+`（`*`でなく）になる。
+
+AjiKoromo（2x2=4種類の味と衣の組合せ）間に差あり<br>
+Panel（評価者A-O）の間に差あり<br> という結果になる。
+
+## より複雑な、繰り返しありの2元配置+パネルを考慮（合計3因子）でもできる
+
+以下の3因子
+
+Aji<br> Koromo<br> の繰り返しありの2元配置かつ
+Panel=A-Oの15名（対応有り）<br>
+
+```{r}
+# 独立2因子・繰り返しありの2元配置分散分析+パネルの対応（反復測定）を考慮
+summary(aov(Score~Aji*Koromo+Panel,data=kadai3_2))
+```
+
+因子の間の文字が`*`だったり`+`だったりする。
+
+-   Aji間に差あり、Aji-Koromoに相互作用あり
+-   Panel（評価者A-O）の間に差あり
+    Panel要因の分散を差し引けたことで、Aji間が有意となった。
+
+<font color="red">このように、考え得る変動を考慮し（分散を分割していくことで）、影響を与える要因をより精度良く検出できる。これが分散分析の強み</font>
+
+### 誤差を明示する方法もある
+
+Error（誤差）となる部分（この例ではPanelが関連する部分）を明示する方法。Panelの違いに興味が無い場合は以下のようにする。分散分析表から結果から除かれるが本体部分は同じ。
+
+```{r}
+# Error（誤差）をみなす部分を明示する
+summary(aov(Score~Aji*Koromo+Error(Panel,Panel:Aji, Panel:Koromo, Panel:Aji:Koromo),data=kadai3_2))
+```
+
+2因子以上あって、そのうち一つの因子で多重比較（Tukey-Kramer）をしたいときにはこのような`aov（）`でモデルを求めると単純な多重比較より有意になりやすくなる。冒頭の実験計画も参照。
+
+
+## 練習1　2群の順序尺度データ（対応なし）
+
+薬剤投与後の収縮期血圧のグレード
+
+### データを読み込む
+
+読めない場合はSet As Working Directoryをする。
+
+```{r}
+exercise1 <- read.delim("exercise1.tsv", stringsAsFactors=TRUE)
+```
+
+正しく読み込まれたか確認する。
+
+```{r}
+exercise1 # データフレームをそのまま表示
+summary(exercise1) # データの要約を表示
+```
+
+### ウィルコクソンの順位和検定
+
+t検定のノンパラ版。ノンパラ比較の基本。
+
+```{r}
+wilcox.test(exercise1$Grade ~ exercise1$Yaku)
+```
+
+Warningではタイがあるとp値が計算できないと言っているが近似値は計算されるので無視する。
+
+p=0.018となり、5%水準で有意な差があると言える。
+
+### 強引にt検定を実施してみる
+
+```{r}
+# t検定（正規性を満たさないので適切ではない）
+t.test(exercise1$Grade ~ exercise1$Yaku)
+```
+
+p値が計算できてしまうので、注意が必要。
+
+### 練習1の補足　t検定が使えるデータでもノンパラを試す
+
+カジカの体重データを生成したコード
+
+乱数を使っている。今回は`set.seed()`で初期化していないので毎回異なるデータが生成される。正規性や等分散性を満たすとは限らないので繰り返し実行して試してみると良い。
+
+```{r}
+# AとBのカジカの体重データを生成
+# A n=36, 平均62.6, 不偏分散15.3(標準偏差sqrt(15.3))
+x1<-rnorm(36,mean=62.6,sd=sqrt(15.3))
+# x1の平均と不偏分散を確認する
+mean(x1)
+var(x1)
+# B n=43, 平均64.5, 不偏分散16.2(標準偏差sqrt(16.2))
+x2<-rnorm(43,mean=64.5,sd=sqrt(16.2))
+# x2の平均と不偏分散を確認する
+mean(x2)
+var(x2)
+# 正規分布かをチェック
+shapiro.test(x1)
+shapiro.test(x2)
+# 等分散のチェック
+var.test(x1,x2)
+
+# 等分散を仮定しない独立2群のt検定
+t.test(x1,x2)
+# Wilcoxonの順位和検定
+wilcox.test(x1,x2)
+```
+
+ノンパラ（Wilcoxon）のほうがp値が大きくなる（有意になりにくい、感度が低い）<font color="red">傾向がある</font>とされている。
+ただし感度の差はそれほど大きくない。
+
+
+## 練習2　3群の順序尺度データ（対応あり）
+
+薬剤投与前後の収縮期血圧のグレード
+
+反復測定1元配置分散分析（授業では扱わず）のノンパラメトリック版と考えられる。
+
+### データ読み込み
+
+exercise2.csvを読み込む。 データはスタック形式ではない。
+
+```{r}
+exercise2 <- read.delim("exercise2.tsv", stringsAsFactors=TRUE)
+```
+
+正しく読み込まれたか確認する。
+
+```{r}
+exercise2
+summary(exercise2)
+```
+
+### Friedman検定
+
+`friedman.test`では、データフレーム`exercise2`を行列（matrix）に変換する必要があるため、`as.matrix()`を使用した。
+
+```{r}
+friedman.test(as.matrix(exercise2))
+friedman.test(as.matrix(exercise2),ncol=3)
+
+```
+
+1%水準で有意となり、時間の経過ごとにグレードが異なることがわかった。
+
+### 多重比較
+
+どの時期が異なるかを調べるために多重比較を行う。
+まず、データをスタック形式に変換する。
+
+```{r}
+# データをスタック形式に変換
+StackedData <- stack(exercise2[, c("before","after01","after02")])
+# 列の名前を設定
+names(StackedData)<-c("Grade","Time")
+```
+
+総当たりWilcoxon順位和検定（対応あり、繰り返し検定の結果をHolm補正）のコマンドは以下の通り。
+
+対応あり`paired=TRUE`の明示が必要。
+
+```{r}
+pairwise.wilcox.test(StackedData$Grade, StackedData$Time,paired=TRUE,p.adj="holm")
+```
+
+どの組合せでも有意な差があるとは言えない。つまり、全体としては時間の経過でGradeに差が生じるが、どれが異なるかはこの方法では判別できない。
+
+グラフを描いてみる。時間の経過とともにGradeが低下する**傾向がある**とは言えるかもしれない。
+
+```{r}
+boxplot(Grade~Time, data=StackedData, id=list(method="y"))
+```
+
+ちなみに、総当たりでなく、個別で比較を行うとすべての組合せでGradeが有意に異なるという結果になる。
+
+```{r}
+wilcox.test(exercise2$before,exercise2$after01,paired=T)
+wilcox.test(exercise2$after02,exercise2$after01,paired=T)
+wilcox.test(exercise2$before,exercise2$after02,paired=T)
+```
+
+## 練習3　3群の順序尺度データ（対応なし）
+
+薬剤投与後の収縮期血圧のグレード
+
+### データ読み込み
+
+```{r}
+exercise3 <- read.delim("exercise3.tsv", stringsAsFactors=TRUE)
+```
+
+正しく読み込まれたか確認する。
+
+```{r}
+exercise3
+summary(exercise3)
+```
+
+### Kruskal-Wallis検定
+
+1-way ANOVAのノンパラ版。
+
+```{r}
+kruskal.test(exercise3$Grade ~ exercise3$Yaku)
+```
+
+p<0.05で薬剤の効果に差があるとみなして良い。
+
+### 多重比較
+
+どの薬剤が異なるかを調べるために多重比較を行う。
+
+総当たりWilcoxon順位和検定（対応なし`paired=FALSE`、繰り返し検定の結果をHolm補正）のコマンドは以下の通り。
+
+```{r}
+pairwise.wilcox.test(exercise3$Grade, exercise3$Yaku, p.adj="holm")
+```
+
+BとCの間には差がないが、AはB、Cとは異なると言える。

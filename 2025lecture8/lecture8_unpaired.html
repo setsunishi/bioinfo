@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>対応無しのt検定（独立2標本t検定）完全マスター教材 | 生物情報処理演習</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- KaTeX CSS & JS for Math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  
+  <!-- Chart.js for Statistical Plotting -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', '"BIZ UDGothic"', 'Inter', 'sans-serif'],
+            mono: ['"Fira Code"', 'Consolas', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            bio: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Print styles */
+    @media print {
+      nav, #simulator, #quiz, #theme-toggle, .no-print {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+        color: black !important;
+        font-size: 11pt;
+      }
+      .card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+      }
+      @page {
+        margin: 1.5cm;
+      }
+    }
+    
+    .katex {
+      font-size: 1.05em !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-bold shadow-md shadow-emerald-500/20">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </span>
+        <div>
+          <span class="text-xs uppercase tracking-wider font-semibold text-emerald-600 dark:text-emerald-400 block">生物情報処理演習 レクチャー＆ラボ</span>
+          <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">対応無しのt検定 (独立2標本t検定)</h1>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center space-x-1 text-sm font-medium">
+        <a href="lesson7.html" class="px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700 transition font-bold flex items-center gap-1.5">
+          <span>🌾 第7回 Web教材・課題</span>
+        </a>
+        <a href="生物情報処理演習_検定1_改善版スライド.html" class="px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 transition font-bold flex items-center gap-1.5" target="_blank">
+          <span>📊 第7回スライド</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+        <a href="#concept" class="px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">対応ありとの違い</a>
+        <a href="#simulator" class="px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">直感シミュレータ</a>
+        <a href="#theory" class="px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">Student vs Welch</a>
+        <a href="#data-lab" class="px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition text-emerald-600 dark:text-emerald-400 font-bold">データ解析ラボ</a>
+        <a href="#r-guide" class="px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">Rコード解説</a>
+        <a href="#quiz" class="px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">確認クイズ</a>
+      </nav>
+
+      <div class="flex items-center space-x-2">
+        <button id="theme-toggle" class="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-none" aria-label="テーマ切替">
+          <svg id="theme-sun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          <svg id="theme-moon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+        </button>
+        <button onclick="window.print()" class="no-print hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 transition">
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+          印刷 / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= LECTURE 7 ANNOUNCEMENT BANNER ================= -->
+  <aside class="bg-gradient-to-r from-blue-700 via-indigo-600 to-teal-600 text-white py-3.5 px-4 shadow-md relative z-40 border-b border-blue-500/40">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+      <div class="flex items-center gap-2.5 font-semibold">
+        <span class="bg-amber-400 text-slate-900 px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider animate-pulse">Now Active</span>
+        <span>🌾 【第7回】統計学的仮説検定 ①（1標本t検定・対応のあるt検定）の教材＆Web課題はこちら！</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="lesson7.html" class="bg-white text-blue-800 hover:bg-blue-50 px-3.5 py-1.5 rounded-lg font-bold text-xs shadow transition flex items-center gap-1.5">
+          <span>第7回ポータルを開く</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+        <a href="kadai7_interactive.html" class="bg-teal-500 hover:bg-teal-400 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs shadow transition flex items-center gap-1">
+          <span>📝 Web課題へ</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= HERO SECTION ================= -->
+  <section class="relative overflow-hidden pt-12 pb-16 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-b from-emerald-50/60 via-slate-50 to-white dark:from-slate-800/40 dark:via-slate-900 dark:to-slate-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 mb-4">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          2標本の平均値の比較 (Two-sample t-test)
+        </div>
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+          「野生型 vs 変異体」「品種A vs 品種B」<br class="hidden sm:inline">
+          <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600">独立した2群の差</span>を統計学的に証明する
+        </h2>
+        <p class="mt-4 text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
+          前回の「対応のあるt検定（同一系統の出穂5日後と35日後の比較）」に続き、今回は<strong>互いに無関係な2つのグループ（標本サイズが異なってもOK）</strong>を比較する「対応無しのt検定」を学びます。Student検定とWelch検定の違いから、Rでの実践、生物学的考察の書き方までを網羅！
+        </p>
+        
+        <div class="mt-8 flex flex-wrap gap-4 items-center">
+          <a href="#simulator" class="inline-flex items-center px-5 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-600/25 transition">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            シミュレータを試す
+          </a>
+          <a href="#data-lab" class="inline-flex items-center px-5 py-3 rounded-xl font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition shadow-sm">
+            🌾 イネ実データ解析ラボへ
+          </a>
+          <a href="対応無しのt検定_演習ひな型.html" target="_blank" class="inline-flex items-center px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition shadow-sm">
+            📄 演習レポート完成見本 (HTML)
+          </a>
+          <a href="rice_genotypes_unpaired_data.csv" download class="inline-flex items-center px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition shadow-sm">
+            💾 イネCSVデータ (76系統)
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MAIN CONTENT CONTAINER ================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20">
+
+    <!-- ================= SECTION 1: 基礎概念 ================= -->
+    <section id="concept" class="scroll-mt-20">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-sm">1</span>
+        <h3 class="text-2xl font-bold text-slate-900 dark:text-white">「対応あり」と「対応なし」を見分ける</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Card 1: 対応あり -->
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-28 h-28 bg-blue-500/10 rounded-full pointer-events-none"></div>
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 mb-3">前回学んだ内容</span>
+          <h4 class="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
+            🔗 対応のあるt検定 <span class="text-xs text-slate-400 font-normal ml-2">(Paired t-test)</span>
+          </h4>
+          <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
+            <strong>同じ対象・同一固体・ペア</strong>を測定した前後比較。
+          </p>
+          <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-300">
+            <li class="flex items-start"><span class="text-blue-500 mr-2">●</span> <strong>典型例：</strong>同じイネ個体における出穂5日目（SW5）と35日目（SW35）の茎葉重</li>
+            <li class="flex items-start"><span class="text-blue-500 mr-2">●</span> <strong>標本サイズ：</strong>必ず $n_1 = n_2$（ペアが崩れると使えない）</li>
+            <li class="flex items-start"><span class="text-blue-500 mr-2">●</span> <strong>数理の本質：</strong>差 $d_i = X_i - Y_i$ を計算し、「差の平均が0か」という<strong>1標本t検定に帰着</strong>させる</li>
+          </ul>
+        </div>
+
+        <!-- Card 2: 対応なし -->
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-800/80 border-2 border-emerald-500/60 dark:border-emerald-500/40 shadow-md shadow-emerald-500/5 relative overflow-hidden">
+          <div class="absolute top-0 right-0 transform translate-x-4 -translate-y-4 w-28 h-28 bg-emerald-500/10 rounded-full pointer-events-none"></div>
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 mb-3">今回のテーマ！</span>
+          <h4 class="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center">
+            ⚔️ 対応無しのt検定 <span class="text-xs text-slate-400 font-normal ml-2">(Independent 2-sample t-test)</span>
+          </h4>
+          <p class="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
+            <strong>互いに独立した2つの別グループ</strong>の平均値を比較。
+          </p>
+          <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-300">
+            <li class="flex items-start"><span class="text-emerald-500 mr-2">●</span> <strong>典型例：</strong>イネのGenotype A群（24系統）vs Genotype B群（52系統）の茎葉重比較</li>
+            <li class="flex items-start"><span class="text-emerald-500 mr-2">●</span> <strong>標本サイズ：</strong>$n_1$ と $n_2$ が<strong>異なっていてもOK！</strong></li>
+            <li class="flex items-start"><span class="text-emerald-500 mr-2">●</span> <strong>数理の本質：</strong>2つの独立な正規分布からのサンプルの差のばらつきを評価する</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- インタラクティブ診断：どっちの検定？ -->
+      <div class="p-6 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200/70 dark:from-slate-800 dark:to-slate-800/50 border border-slate-300 dark:border-slate-700">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="font-bold text-slate-900 dark:text-white flex items-center">
+            <span class="mr-2 text-lg">🎯</span> 実験シチュエーション診断：「この実験、どっちの検定を使う？」
+          </h4>
+          <span class="text-xs text-slate-500 dark:text-slate-400">カードをクリックして判定と解説を開く</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="diagnostic-cards">
+          <!-- Card Q1 -->
+          <button onclick="toggleCard(this)" class="group text-left p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition shadow-sm">
+            <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">Q1. 遺伝子型比較</div>
+            <div class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-3">野生型シロイヌナズナ15個体と、KO変異体12個体の主根の長さを比較する。</div>
+            <div class="answer hidden pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <span class="px-2 py-0.5 rounded font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 mr-1">対応なし</span>
+              個体が別々（独立）でサンプルサイズも15と12で異なるため対応なしt検定。
+            </div>
+          </button>
+
+          <!-- Card Q2 -->
+          <button onclick="toggleCard(this)" class="group text-left p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition shadow-sm">
+            <div class="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Q2. 薬剤投与の前後</div>
+            <div class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-3">マウス10匹に対して降圧剤を投与する前の血圧と、投与1時間後の血圧を比較する。</div>
+            <div class="answer hidden pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <span class="px-2 py-0.5 rounded font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 mr-1">対応あり</span>
+              同一個体の「投与前」と「投与後」というペアデータなので対応ありt検定。
+            </div>
+          </button>
+
+          <!-- Card Q3 -->
+          <button onclick="toggleCard(this)" class="group text-left p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition shadow-sm">
+            <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">Q3. 圃場・施肥試験</div>
+            <div class="text-sm font-medium text-slate-800 dark:text-slate-200 mb-3">標準肥料を与えたイネ区（20株）と、新型肥料を与えたイネ区（20株）の穂重を比較する。</div>
+            <div class="answer hidden pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <span class="px-2 py-0.5 rounded font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 mr-1">対応なし</span>
+              株数は同じ20株だが、植えられている株（個体）自体は別々なので対応なしt検定。
+            </div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 2: 直感シミュレータ ================= -->
+    <section id="simulator" class="scroll-mt-20">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-sm">2</span>
+        <div>
+          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">t検定の直感コア：「シグナル ÷ ノイズ」動的シミュレータ</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">平均の差（シグナル）が大きく、データのばらつき（ノイズ）が小さく、サンプル数が多いほどt値が大きくなり有意になる！</p>
+        </div>
+      </div>
+
+      <!-- 数式バナー -->
+      <div class="p-4 rounded-xl bg-slate-900 text-white mb-6 flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-sm border border-slate-800">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded bg-emerald-500 text-slate-900 font-bold text-xs">本質公式</span>
+          <span class="text-base font-bold">t = (2群の平均値の差) ÷ (差の標準誤差) = Signal / Noise</span>
+        </div>
+        <div class="text-xs text-slate-400">
+          分子が効果の強さ、分母が実験の誤差やばらつき
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-white dark:bg-slate-800/90 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+        
+        <!-- Controls Column (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          <h4 class="font-bold text-slate-900 dark:text-white flex items-center text-base border-b border-slate-100 dark:border-slate-700 pb-3">
+            <svg class="w-5 h-5 mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+            母集団＆サンプリング・パラメータ操作
+          </h4>
+
+          <!-- Group 1 Controls -->
+          <div class="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 space-y-3">
+            <div class="flex justify-between items-center text-xs font-bold text-emerald-800 dark:text-emerald-300">
+              <span>🌱 グループ 1 (例: 野生型 WT)</span>
+              <span id="label-g1-stats" class="font-mono">平均: 50.0, SD: 10.0, n: 20</span>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300 mb-1">
+                <span>平均値 (&mu;1): <b id="val-mu1" class="font-mono">50.0</b></span>
+              </div>
+              <input type="range" id="slider-mu1" min="30" max="70" step="0.5" value="50" class="w-full accent-emerald-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+            <div>
+              <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300 mb-1">
+                <span>ばらつき / SD (&sigma;1): <b id="val-sd1" class="font-mono">10.0</b></span>
+              </div>
+              <input type="range" id="slider-sd1" min="2" max="25" step="0.5" value="10" class="w-full accent-emerald-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+            <div>
+              <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300 mb-1">
+                <span>サンプルサイズ (n1): <b id="val-n1" class="font-mono">20</b></span>
+              </div>
+              <input type="range" id="slider-n1" min="3" max="100" step="1" value="20" class="w-full accent-emerald-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- Group 2 Controls -->
+          <div class="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40 space-y-3">
+            <div class="flex justify-between items-center text-xs font-bold text-blue-800 dark:text-blue-300">
+              <span>🌾 グループ 2 (例: 変異体 Mutant)</span>
+              <span id="label-g2-stats" class="font-mono">平均: 58.0, SD: 10.0, n: 20</span>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300 mb-1">
+                <span>平均値 (&mu;2): <b id="val-mu2" class="font-mono">58.0</b></span>
+              </div>
+              <input type="range" id="slider-mu2" min="30" max="70" step="0.5" value="58" class="w-full accent-blue-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+            <div>
+              <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300 mb-1">
+                <span>ばらつき / SD (&sigma;2): <b id="val-sd2" class="font-mono">10.0</b></span>
+              </div>
+              <input type="range" id="slider-sd2" min="2" max="25" step="0.5" value="10" class="w-full accent-blue-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+            <div>
+              <div class="flex justify-between text-xs text-slate-600 dark:text-slate-300 mb-1">
+                <span>サンプルサイズ (n2): <b id="val-n2" class="font-mono">20</b></span>
+              </div>
+              <input type="range" id="slider-n2" min="3" max="100" step="1" value="20" class="w-full accent-blue-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div class="pt-2">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-2">💡 直感体感プリセット：</span>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <button onclick="setSimPreset('clear_diff')" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 font-medium text-slate-700 dark:text-slate-200 text-left">
+                ✨ 明確な差がある
+              </button>
+              <button onclick="setSimPreset('noisy')" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 font-medium text-slate-700 dark:text-slate-200 text-left">
+                🌪️ 差はあるがばらつき大
+              </button>
+              <button onclick="setSimPreset('small_n')" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 font-medium text-slate-700 dark:text-slate-200 text-left">
+                🔬 サンプル数が極小 (n=4)
+              </button>
+              <button onclick="setSimPreset('unequal_var')" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 font-medium text-slate-700 dark:text-slate-200 text-left">
+                ⚖️ ばらつきが不揃い (Welch)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Display & Output Column (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
+          
+          <!-- Realtime Stats Dashboard -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-center">
+              <span class="text-xs text-slate-500 block">検定統計量 t値</span>
+              <span id="sim-t-val" class="text-xl font-extrabold text-slate-900 dark:text-white font-mono">-2.530</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-center">
+              <span class="text-xs text-slate-500 block">両側 p値</span>
+              <span id="sim-p-val" class="text-xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">0.0156</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-center">
+              <span class="text-xs text-slate-500 block">判定 (&alpha; = 0.05)</span>
+              <span id="sim-verdict-badge" class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                有意差あり (p &lt; 0.05)
+              </span>
+            </div>
+          </div>
+
+          <!-- Dynamic Distribution Canvas -->
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">📊 2群の確率密度分布と重なり具合</span>
+              <span class="text-xs text-slate-400">山の重なりが少ないほど判別が容易</span>
+            </div>
+            <div class="relative h-48 w-full">
+              <canvas id="simCanvasDist" class="w-full h-full"></canvas>
+            </div>
+          </div>
+
+          <!-- Dynamic t-distribution & Rejection Region Canvas -->
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🎯 t分布と棄却域（5%水準, 両側）</span>
+              <span class="text-xs text-slate-400">赤色ゾーンに入れば帰無仮説H0を棄却</span>
+            </div>
+            <div class="relative h-36 w-full">
+              <canvas id="simCanvasTdist" class="w-full h-full"></canvas>
+            </div>
+          </div>
+
+          <div class="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 p-3 rounded-lg flex items-start gap-2">
+            <span class="text-emerald-500 font-bold">💡 観察のヒント:</span>
+            <span>「サンプルサイズ n」のスライダーを大きくしてみてください。平均やSDを変えなくても、n を増やすだけで標準誤差が小さくなり、t値が大きくなってp値が劇的に小さくなる（有意になりやすくなる）ことが確認できます！</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 3: 数理理論 (Student vs Welch) ================= -->
+    <section id="theory" class="scroll-mt-20">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-sm">3</span>
+        <div>
+          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">数理理論：Studentのt検定 vs Welchのt検定</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">なぜ現代の生物統計学では「最初からWelchのt検定」を使うのが国際標準なのか？</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        
+        <!-- Student's t-test -->
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-lg font-bold text-slate-900 dark:text-white">Studentのt検定 (等分散を仮定)</h4>
+            <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">R: var.equal = TRUE</span>
+          </div>
+          <p class="text-sm text-slate-600 dark:text-slate-300">
+            2群の母分散が等しい（$\sigma_1^2 = \sigma_2^2$）という前提のもとで、2群のデータを合わせた<strong>合同分散（プールされた分散 $s_p^2$）</strong>を計算して標準誤差を求めます。
+          </p>
+
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 font-mono text-xs space-y-2 border border-slate-200 dark:border-slate-700">
+            <div class="font-bold text-slate-700 dark:text-slate-300">① 合同分散 (Pooled Variance):</div>
+            <div class="text-center py-1">
+              $$s_p^2 = \frac{(n_1 - 1)s_1^2 + (n_2 - 1)s_2^2}{n_1 + n_2 - 2}$$
+            </div>
+            <div class="font-bold text-slate-700 dark:text-slate-300 mt-2">② 検定統計量 t値 & 自由度:</div>
+            <div class="text-center py-1">
+              $$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{s_p^2 \left( \frac{1}{n_1} + \frac{1}{n_2} \right)}}, \quad df = n_1 + n_2 - 2$$
+            </div>
+          </div>
+          <div class="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-lg border border-amber-200 dark:border-amber-900/50">
+            ⚠️ <strong>弱点:</strong> 2群の分散が異なり、かつサンプルサイズが不揃い（$n_1 \ne n_2$）の場合、第一種の過誤（有意水準 $\alpha$）が激しく崩れます。
+          </div>
+        </div>
+
+        <!-- Welch's t-test -->
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-800 border-2 border-emerald-500/50 dark:border-emerald-500/40 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+              Welchのt検定 (不等分散対応)
+              <span class="ml-2 px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">現代標準</span>
+            </h4>
+            <span class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">R: デフォルト</span>
+          </div>
+          <p class="text-sm text-slate-600 dark:text-slate-300">
+            2群の母分散が異なっていても（$\sigma_1^2 \ne \sigma_2^2$ でも）問題なく使えます。それぞれの群の分散を独立に評価し、<strong>自由度を実数に補正</strong>します。
+          </p>
+
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 font-mono text-xs space-y-2 border border-slate-200 dark:border-slate-700">
+            <div class="font-bold text-slate-700 dark:text-slate-300">① 検定統計量 t値:</div>
+            <div class="text-center py-1">
+              $$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$$
+            </div>
+            <div class="font-bold text-slate-700 dark:text-slate-300 mt-2">② 自由度 (Welch–Satterthwaiteの式):</div>
+            <div class="text-center py-1">
+              $$df = \frac{\left( \frac{s_1^2}{n_1} + \frac{s_2^2}{n_2} \right)^2}{\frac{(s_1^2 / n_1)^2}{n_1 - 1} + \frac{(s_2^2 / n_2)^2}{n_2 - 1}}$$
+            </div>
+          </div>
+          <div class="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-900/50">
+            ✅ <strong>特長:</strong> 実際に等分散であってもStudent検定とほぼ同じ検出力を保ち、不等分散なら安全に誤りを防ぐ万能手法！
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 深掘りコラム：なぜ二段階検定はNGなのか？ -->
+      <div class="p-6 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-slate-800 dark:via-amber-950/20 dark:to-slate-800 border border-amber-300/80 dark:border-amber-700/60 shadow-sm">
+        <div class="flex items-start gap-4">
+          <div class="p-3 bg-amber-500 text-white rounded-xl shadow-md shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <div class="space-y-3">
+            <h4 class="text-lg font-bold text-slate-900 dark:text-white flex items-center">
+              生物統計学の重要コラム：「F検定で等分散性を確かめてからStudentかWelchを選ぶ」はなぜ間違いなのか？
+            </h4>
+            <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+              古い教科書では「まずF検定（分散の比の検定）を行い、有意でなければStudent検定、有意ならWelch検定を行う」という手順（<strong>二段階検定</strong>）が書かれていることがあります。しかし、<strong>現代の統計学や生物医学論文ではこの二段階検定は推奨されていません（明確に否定されています）</strong>。
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700 dark:text-slate-300">
+              <div class="p-3 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-amber-200 dark:border-amber-900">
+                <strong>理由1: 第一種の過誤の確率が狂う</strong><br>
+                F検定の判定結果に応じて検定を切り替えると、最終的な有意水準が本来の5%から外れてしまい、誤った結論（偽陽性または検出力低下）を招きます。
+              </div>
+              <div class="p-3 rounded-lg bg-white/80 dark:bg-slate-900/80 border border-amber-200 dark:border-amber-900">
+                <strong>理由2: Welchの検定が常に頑健</strong><br>
+                Welchのt検定は、母分散が等しい場合でもStudentのt検定と実質的に同等に機能するため、最初からWelch検定を使うのが最も安全かつ科学的に誠実です。
+              </div>
+            </div>
+            <p class="text-xs text-emerald-800 dark:text-emerald-300 font-semibold">
+              👉 だからこそ、R言語の <code class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 font-mono">t.test()</code> は何もオプションを指定しないデフォルトの状態で Welchのt検定 を実行する設計になっているのです！
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 4: 実践データ解析ラボ ================= -->
+    <section id="data-lab" class="scroll-mt-20">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-sm">4</span>
+        <div>
+          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">生物データ実践解析ラボ</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">演習直結のイネ系統データや植物ホルモン実験データをワンクリック解析！Excelからの貼り付けも可能</p>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+        
+        <!-- Preset Selector Tabs -->
+        <div>
+          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">解析データセットの選択</label>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="loadDataset('rice_decrease')" id="btn-ds-rice-dec" class="ds-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white shadow-sm transition">
+              🌾 【演習】イネ茎葉重減少量 (Genotype A vs B)
+            </button>
+            <button onclick="loadDataset('rice_sw35')" id="btn-ds-rice-sw35" class="ds-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+              🌾 【演習】イネ出穂後35日茎葉重 SW35 (A vs B)
+            </button>
+            <button onclick="loadDataset('arabidopsis')" id="btn-ds-arab" class="ds-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+              🌱 【植物生理】シロイヌナズナ根長 (WT vs 変異体)
+            </button>
+            <button onclick="loadDataset('custom')" id="btn-ds-custom" class="ds-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+              ✏️ 自由入力 (Excelコピペ対応)
+            </button>
+          </div>
+        </div>
+
+        <!-- Data Input Textareas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label for="input-g1-data" class="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center">
+                <span>群 1 データ (数値列):</span>
+                <input type="text" id="name-g1" value="Genotype_A" class="ml-2 px-2 py-0.5 text-xs rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 font-bold">
+              </label>
+              <span id="count-g1" class="text-xs text-slate-400 font-mono">n = 24</span>
+            </div>
+            <textarea id="input-g1-data" rows="5" class="w-full p-3 font-mono text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition" placeholder="数値をカンマ、スペース、改行で入力"></textarea>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label for="input-g2-data" class="text-xs font-bold text-blue-700 dark:text-blue-400 flex items-center">
+                <span>群 2 データ (数値列):</span>
+                <input type="text" id="name-g2" value="Genotype_B" class="ml-2 px-2 py-0.5 text-xs rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 font-bold">
+              </label>
+              <span id="count-g2" class="text-xs text-slate-400 font-mono">n = 52</span>
+            </div>
+            <textarea id="input-g2-data" rows="5" class="w-full p-3 font-mono text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none transition" placeholder="数値をカンマ、スペース、改行で入力"></textarea>
+          </div>
+        </div>
+
+        <!-- Execute & Options -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <div class="flex items-center space-x-4 text-xs">
+            <label class="flex items-center cursor-pointer">
+              <span class="mr-2 text-slate-600 dark:text-slate-300 font-medium">対立仮説 (alternative):</span>
+              <select id="select-alt" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                <option value="two.sided">両側検定 (&mu;1 &ne; &mu;2)</option>
+                <option value="greater">片側検定 (&mu;1 &gt; &mu;2)</option>
+                <option value="less">片側検定 (&mu;1 &lt; &mu;2)</option>
+              </select>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <span class="mr-2 text-slate-600 dark:text-slate-300 font-medium">信頼水準:</span>
+              <select id="select-conf" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
+                <option value="0.95">95% (&alpha; = 0.05)</option>
+                <option value="0.99">99% (&alpha; = 0.01)</option>
+              </select>
+            </label>
+          </div>
+
+          <button onclick="calculateDataLab()" class="px-6 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20 transition flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+            t検定を実行してグラフを描画
+          </button>
+        </div>
+
+        <!-- Result Section (Outputs) -->
+        <div id="lab-results" class="pt-6 border-t border-slate-200 dark:border-slate-700 space-y-6">
+          
+          <!-- Summary Table -->
+          <div>
+            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center">
+              <span>📋 要約統計量 (Summary Statistics)</span>
+            </h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300 border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50">
+                    <th class="p-2.5">グループ</th>
+                    <th class="p-2.5">標本数 (n)</th>
+                    <th class="p-2.5">平均値 (Mean)</th>
+                    <th class="p-2.5">不偏分散 (s²)</th>
+                    <th class="p-2.5">標準偏差 (SD)</th>
+                    <th class="p-2.5">標準誤差 (SE)</th>
+                  </tr>
+                </thead>
+                <tbody id="table-summary-body" class="font-mono">
+                  <!-- dynamically filled -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Test Outputs Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- Welch Test Result -->
+            <div class="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-500/50 dark:border-emerald-600/40">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300">⭐ Welchのt検定 (推奨)</span>
+                <span id="badge-welch" class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">p &lt; 0.001</span>
+              </div>
+              <div class="space-y-1 font-mono text-xs text-slate-700 dark:text-slate-300">
+                <div class="flex justify-between"><span>検定統計量 t:</span> <b id="out-welch-t">-4.9457</b></div>
+                <div class="flex justify-between"><span>自由度 df:</span> <b id="out-welch-df">49.342</b></div>
+                <div class="flex justify-between"><span>p値 (p-value):</span> <b id="out-welch-p" class="text-emerald-600 dark:text-emerald-400 font-bold">9.193e-06</b></div>
+                <div class="flex justify-between"><span>平均値の差 (1 - 2):</span> <b id="out-welch-diff">-9.6284</b></div>
+                <div class="flex justify-between"><span>差の95%信頼区間:</span> <b id="out-welch-ci">[-13.540, -5.717]</b></div>
+              </div>
+            </div>
+
+            <!-- Student Test Result -->
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Studentのt検定 (等分散仮定)</span>
+                <span id="badge-student" class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300">p &lt; 0.001</span>
+              </div>
+              <div class="space-y-1 font-mono text-xs text-slate-700 dark:text-slate-300">
+                <div class="flex justify-between"><span>検定統計量 t:</span> <b id="out-student-t">-4.8214</b></div>
+                <div class="flex justify-between"><span>自由度 df:</span> <b id="out-student-df">74</b></div>
+                <div class="flex justify-between"><span>p値 (p-value):</span> <b id="out-student-p">7.234e-06</b></div>
+                <div class="flex justify-between"><span>合同分散 s_p²:</span> <b id="out-student-sp2">67.142</b></div>
+                <div class="flex justify-between"><span>差の95%信頼区間:</span> <b id="out-student-ci">[-13.606, -5.651]</b></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Plot Area: Boxplot & Jitter Dots -->
+          <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">📊 データ分布の可視化 (ドットプロット＋平均値±SEエラーバー)</span>
+              <span class="text-xs text-slate-400">個々のプロット点と平均・標準誤差の広がり</span>
+            </div>
+            <div class="relative h-64 w-full">
+              <canvas id="labChart" class="w-full h-full"></canvas>
+            </div>
+          </div>
+
+          <!-- Report Generator (Copyable Text) -->
+          <div class="p-4 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40">
+            <div class="flex justify-between items-center mb-2">
+              <h5 class="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                そのまま使える！レポート・論文用結果記述文
+              </h5>
+              <button onclick="copyReportText()" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center">
+                📋 文章をコピー
+              </button>
+            </div>
+            <p id="report-text" class="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 font-sans">
+              <!-- dynamically updated -->
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 5: R言語 & RStudio攻略 ================= -->
+    <section id="r-guide" class="scroll-mt-20">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-sm">5</span>
+        <div>
+          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">R言語 & RStudio 実践コードと出力の完全解読</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">RStudioのConsoleに出力される各行の意味を色分けで理解し、ワンクリックでコードを生成</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Code Generator (5 cols) -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="p-6 rounded-2xl bg-slate-900 text-slate-200 border border-slate-800 shadow-sm space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Rコード自動生成</span>
+              <button onclick="copyRCode()" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300 font-mono transition flex items-center">
+                📋 コピー
+              </button>
+            </div>
+            <pre class="font-mono text-xs overflow-x-auto text-emerald-300 bg-slate-950 p-4 rounded-xl border border-slate-800 leading-relaxed" id="r-code-block">
+# データの読み込み
+data <- read.csv("rice_genotypes_unpaired_data.csv")
+
+# Welchのt検定 (独立2標本, 推奨)
+t.test(Decrease ~ Genotype, data = data)
+
+# 箱ひげ図＋ジッタープロットの描画
+boxplot(Decrease ~ Genotype, data = data, col = c("#bbf7d0", "#bfdbfe"),
+        ylab = "SW Decrease (g)", main = "Genotype A vs B")
+stripchart(Decrease ~ Genotype, data = data, 
+           vertical = TRUE, method = "jitter", add = TRUE, pch = 16, col = "#334155")
+            </pre>
+            <div class="text-xs text-slate-400 space-y-1">
+              <p>💡 <strong>引数の使い分け:</strong></p>
+              <p>• <code>var.equal = FALSE</code>: Welchの検定（デフォルトなので省略可）</p>
+              <p>• <code>var.equal = TRUE</code>: Studentの検定</p>
+              <p>• <code>alternative = "greater"</code>: 片側検定（群1 &gt; 群2）</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive Console Anatomy (7 cols) -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center">
+              🔍 RStudio Console出力の徹底解読マップ
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">ハイライトされた部分にカーソルを合わせる（またはタップする）と、その数値の意味と見方がわかります！</p>
+
+            <div class="p-4 rounded-xl bg-slate-950 text-slate-200 font-mono text-xs sm:text-sm space-y-2 leading-relaxed border border-slate-800">
+              <div class="text-slate-400">	Welch Two Sample t-test</div>
+              <div class="text-slate-400">data:  table1$Decrease and table2$Decrease</div>
+              <div class="py-1">
+                <span class="cursor-pointer px-1 py-0.5 rounded bg-emerald-900/80 text-emerald-300 hover:ring-2 hover:ring-emerald-400" onmouseover="showRHelp('t')">t = -4.9457</span>, 
+                <span class="cursor-pointer px-1 py-0.5 rounded bg-blue-900/80 text-blue-300 hover:ring-2 hover:ring-blue-400" onmouseover="showRHelp('df')">df = 49.342</span>, 
+                <span class="cursor-pointer px-1 py-0.5 rounded bg-rose-900/80 text-rose-300 hover:ring-2 hover:ring-rose-400 font-bold" onmouseover="showRHelp('p')">p-value = 9.193e-06</span>
+              </div>
+              <div class="text-slate-400">alternative hypothesis: true difference in means is not equal to 0</div>
+              <div class="py-1">
+                95 percent confidence interval:<br>
+                <span class="cursor-pointer px-1 py-0.5 rounded bg-amber-900/80 text-amber-300 hover:ring-2 hover:ring-amber-400" onmouseover="showRHelp('ci')">-13.540005  -5.716831</span>
+              </div>
+              <div class="text-slate-400">sample estimates:</div>
+              <div class="py-1">
+                <span class="cursor-pointer px-1 py-0.5 rounded bg-indigo-900/80 text-indigo-300 hover:ring-2 hover:ring-indigo-400" onmouseover="showRHelp('mean1')">mean of x: 2.209492</span>&nbsp;&nbsp;
+                <span class="cursor-pointer px-1 py-0.5 rounded bg-indigo-900/80 text-indigo-300 hover:ring-2 hover:ring-indigo-400" onmouseover="showRHelp('mean2')">mean of y: 11.837910</span>
+              </div>
+            </div>
+
+            <!-- Dynamic Help Box -->
+            <div id="r-help-box" class="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300">
+              <span class="font-bold text-emerald-600 dark:text-emerald-400">👆 上のConsole内の色付き部分にカーソルを合わせてみてください</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 6: レポート執筆＆注意点 ================= -->
+    <section id="pitfalls" class="scroll-mt-20">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-sm">6</span>
+        <div>
+          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">レポート・論文での書き方と「5つの落とし穴」</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">生物学のレポートや卒業論文で減点されないための重要チェックリスト</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Checklist -->
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+          <h4 class="font-bold text-slate-900 dark:text-white text-base flex items-center">
+            ⚠️ よくある重大な誤解・落とし穴
+          </h4>
+          <ul class="text-xs sm:text-sm space-y-2.5 text-slate-600 dark:text-slate-300">
+            <li class="flex items-start">
+              <span class="text-rose-500 font-bold mr-2">❌</span>
+              <div>
+                <strong>「p &gt; 0.05 だから差がないと証明された」と書く</strong><br>
+                <span class="text-xs text-slate-400">正しくは「有意な差は検出されなかった（差があるとは言えない）」。帰無仮説は「証明」されるのではなく「棄却されない」だけです。</span>
+              </div>
+            </li>
+            <li class="flex items-start">
+              <span class="text-rose-500 font-bold mr-2">❌</span>
+              <div>
+                <strong>サンプルサイズが異なるのにペアを組んでしまう</strong><br>
+                <span class="text-xs text-slate-400">系統や個体が別々の場合は必ず「対応なし」です。行の順番が同じだからといって対応をつけてはいけません。</span>
+              </div>
+            </li>
+            <li class="flex items-start">
+              <span class="text-rose-500 font-bold mr-2">❌</span>
+              <div>
+                <strong>平均値だけを見て分散（ばらつき）を無視する</strong><br>
+                <span class="text-xs text-slate-400">平均値の差が5gあっても、標準偏差が10gあれば統計的には偶然の誤差の範囲内になり得ます。</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Academic Writing Template -->
+        <div class="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+          <h4 class="font-bold text-slate-900 dark:text-white text-base flex items-center">
+            ✍️ 模範記述スタイル (APA / 生物系学会標準)
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            検定名、自由度、検定統計量 t値、p値、そして両群の平均値とばらつき（SDまたはSE）を明記するのが国際ルールです。
+          </p>
+          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
+            「イネの出穂後の茎葉重減少量について、Genotype A群（平均 2.21 ± 7.62 g, n = 24）とGenotype B群（平均 11.84 ± 8.45 g, n = 52）をWelchのt検定により比較した。その結果、両群間に統計学的に有意な差が認められた（<span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">t(49.34) = -4.95, p &lt; 0.001</span>）。したがって、Genotype Bをもつ系統群はGenotype Aに比べて出穂後の茎葉重減少（枯れ上がり）が有意に大きいことが示された。」
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SECTION 7: インタラクティブクイズ ================= -->
+    <section id="quiz" class="scroll-mt-20">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-sm">7</span>
+        <div>
+          <h3 class="text-2xl font-bold text-slate-900 dark:text-white">理解度チェック！インタラクティブ・クイズ</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400">全5問に回答して、対応なしt検定のマスター度を確かめましょう！</p>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-8">
+        
+        <!-- Score Banner -->
+        <div id="quiz-banner" class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+          <div>
+            <span class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold block">あなたのスコア</span>
+            <span id="quiz-score-text" class="text-2xl font-extrabold text-slate-900 dark:text-white">0 / 5 問正解</span>
+          </div>
+          <button onclick="resetQuiz()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 font-bold transition">
+            🔄 最初からやり直す
+          </button>
+        </div>
+
+        <div class="space-y-6" id="quiz-container">
+          <!-- Questions will be rendered by JS -->
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mt-20 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-12 text-center text-xs text-slate-500 dark:text-slate-400 space-y-3">
+    <p class="font-bold text-slate-700 dark:text-slate-300">生物情報処理演習: 統計学的仮説検定インタラクティブ教材</p>
+    <p>対象分野: 農学・生物資源学・生物科学・バイオインフォマティクス・生命医科学</p>
+    <p class="text-slate-400 dark:text-slate-500">© 2026 生物情報処理演習. All Rights Reserved. Built with Modern Web Standards.</p>
+  </footer>
+
+  <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+  <script>
+    /* ========================================================
+       1. DATASETS & PRESETS
+       ======================================================== */
+    const DATASETS = {
+      rice_decrease: {
+        name1: "Genotype_A",
+        name2: "Genotype_B",
+        label: "イネ茎葉重減少量 (SW5 - SW35, g)",
+        // 24 lines for Genotype A
+        data1: [12.14, -1.20, 2.71, -8.04, -5.18, 9.96, 0.19, 19.65, 14.95, -10.37, 1.31, 5.14, 1.98, -3.49, -0.18, 0.98, 2.63, -4.41, 10.11, 0.72, 4.41, 0.22, -0.34, 8.74],
+        // 52 lines for Genotype B
+        data2: [5.08, 2.60, 19.85, 15.35, 29.35, 11.51, 9.94, 6.78, 12.21, 6.09, 17.52, 10.60, 18.23, 7.37, 27.67, 7.24, 6.57, 12.59, 12.87, 8.44, 21.01, 8.51, 20.91, 11.45, 9.20, 15.22, 17.15, 15.42, 6.27, 4.19, 16.51, 8.49, 14.28, 4.29, 3.23, 11.83, 17.75, 4.67, 13.98, 9.61, 6.94, 10.02, 12.44, 8.16, 12.48, 5.11, 22.84, 11.19, 14.92, 14.36, 10.08, 12.63]
+      },
+      rice_sw35: {
+        name1: "Genotype_A_SW35",
+        name2: "Genotype_B_SW35",
+        label: "出穂後35日茎葉重 SW35 (g)",
+        data1: [42.30, 36.58, 38.90, 49.04, 44.88, 56.87, 37.57, 53.75, 27.02, 56.75, 59.18, 34.81, 61.04, 28.08, 41.91, 43.07, 57.96, 31.28, 37.02, 47.78, 45.42, 89.23, 25.64, 46.73],
+        data2: [27.80, 32.30, 28.30, 40.70, 68.50, 25.30, 35.80, 34.20, 38.60, 36.20, 39.50, 37.10, 43.80, 35.90, 42.10, 36.80, 43.20, 44.80, 41.20, 39.80, 47.90, 41.50, 52.30, 40.20, 41.00, 38.40, 45.10, 48.00, 42.50, 46.20, 41.80, 47.80, 50.10, 49.20, 53.10, 46.80, 54.30, 51.20, 56.80, 72.80, 24.30, 29.50, 31.60, 33.40, 35.20, 38.10, 26.50, 28.90, 30.40, 32.10, 34.70, 36.50]
+      },
+      arabidopsis: {
+        name1: "WT_Col0",
+        name2: "aux1_mutant",
+        label: "シロイヌナズナ主根長 (cm)",
+        data1: [12.4, 11.8, 13.1, 12.0, 12.9, 11.5, 13.5, 12.2, 12.7, 11.9, 13.0, 12.6],
+        data2: [8.9, 9.2, 8.5, 9.7, 8.8, 9.0, 8.2, 9.5, 8.6, 9.1, 9.4, 8.7]
+      },
+      custom: {
+        name1: "Sample_1",
+        name2: "Sample_2",
+        label: "カスタムデータ",
+        data1: [10.2, 11.5, 12.1, 9.8, 10.7],
+        data2: [14.1, 15.3, 13.8, 16.2, 14.9]
+      }
+    };
+
+    /* ========================================================
+       2. STATISTICAL MATH UTILITIES
+       ======================================================== */
+    function calcStats(arr) {
+      const n = arr.length;
+      if (n === 0) return { n: 0, mean: 0, variance: 0, sd: 0, se: 0 };
+      const mean = arr.reduce((a, b) => a + b, 0) / n;
+      if (n === 1) return { n: 1, mean: mean, variance: 0, sd: 0, se: 0 };
+      const sumSqDiff = arr.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0);
+      const variance = sumSqDiff / (n - 1);
+      const sd = Math.sqrt(variance);
+      const se = sd / Math.sqrt(n);
+      return { n, mean, variance, sd, se };
+    }
+
+    // Lanczos approximation for log-gamma
+    function logGamma(x) {
+      const g = 7;
+      const C = [
+        0.99999999999980993,
+        676.5203681218851,
+        -1259.1392167224028,
+        771.32342877765313,
+        -176.61502916214059,
+        12.507343278686905,
+        -0.138571095856205,
+        9.9843695780195716e-6,
+        1.5056327351493116e-7
+      ];
+      if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - logGamma(1 - x);
+      x -= 1;
+      let base = x + g + 0.5;
+      let sum = C[0];
+      for (let i = 1; i < C.length; i++) sum += C[i] / (x + i);
+      return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(base) - base + Math.log(sum);
+    }
+
+    // Regularized Incomplete Beta Function Ix(a, b)
+    function incBeta(x, a, b) {
+      if (x <= 0) return 0;
+      if (x >= 1) return 1;
+      const TINY = 1e-30;
+      const qab = a + b, qap = a + 1, qam = a - 1;
+      let c = 1, d = 1 - qab * x / qap;
+      if (Math.abs(d) < TINY) d = TINY;
+      d = 1 / d;
+      let h = d;
+      for (let m = 1; m <= 120; m++) {
+        let m2 = 2 * m;
+        let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+        d = 1 + aa * d;
+        if (Math.abs(d) < TINY) d = TINY;
+        c = 1 + aa / c;
+        if (Math.abs(c) < TINY) c = TINY;
+        d = 1 / d;
+        h *= d * c;
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+        d = 1 + aa * d;
+        if (Math.abs(d) < TINY) d = TINY;
+        c = 1 + aa / c;
+        if (Math.abs(c) < TINY) c = TINY;
+        d = 1 / d;
+        let del = d * c;
+        h *= del;
+        if (Math.abs(del - 1) < 1e-12) break;
+      }
+      const bt = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+      return (bt * h) / a;
+    }
+
+    // Cumulative distribution function of Student t-distribution
+    function tCDF(t, df) {
+      const x = df / (df + t * t);
+      const prob = 0.5 * incBeta(x, df / 2, 0.5);
+      return t > 0 ? 1 - prob : prob;
+    }
+
+    // Two-tailed p-value for Student t
+    function tPValueTwoTailed(t, df) {
+      const x = df / (df + t * t);
+      return incBeta(x, df / 2, 0.5);
+    }
+
+    // Inverse of t-distribution CDF (quantile function) using binary search
+    function tQuantile(p, df) {
+      if (p <= 0) return -Infinity;
+      if (p >= 1) return Infinity;
+      if (Math.abs(p - 0.5) < 1e-9) return 0;
+      let low = -100, high = 100;
+      for (let i = 0; i < 60; i++) {
+        let mid = (low + high) / 2;
+        if (tCDF(mid, df) < p) low = mid;
+        else high = mid;
+      }
+      return (low + high) / 2;
+    }
+
+    // Independent Two-sample t-test calculation (Welch & Student)
+    function runTwoSampleTTest(arr1, arr2, alternative = 'two.sided', confLevel = 0.95) {
+      const s1 = calcStats(arr1);
+      const s2 = calcStats(arr2);
+      const diff = s1.mean - s2.mean;
+
+      // 1. Welch t-test
+      const seWelch = Math.sqrt((s1.variance / s1.n) + (s2.variance / s2.n));
+      const tWelch = diff / seWelch;
+      const numDf = Math.pow((s1.variance / s1.n) + (s2.variance / s2.n), 2);
+      const denDf = (Math.pow(s1.variance / s1.n, 2) / (s1.n - 1)) + (Math.pow(s2.variance / s2.n, 2) / (s2.n - 1));
+      const dfWelch = numDf / denDf;
+      
+      let pWelch = 0;
+      if (alternative === 'two.sided') {
+        pWelch = tPValueTwoTailed(tWelch, dfWelch);
+      } else if (alternative === 'greater') {
+        pWelch = 1 - tCDF(tWelch, dfWelch);
+      } else {
+        pWelch = tCDF(tWelch, dfWelch);
+      }
+
+      // Welch Confidence Interval
+      const alpha = 1 - confLevel;
+      const tCritWelch = tQuantile(1 - alpha / 2, dfWelch);
+      const ciWelch = [diff - tCritWelch * seWelch, diff + tCritWelch * seWelch];
+
+      // 2. Student t-test
+      const dfStudent = s1.n + s2.n - 2;
+      const sp2 = ((s1.n - 1) * s1.variance + (s2.n - 1) * s2.variance) / dfStudent;
+      const seStudent = Math.sqrt(sp2 * (1 / s1.n + 1 / s2.n));
+      const tStudent = diff / seStudent;
+
+      let pStudent = 0;
+      if (alternative === 'two.sided') {
+        pStudent = tPValueTwoTailed(tStudent, dfStudent);
+      } else if (alternative === 'greater') {
+        pStudent = 1 - tCDF(tStudent, dfStudent);
+      } else {
+        pStudent = tCDF(tStudent, dfStudent);
+      }
+
+      const tCritStudent = tQuantile(1 - alpha / 2, dfStudent);
+      const ciStudent = [diff - tCritStudent * seStudent, diff + tCritStudent * seStudent];
+
+      return {
+        s1, s2, diff,
+        welch: { t: tWelch, df: dfWelch, p: pWelch, se: seWelch, ci: ciWelch },
+        student: { t: tStudent, df: dfStudent, p: pStudent, se: seStudent, sp2: sp2, ci: ciStudent }
+      };
+    }
+
+    /* ========================================================
+       3. INTERACTIVE SIMULATOR (CANVAS ENGINE)
+       ======================================================== */
+    function normalPDF(x, mean, sd) {
+      return (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
+    }
+
+    function tPDF(t, df) {
+      const coef = Math.exp(logGamma((df + 1) / 2) - logGamma(df / 2)) / Math.sqrt(df * Math.PI);
+      return coef * Math.pow(1 + (t * t) / df, -(df + 1) / 2);
+    }
+
+    function updateSimulator() {
+      const mu1 = parseFloat(document.getElementById('slider-mu1').value);
+      const sd1 = parseFloat(document.getElementById('slider-sd1').value);
+      const n1 = parseInt(document.getElementById('slider-n1').value);
+
+      const mu2 = parseFloat(document.getElementById('slider-mu2').value);
+      const sd2 = parseFloat(document.getElementById('slider-sd2').value);
+      const n2 = parseInt(document.getElementById('slider-n2').value);
+
+      document.getElementById('val-mu1').textContent = mu1.toFixed(1);
+      document.getElementById('val-sd1').textContent = sd1.toFixed(1);
+      document.getElementById('val-n1').textContent = n1;
+      document.getElementById('label-g1-stats').textContent = `平均: ${mu1.toFixed(1)}, SD: ${sd1.toFixed(1)}, n: ${n1}`;
+
+      document.getElementById('val-mu2').textContent = mu2.toFixed(1);
+      document.getElementById('val-sd2').textContent = sd2.toFixed(1);
+      document.getElementById('val-n2').textContent = n2;
+      document.getElementById('label-g2-stats').textContent = `平均: ${mu2.toFixed(1)}, SD: ${sd2.toFixed(1)}, n: ${n2}`;
+
+      // Calculate t-test statistics
+      const se = Math.sqrt((sd1 * sd1 / n1) + (sd2 * sd2 / n2));
+      const t = (mu1 - mu2) / se;
+      const numDf = Math.pow((sd1 * sd1 / n1) + (sd2 * sd2 / n2), 2);
+      const denDf = (Math.pow(sd1 * sd1 / n1, 2) / (n1 - 1)) + (Math.pow(sd2 * sd2 / n2, 2) / (n2 - 1));
+      const df = numDf / denDf;
+      const p = tPValueTwoTailed(t, df);
+
+      // Update dashboard values
+      document.getElementById('sim-t-val').textContent = t.toFixed(3);
+      document.getElementById('sim-p-val').textContent = p < 0.0001 ? p.toExponential(3) : p.toFixed(4);
+
+      const badge = document.getElementById('sim-verdict-badge');
+      if (p < 0.001) {
+        badge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+        badge.textContent = "極めて有意差あり (p < 0.001)";
+      } else if (p < 0.05) {
+        badge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
+        badge.textContent = "有意差あり (p < 0.05)";
+      } else {
+        badge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300";
+        badge.textContent = "有意差なし (p ≥ 0.05)";
+      }
+
+      // 1. Draw Distribution Canvas
+      drawSimDistribution(mu1, sd1, n1, mu2, sd2, n2);
+
+      // 2. Draw t-distribution Canvas
+      drawSimTDistribution(t, df);
+    }
+
+    function drawSimDistribution(mu1, sd1, n1, mu2, sd2, n2) {
+      const canvas = document.getElementById('simCanvasDist');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Plot range x: min to max
+      const minX = Math.min(mu1 - 3.5 * sd1, mu2 - 3.5 * sd2, 20);
+      const maxX = Math.max(mu1 + 3.5 * sd1, mu2 + 3.5 * sd2, 80);
+      const maxDensity = Math.max(normalPDF(mu1, mu1, sd1), normalPDF(mu2, mu2, sd2)) * 1.15;
+
+      function toScreenX(x) {
+        return 30 + ((x - minX) / (maxX - minX)) * (w - 50);
+      }
+      function toScreenY(y) {
+        return (h - 25) - (y / maxDensity) * (h - 40);
+      }
+
+      // Axes
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(30, h - 25);
+      ctx.lineTo(w - 20, h - 25);
+      ctx.stroke();
+
+      // Draw Group 1 Curve (Emerald)
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.5;
+      for (let px = 0; px <= w - 50; px += 2) {
+        const xVal = minX + (px / (w - 50)) * (maxX - minX);
+        const yVal = normalPDF(xVal, mu1, sd1);
+        const sy = toScreenY(yVal);
+        if (px === 0) ctx.moveTo(toScreenX(xVal), toScreenY(0));
+        ctx.lineTo(toScreenX(xVal), sy);
+      }
+      ctx.lineTo(toScreenX(maxX), toScreenY(0));
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Draw Group 2 Curve (Blue)
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 2.5;
+      for (let px = 0; px <= w - 50; px += 2) {
+        const xVal = minX + (px / (w - 50)) * (maxX - minX);
+        const yVal = normalPDF(xVal, mu2, sd2);
+        const sy = toScreenY(yVal);
+        if (px === 0) ctx.moveTo(toScreenX(xVal), toScreenY(0));
+        ctx.lineTo(toScreenX(xVal), sy);
+      }
+      ctx.lineTo(toScreenX(maxX), toScreenY(0));
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Means vertical lines
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#059669';
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(mu1), toScreenY(0));
+      ctx.lineTo(toScreenX(mu1), toScreenY(normalPDF(mu1, mu1, sd1)));
+      ctx.stroke();
+
+      ctx.strokeStyle = '#2563eb';
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(mu2), toScreenY(0));
+      ctx.lineTo(toScreenX(mu2), toScreenY(normalPDF(mu2, mu2, sd2)));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Legends
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = '#059669';
+      ctx.fillText(`群1: 平均=${mu1.toFixed(1)}`, toScreenX(mu1) - 25, 18);
+      ctx.fillStyle = '#2563eb';
+      ctx.fillText(`群2: 平均=${mu2.toFixed(1)}`, toScreenX(mu2) - 25, 32);
+    }
+
+    function drawSimTDistribution(tVal, df) {
+      const canvas = document.getElementById('simCanvasTdist');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const tRange = 5.0; // from -5 to +5
+      const maxDensity = tPDF(0, df) * 1.15;
+      const tCrit = tQuantile(0.975, df); // 5% two-sided critical value
+
+      function toX(t) {
+        return 30 + ((t + tRange) / (2 * tRange)) * (w - 60);
+      }
+      function toY(y) {
+        return (h - 20) - (y / maxDensity) * (h - 35);
+      }
+
+      // Fill Rejection Regions (Red)
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+      // Left tail (< -tCrit)
+      ctx.beginPath();
+      ctx.moveTo(toX(-tRange), toY(0));
+      for (let t = -tRange; t <= -tCrit; t += 0.05) {
+        ctx.lineTo(toX(t), toY(tPDF(t, df)));
+      }
+      ctx.lineTo(toX(-tCrit), toY(0));
+      ctx.closePath();
+      ctx.fill();
+
+      // Right tail (> tCrit)
+      ctx.beginPath();
+      ctx.moveTo(toX(tCrit), toY(0));
+      for (let t = tCrit; t <= tRange; t += 0.05) {
+        ctx.lineTo(toX(t), toY(tPDF(t, df)));
+      }
+      ctx.lineTo(toX(tRange), toY(0));
+      ctx.closePath();
+      ctx.fill();
+
+      // Main t-distribution line
+      ctx.beginPath();
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      for (let t = -tRange; t <= tRange; t += 0.1) {
+        const sx = toX(t);
+        const sy = toY(tPDF(t, df));
+        if (t === -tRange) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+
+      // Center axis
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(30, h - 20);
+      ctx.lineTo(w - 30, h - 20);
+      ctx.stroke();
+
+      // Critical markers
+      ctx.font = '10px monospace';
+      ctx.fillStyle = '#dc2626';
+      ctx.fillText(`-tCrit (${(-tCrit).toFixed(2)})`, toX(-tCrit) - 20, h - 6);
+      ctx.fillText(`+tCrit (${tCrit.toFixed(2)})`, toX(tCrit) - 10, h - 6);
+
+      // Plot actual t value marker
+      const clampedT = Math.max(-tRange, Math.min(tRange, tVal));
+      const tx = toX(clampedT);
+      const ty = toY(tPDF(clampedT, df));
+
+      ctx.fillStyle = Math.abs(tVal) >= tCrit ? '#10b981' : '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(tx, ty, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = Math.abs(tVal) >= tCrit ? '#047857' : '#b45309';
+      ctx.fillText(`t = ${tVal.toFixed(2)}`, tx - 15, Math.max(15, ty - 10));
+    }
+
+    function setSimPreset(type) {
+      if (type === 'clear_diff') {
+        document.getElementById('slider-mu1').value = 45;
+        document.getElementById('slider-mu2').value = 60;
+        document.getElementById('slider-sd1').value = 8;
+        document.getElementById('slider-sd2').value = 8;
+        document.getElementById('slider-n1').value = 25;
+        document.getElementById('slider-n2').value = 25;
+      } else if (type === 'noisy') {
+        document.getElementById('slider-mu1').value = 48;
+        document.getElementById('slider-mu2').value = 52;
+        document.getElementById('slider-sd1').value = 18;
+        document.getElementById('slider-sd2').value = 18;
+        document.getElementById('slider-n1').value = 20;
+        document.getElementById('slider-n2').value = 20;
+      } else if (type === 'small_n') {
+        document.getElementById('slider-mu1').value = 46;
+        document.getElementById('slider-mu2').value = 56;
+        document.getElementById('slider-sd1').value = 10;
+        document.getElementById('slider-sd2').value = 10;
+        document.getElementById('slider-n1').value = 4;
+        document.getElementById('slider-n2').value = 4;
+      } else if (type === 'unequal_var') {
+        document.getElementById('slider-mu1').value = 48;
+        document.getElementById('slider-mu2').value = 55;
+        document.getElementById('slider-sd1').value = 4;
+        document.getElementById('slider-sd2').value = 16;
+        document.getElementById('slider-n1').value = 35;
+        document.getElementById('slider-n2').value = 12;
+      }
+      updateSimulator();
+    }
+
+    /* ========================================================
+       4. PRACTICAL DATA LAB LOGIC
+       ======================================================== */
+    let labChartInstance = null;
+
+    function loadDataset(key) {
+      // update active button state
+      document.querySelectorAll('.ds-btn').forEach(btn => {
+        btn.className = "ds-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition";
+      });
+      const activeBtnId = key === 'rice_decrease' ? 'btn-ds-rice-dec' :
+                          key === 'rice_sw35' ? 'btn-ds-rice-sw35' :
+                          key === 'arabidopsis' ? 'btn-ds-arab' : 'btn-ds-custom';
+      document.getElementById(activeBtnId).className = "ds-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 text-white shadow-sm transition";
+
+      const ds = DATASETS[key];
+      document.getElementById('name-g1').value = ds.name1;
+      document.getElementById('name-g2').value = ds.name2;
+      document.getElementById('input-g1-data').value = ds.data1.join(', ');
+      document.getElementById('input-g2-data').value = ds.data2.join(', ');
+      calculateDataLab();
+    }
+
+    function parseDataInput(str) {
+      return str.split(/[\s,]+/)
+                .map(s => s.trim())
+                .filter(s => s.length > 0 && !isNaN(Number(s)))
+                .map(Number);
+    }
+
+    function calculateDataLab() {
+      const g1 = parseDataInput(document.getElementById('input-g1-data').value);
+      const g2 = parseDataInput(document.getElementById('input-g2-data').value);
+      const name1 = document.getElementById('name-g1').value || 'Group 1';
+      const name2 = document.getElementById('name-g2').value || 'Group 2';
+      const alternative = document.getElementById('select-alt').value;
+      const confLevel = parseFloat(document.getElementById('select-conf').value);
+
+      document.getElementById('count-g1').textContent = `n = ${g1.length}`;
+      document.getElementById('count-g2').textContent = `n = ${g2.length}`;
+
+      if (g1.length < 2 || g2.length < 2) {
+        alert("各グループに最低2点以上の数値を入力してください。");
+        return;
+      }
+
+      const res = runTwoSampleTTest(g1, g2, alternative, confLevel);
+
+      // 1. Update summary table
+      const tbody = document.getElementById('table-summary-body');
+      tbody.innerHTML = `
+        <tr class="border-b border-slate-100 dark:border-slate-800">
+          <td class="p-2.5 font-bold text-emerald-600 dark:text-emerald-400">${name1}</td>
+          <td class="p-2.5">${res.s1.n}</td>
+          <td class="p-2.5">${res.s1.mean.toFixed(3)}</td>
+          <td class="p-2.5">${res.s1.variance.toFixed(3)}</td>
+          <td class="p-2.5">${res.s1.sd.toFixed(3)}</td>
+          <td class="p-2.5">${res.s1.se.toFixed(3)}</td>
+        </tr>
+        <tr>
+          <td class="p-2.5 font-bold text-blue-600 dark:text-blue-400">${name2}</td>
+          <td class="p-2.5">${res.s2.n}</td>
+          <td class="p-2.5">${res.s2.mean.toFixed(3)}</td>
+          <td class="p-2.5">${res.s2.variance.toFixed(3)}</td>
+          <td class="p-2.5">${res.s2.sd.toFixed(3)}</td>
+          <td class="p-2.5">${res.s2.se.toFixed(3)}</td>
+        </tr>
+      `;
+
+      // 2. Update Welch outputs
+      document.getElementById('out-welch-t').textContent = res.welch.t.toFixed(4);
+      document.getElementById('out-welch-df').textContent = res.welch.df.toFixed(3);
+      document.getElementById('out-welch-p').textContent = res.welch.p < 0.0001 ? res.welch.p.toExponential(4) : res.welch.p.toFixed(5);
+      document.getElementById('out-welch-diff').textContent = res.diff.toFixed(4);
+      document.getElementById('out-welch-ci').textContent = `[${res.welch.ci[0].toFixed(3)}, ${res.welch.ci[1].toFixed(3)}]`;
+
+      const badgeW = document.getElementById('badge-welch');
+      if (res.welch.p < 0.001) badgeW.textContent = "p < 0.001 (極めて有意)";
+      else if (res.welch.p < 0.05) badgeW.textContent = "p < 0.05 (有意差あり)";
+      else badgeW.textContent = "p ≥ 0.05 (有意差なし)";
+
+      // 3. Update Student outputs
+      document.getElementById('out-student-t').textContent = res.student.t.toFixed(4);
+      document.getElementById('out-student-df').textContent = res.student.df;
+      document.getElementById('out-student-p').textContent = res.student.p < 0.0001 ? res.student.p.toExponential(4) : res.student.p.toFixed(5);
+      document.getElementById('out-student-sp2').textContent = res.student.sp2.toFixed(3);
+      document.getElementById('out-student-ci').textContent = `[${res.student.ci[0].toFixed(3)}, ${res.student.ci[1].toFixed(3)}]`;
+
+      const badgeS = document.getElementById('badge-student');
+      if (res.student.p < 0.001) badgeS.textContent = "p < 0.001 (極めて有意)";
+      else if (res.student.p < 0.05) badgeS.textContent = "p < 0.05 (有意差あり)";
+      else badgeS.textContent = "p ≥ 0.05 (有意差なし)";
+
+      // 4. Update Report Text Generator
+      const pFormatted = res.welch.p < 0.001 ? "p < 0.001" : `p = ${res.welch.p.toFixed(4)}`;
+      const verdictStr = res.welch.p < 0.05 ? "統計学的に有意な差が認められた" : "統計学的に有意な差は認められなかった";
+      const reportStr = `「${name1}（平均 ${res.s1.mean.toFixed(2)} ± ${res.s1.sd.toFixed(2)}, n = ${res.s1.n}）と${name2}（平均 ${res.s2.mean.toFixed(2)} ± ${res.s2.sd.toFixed(2)}, n = ${res.s2.n}）について、Welchのt検定（両側検定、有意水準5%）を用いて比較を行った。その結果、両群間に${verdictStr}（t(${res.welch.df.toFixed(2)}) = ${res.welch.t.toFixed(2)}, ${pFormatted}, 95%信頼区間 [${res.welch.ci[0].toFixed(2)}, ${res.welch.ci[1].toFixed(2)}]）。」`;
+      document.getElementById('report-text').textContent = reportStr;
+
+      // 5. Update R Code generator block
+      const rCode = `# データの定義
+${name1} <- c(${g1.slice(0, 15).join(', ')}${g1.length > 15 ? ', ...' : ''})
+${name2} <- c(${g2.slice(0, 15).join(', ')}${g2.length > 15 ? ', ...' : ''})
+
+# Welchのt検定 (var.equal = FALSE はデフォルト)
+t.test(${name1}, ${name2}, alternative = "${alternative}", conf.level = ${confLevel})
+
+# （参考）Studentのt検定
+t.test(${name1}, ${name2}, var.equal = TRUE, alternative = "${alternative}", conf.level = ${confLevel})
+
+# 箱ひげ図＋ジッタープロット
+boxplot(list(${name1} = ${name1}, ${name2} = ${name2}), col = c("#bbf7d0", "#bfdbfe"))
+stripchart(list(${name1} = ${name1}, ${name2} = ${name2}), vertical = TRUE, method = "jitter", add = TRUE, pch = 16)`;
+      document.getElementById('r-code-block').textContent = rCode;
+
+      // 6. Draw Chart.js Graph
+      renderLabChart(name1, g1, res.s1, name2, g2, res.s2);
+    }
+
+    function renderLabChart(name1, g1, s1, name2, g2, s2) {
+      const ctx = document.getElementById('labChart').getContext('2d');
+      if (labChartInstance) {
+        labChartInstance.destroy();
+      }
+
+      // Scatter data for jitter dots
+      const dots1 = g1.map(val => ({ x: 1 + (Math.random() - 0.5) * 0.25, y: val }));
+      const dots2 = g2.map(val => ({ x: 2 + (Math.random() - 0.5) * 0.25, y: val }));
+
+      // Mean & SE error bar points
+      const meanData = [
+        { x: 1, y: s1.mean, se: s1.se },
+        { x: 2, y: s2.mean, se: s2.se }
+      ];
+
+      labChartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: `${name1} サンプル点 (n=${s1.n})`,
+              data: dots1,
+              backgroundColor: 'rgba(16, 185, 129, 0.6)',
+              borderColor: '#059669',
+              pointRadius: 4,
+            },
+            {
+              label: `${name2} サンプル点 (n=${s2.n})`,
+              data: dots2,
+              backgroundColor: 'rgba(59, 130, 246, 0.6)',
+              borderColor: '#2563eb',
+              pointRadius: 4,
+            },
+            {
+              label: '平均値 ± SE (標準誤差)',
+              data: [{ x: 1, y: s1.mean }, { x: 2, y: s2.mean }],
+              backgroundColor: '#dc2626',
+              borderColor: '#dc2626',
+              pointRadius: 7,
+              pointStyle: 'rectRot'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1e293b',
+                font: { size: 11, family: '"Noto Sans JP", sans-serif' }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `値: ${context.raw.y.toFixed(2)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              min: 0.5,
+              max: 2.5,
+              ticks: {
+                callback: function(val) {
+                  if (val === 1) return name1;
+                  if (val === 2) return name2;
+                  return '';
+                },
+                color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#475569',
+                font: { size: 12, weight: 'bold' }
+              },
+              grid: { color: 'rgba(148, 163, 184, 0.1)' }
+            },
+            y: {
+              title: { display: true, text: '測定値', color: '#94a3b8' },
+              ticks: { color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#475569' },
+              grid: { color: 'rgba(148, 163, 184, 0.15)' }
+            }
+          }
+        }
+      });
+    }
+
+    function copyReportText() {
+      const text = document.getElementById('report-text').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("レポート用文章をクリップボードにコピーしました！");
+      });
+    }
+
+    function copyRCode() {
+      const text = document.getElementById('r-code-block').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Rコードをクリップボードにコピーしました！RStudioのスクリプトに貼り付けて実行してください。");
+      });
+    }
+
+    /* ========================================================
+       5. R CONSOLE INTERACTIVE HELPER
+       ======================================================== */
+    const R_HELPS = {
+      t: "<b>t = -4.9457</b>: 検定統計量。グループ間の差を標準誤差で割った値。絶対値が大きいほど偶然では説明がつかない強い差があることを示します。",
+      df: "<b>df = 49.342</b>: Welchの検定による自由度。等分散を仮定しないため、Welch-Satterthwaiteの式によって小数の値（約49.34）になります。",
+      p: "<b>p-value = 9.193e-06</b>: 両側p値（約 0.00000919）。「2群に差がない」という帰無仮説のもとで、これほど極端な差が偶然生じる確率は0.001%未満です！",
+      ci: "<b>95 percent confidence interval [-13.54, -5.72]</b>: 平均値の差の95%信頼区間。区間の中に 0 が含まれていないため、有意水準5%で帰無仮説（差=0）が確実に棄却されます。",
+      mean1: "<b>mean of x: 2.209</b>: 第1群（Genotype A）の標本平均値。",
+      mean2: "<b>mean of y: 11.838</b>: 第2群（Genotype B）の標本平均値。"
+    };
+
+    function showRHelp(key) {
+      const box = document.getElementById('r-help-box');
+      box.innerHTML = R_HELPS[key] || "";
+    }
+
+    /* ========================================================
+       6. INTERACTIVE QUIZ LOGIC
+       ======================================================== */
+    const QUIZ_QUESTIONS = [
+      {
+        q: "Q1. 野生型マウス15匹と遺伝子ノックアウトマウス12匹の体重を比較したい。適切な検定はどれか？",
+        options: [
+          "1標本t検定",
+          "対応のあるt検定 (Paired t-test)",
+          "対応無しのt検定 (Two-sample t-test)",
+          "カイ二乗検定"
+        ],
+        answer: 2,
+        explain: "個体が互いに独立しており、サンプルサイズも15匹と12匹で異なるため「対応無しのt検定」が適切です。"
+      },
+      {
+        q: "Q2. R言語で `t.test(x, y)` をオプションなしで実行したとき、デフォルトで行われる検定はどれか？",
+        options: [
+          "Studentのt検定 (等分散を仮定)",
+          "Welchのt検定 (不等分散対応)",
+          "対応のあるt検定 (paired = TRUE)",
+          "マン・ホイットニーのU検定"
+        ],
+        answer: 1,
+        explain: "Rのデフォルトは `var.equal = FALSE`、すなわち Welchのt検定 です。現代の生物統計学では等分散の事前検定（F検定など）を行わず、最初からWelch検定を使うのが国際標準です。"
+      },
+      {
+        q: "Q3. 対応無しのt検定を行ったところ、p = 0.12 となった。この結果に対する最も適切な解釈はどれか？",
+        options: [
+          "2群の母平均は等しいと完全に証明された",
+          "有意水準5%において、2群の母平均に統計学的に有意な差があるとはいえない",
+          "実験データに重大な誤りがある",
+          "帰無仮説が正しい確率が12%である"
+        ],
+        answer: 1,
+        explain: "p > 0.05 の場合、「差がないことが証明された」のではなく「効果や差が検出されなかった（差があるとは言えない）」と結論づけます。"
+      },
+      {
+        q: "Q4. 2群の平均値の差がまったく同じ場合、t値が大きくなり（p値が小さくなり有意になりやすく）なる条件はどれか？",
+        options: [
+          "各群の標準偏差（ばらつき）が大きくなる",
+          "サンプルサイズ（標本数 n）が大きくなる",
+          "有意水準を0.01から0.05に変更する",
+          "片側検定から両側検定に変更する"
+        ],
+        answer: 1,
+        explain: "t値は (差) ÷ (標準誤差) です。標本数 n が増えると標準誤差 (s / √n) が小さくなるため、分母が減ってt値が大きくなります。"
+      },
+      {
+        q: "Q5. Studentのt検定において、標本サイズが n1 = 20、n2 = 15 のときの自由度 df はいくつか？",
+        options: [
+          "33",
+          "34",
+          "35",
+          "19"
+        ],
+        answer: 0,
+        explain: "Studentのt検定の自由度は df = n1 + n2 - 2 です。したがって 20 + 15 - 2 = 33 となります。"
+      }
+    ];
+
+    let userAnswers = {};
+
+    function renderQuiz() {
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = '';
+
+      QUIZ_QUESTIONS.forEach((qObj, idx) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = "p-5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3";
+        
+        let optionsHtml = '';
+        qObj.options.forEach((opt, optIdx) => {
+          optionsHtml += `
+            <button onclick="handleQuizAnswer(${idx}, ${optIdx})" id="q${idx}-opt${optIdx}" class="quiz-opt-btn w-full text-left p-3 rounded-lg text-xs sm:text-sm font-medium border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-slate-700/60 transition flex items-center justify-between">
+              <span>${opt}</span>
+              <span class="icon hidden ml-2"></span>
+            </button>
+          `;
+        });
+
+        qDiv.innerHTML = `
+          <div class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">${qObj.q}</div>
+          <div class="space-y-2" id="q${idx}-options">
+            ${optionsHtml}
+          </div>
+          <div id="q${idx}-feedback" class="hidden p-3 rounded-lg text-xs leading-relaxed font-sans mt-3"></div>
+        `;
+        container.appendChild(qDiv);
+      });
+    }
+
+    function handleQuizAnswer(qIdx, selectedOptIdx) {
+      if (userAnswers[qIdx] !== undefined) return; // already answered
+      userAnswers[qIdx] = selectedOptIdx;
+
+      const qObj = QUIZ_QUESTIONS[qIdx];
+      const isCorrect = selectedOptIdx === qObj.answer;
+
+      const optBtn = document.getElementById(`q${qIdx}-opt${selectedOptIdx}`);
+      const feedbackDiv = document.getElementById(`q${qIdx}-feedback`);
+
+      if (isCorrect) {
+        optBtn.classList.add('border-emerald-500', 'bg-emerald-100', 'dark:bg-emerald-950', 'text-emerald-900', 'dark:text-emerald-200');
+        feedbackDiv.className = "p-3 rounded-lg text-xs leading-relaxed font-sans mt-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200";
+        feedbackDiv.innerHTML = `<strong>⭕ 正解！</strong> ${qObj.explain}`;
+      } else {
+        optBtn.classList.add('border-rose-500', 'bg-rose-100', 'dark:bg-rose-950', 'text-rose-900', 'dark:text-rose-200');
+        // also highlight correct one
+        const correctBtn = document.getElementById(`q${qIdx}-opt${qObj.answer}`);
+        correctBtn.classList.add('border-emerald-500', 'bg-emerald-50', 'dark:bg-emerald-950/40');
+
+        feedbackDiv.className = "p-3 rounded-lg text-xs leading-relaxed font-sans mt-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200";
+        feedbackDiv.innerHTML = `<strong>❌ 不正解...</strong> (正解: ${qObj.options[qObj.answer]})<br>${qObj.explain}`;
+      }
+      feedbackDiv.classList.remove('hidden');
+
+      // Update total score
+      const totalScore = Object.keys(userAnswers).filter(k => userAnswers[k] === QUIZ_QUESTIONS[k].answer).length;
+      document.getElementById('quiz-score-text').textContent = `${totalScore} / ${QUIZ_QUESTIONS.length} 問正解`;
+    }
+
+    function resetQuiz() {
+      userAnswers = {};
+      document.getElementById('quiz-score-text').textContent = `0 / ${QUIZ_QUESTIONS.length} 問正解`;
+      renderQuiz();
+    }
+
+    function toggleCard(btn) {
+      const answer = btn.querySelector('.answer');
+      if (answer) {
+        answer.classList.toggle('hidden');
+      }
+    }
+
+    /* ========================================================
+       7. THEME & INITIALIZATION
+       ======================================================== */
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('theme-sun');
+    const moonIcon = document.getElementById('theme-moon');
+
+    function initTheme() {
+      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      }
+      updateSimulator();
+      if (labChartInstance) calculateDataLab();
+    });
+
+    // Slider Event Listeners
+    ['slider-mu1', 'slider-sd1', 'slider-n1', 'slider-mu2', 'slider-sd2', 'slider-n2'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateSimulator);
+    });
+
+    // Window Load Init
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      updateSimulator();
+      loadDataset('rice_decrease');
+      renderQuiz();
+
+      // Render KaTeX after DOM is ready
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      updateSimulator();
+    });
+  </script>
+</body>
+</html>

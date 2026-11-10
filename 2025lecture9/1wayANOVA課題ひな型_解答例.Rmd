@@ -1,0 +1,320 @@
+---
+title: "第9回　一元配置分散分析　ひな型"
+author: "自分の名前自分の名前"
+date: "2025-12-xx"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 課題：
+このR markdownファイルをよく見て、htmlで赤字で表示される部分を適切に追記して添付ファイルにて提出しなさい。検定における有意水準は5%とする。<br>
+
+なお、このR markdownはそのままKnitできるはずなので、できない場合はすぐに知らせてください。
+
+## 課題1
+
+「niwatori.csv」のデータは、ニワトリに6種類の飼料を与え続け6週間後のニワトリの体重を測定したものである。このデータから、飼料によりニワトリの体重に差があるかを検定したい。
+
+#### データを読み込む
+
+ニワトリの課題データをスタック形式で`niwatori.csv`として保存した。
+
+データフレーム名を`niwatori`として以下のように読み込むことにした。
+
+```{r}
+niwatori <- read.csv("niwatori.csv")
+niwatori$Esa<-as.factor(niwatori$Esa) # 列Esa（餌）をfactorに変換
+summary(niwatori)
+```
+
+
+### （１）スタック形式に変換したデータを用い、箱ひげ図を描きなさい。
+### （２）スタック形式に変換したデータを用い、ドットチャートを描きなさい。
+
+```{r}
+# グラフを描くコード
+boxplot(niwatori$Taiju~niwatori$Esa)
+stripchart(niwatori$Taiju~niwatori$Esa, vertical=TRUE, method="jitter",add=TRUE) #重ねて描くにはadd=TRUEを追加
+```
+
+<font color="red">
+グラフからの予想：書いて下さい。
+</font>
+
+### （３）各飼料におけるニワトリの体重は正規分布しているか？
+
+#### 正規性の検定（各群のデータごとに行う。多重検定になるが、個別のp値のみにて判断することとする。）
+
+#### シャピロ・ウィルクの正規性の検定（Shapiro-Wilk test）
+- 帰無仮説：正規分布と言える
+  - （データの母集団は正規分布に従っている）
+- 対立仮説：正規分布と言えない
+  - （データの母集団は正規分布に従っていない）
+
+```{r}
+# tapplyを使ってYakuの種類ごとにshapiro.test関数を実行する
+tapply(niwatori$Taiju,niwatori$Esa,shapiro.test)
+```
+
+<font color="Red">
+すべての試験区で体重は正規分布していると言える。
+</font>
+
+<br>
+<br>
+
+#### コルモゴロフ・スミルノフ検定（Kolmogorov-Smirnov test）
+正規性（正規分布しているか）をKS法でも確かめる。
+
+```{r}
+require(nortest)
+# lillie.testを行うコード
+tapply(niwatori$Taiju,niwatori$Esa,lillie.test)
+```
+
+<font color="Red">
+すべての試験区で体重は正規分布していると言える。
+</font>
+
+### （４）各飼料におけるニワトリの体重の等分散性は仮定できるか？
+
+#### 等分散性の検定
+
+等分散性の検定（3群以上）は**バートレット検定（Bartlett test）**を用いる。
+
+- 帰無仮説：各群の母分散は等しい（等分散）
+- 対立仮説：各群の母分散に等しいとはいえない（不等分散）
+
+帰無仮説が採択された場合→分散分析・多重比較へ
+
+対立仮説が採択された場合→ノンパラメトリック検定へ（またはWelchの等分散を仮定しないANOVAへ）
+
+
+```{r}
+# グループごとの分散を表示
+tapply(niwatori$Taiju,niwatori$Esa,var)
+# Bartlett testを実行
+# data=niwatoriパラメーターを用いて表記を簡略化できる場合もある
+bartlett.test(Taiju~Esa,data=niwatori)
+```
+
+<font color="red">
+等分散性は否定されない（p=0.66）。
+</font>
+<br><br>
+
+#### 以上で、分散分析を行う前提が満たされたので分散分析を行う。
+<br>
+### （５）飼料によってニワトリの体重に違いがあると言えるか？
+
+一元配置分散分析により検定する。
+
+#### 一元配置分散分析
+- 帰無仮説：各群の平均は等しい
+- 対立仮説：各群の平均は等しいとはいえない
+
+
+```{r}
+# グループごとの平均を表示
+tapply(niwatori$Taiju,niwatori$Esa,mean)
+
+# 分散分析を実行して結果をanova_resultに格納
+anova_result<-aov(niwatori$Taiju~niwatori$Esa)
+# anova_resultの内容を人間に優しい標記（いわゆる分散分析表）で表示
+summary(anova_result)
+```
+
+<font color="red">
+試験区間で体重に差があると言える（p=0.000)。
+</font>
+<br>
+<br>
+
+### （６）Tukey-Kramer, BonferroniおよびHolmの各方法を用いて多重比較を行い、どの飼料の間に差があるかを解析しなさい。可能ならcompact letter displayをつけたグラフを作成しなさい。
+
+多重比較によりどの飼料の間に差があるかを調べる。**（注：この検定はANOVAの結果にかかわらず行うべき。）**
+
+#### 多重比較
+
+#### Tukey Kramer法による多重比較
+
+総当たりt検定（Tukey Kramer）を行う。
+
+```{r}
+TukeyHSD(aov(Taiju~Esa,data=niwatori),"Esa",ordered=TRUE)
+```
+
+（解釈を記述して下さい。）
+<font color="red">
+餌は6種類あるので総当たり比較では15通りの比較がされた。このうち、有意（p<0.05）な組合せは*XX*通り。
+</font>
+
+#### Tukey-Kramerからcompact letter displayへ
+
+組み合わせが多くなると、有意に異なるグループを識別するのが難しくなる。平均が有意に異なるグループに異なるシンボル（a, b, c, ...）（compact letter display）をつける。
+
+事前に`install.packages("multcomp")`を実行しておく。
+
+```{r, results='hide'}
+library(multcomp)
+```
+
+
+まず、分散分析の結果を`anova_result`に格納する。
+```{r}
+anova_result <- aov(Taiju~Esa,data=niwatori)  # 分散分析の結果をresult1に格納
+summary(anova_result) # 結果を表示する
+```
+
+次に、Tukey-Kramer法による多重比較の結果を`tukey_result`に格納する。
+
+```{r}
+tukey_result <- glht(anova_result, linfct = mcp(Esa = "Tukey")) # Tukey-Kramerの結果をtukey_resultに格納
+summary(tukey_result) # 結果を表示する
+```
+
+さらに、平均が有意に異なるグループに異なるシンボル（a, b, c, ...）をつけてくれる関数を実行する。
+
+cldはcompact letter displayから来ている。
+
+```{r}
+cld(tukey_result) # compact letter display関数
+```
+
+<br>
+<br>
+
+
+この結果を箱ひげ図に重ねてみる。
+
+```{r}
+par()$mar # 上が切れるのでマージンを確認
+par(mar=c(5.1, 4.1, 6, 2.1)) # 上のマージンを広げる
+plot(cld(tukey_result)) # cldつきの箱ひげ図を描く
+```
+
+（グラフ上部のabcは異なる文字の間で有意な差（p<0.05）があることを示す。）<br>
+<font color="red">
+結果の説明を記載する
+</font>
+
+<br>
+<br>
+
+
+##### Bonferroni法
+
+以下のコマンドにより実行する。
+
+```{r}
+pairwise.t.test(niwatori$Taiju,niwatori$Esa,p.adjust.method="bonferroni") # Bonferroniが小文字で始まることに注意
+# CLDをつけるお決まりのルーチン　ANOVAの結果が必要
+bonf_summary <- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")),test = adjusted("bonferroni"))
+bonf_summary # 結果を確認
+cld(bonf_summary) # CLDをつけてConsole出力
+par(mar=c(5.1, 4.1, 6, 2.1)) # グラフ上部のマージンを広げる
+plot(cld(bonf_summary)) # CLD付きのグラフを出力
+```
+
+<font color="red">
+（結果の解釈を記載する。必ずTukey-Kramerと比較してほしい。）
+説明を記載する
+</font>
+
+<br>
+<br>
+
+
+##### Holm法
+Bonferroni法による多重比較ととてもよく似た以下のコマンドにより実行する。
+
+```{r}
+pairwise.t.test(niwatori$Taiju,niwatori$Esa,p.adjust.method="holm") # Holmが小文字で始まることに注意
+
+# 再度、同様の命令を用いてCLDを付けることができる
+holm_summary <- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")),test = adjusted("holm"))
+holm_summary # 結果を確認
+cld(holm_summary) # CLDをつけてConsole出力
+par(mar=c(5.1, 4.1, 6, 2.1)) # グラフ上部のマージンを広げる
+plot(cld(holm_summary)) # CLD付きのグラフを出力
+```
+
+<font color="red">
+（結果の解釈を記載する。Bonferroniとp値を比較してください。）
+</font>
+
+_____
+
+## 課題2
+
+### t検定とANOVAの関係を確認する。
+
+ANOVAは2群の比較でも実行できる。この場合、t検定と結果が異なると困ったことになるので検証する。
+
+この問題に添付のファイル「kadai2_t_vs_ANOVA.csv」のデータは、前回の課題のうち、SW5_35を抜き出したものである。以下の（１）〜（４）についてt値またはF値とp値を示し、（５）に答えなさい。
+
+- （１）この課題データを用い、前回と同じ対応無しt検定（両側、等分散仮定）を行いなさい。
+- （２）おなじ課題データを用い、1元配置分散分析により遺伝子型（genotype）AとBに差があるかを検定しなさい。
+- （３）この課題データを用い、前回と同じ対応無しt検定（両側、Welch）を行いなさい。
+- （４）おなじ課題データを用い、1元配置分散分析（1-way ANOVA）により遺伝子型（genotype）AとBに差があるかを検定しなさい。ただし、「Welchの等分散を仮定しないF検定」を選択すること。
+- （５）（1）と(２）および（３）と（４）は同じp値を与えたはずである。またt値とF値の関係も確認し、2群の比較が1-way ANOVAとの関係を説明しなさい。（ネットで調べた情報で十分である。）
+
+#### データ読み込み
+
+`stringAsFactors`を利用すれば、因子への変換を省略できる。
+
+```{r}
+dataset<- read.csv("kadai2_t_vs_ANOVA.csv",stringsAsFactors=TRUE)
+```
+
+#### (1)等分散の両側検定を行った。
+```{r}
+# t検定の結果をxに格納
+x<-t.test(SW5_35~Genotype, alternative='two.sided', 
+  conf.level=.95, var.equal=TRUE, 
+  data=dataset)
+x # t検定の結果を表示
+x$statistic # t値
+cat("t^2=")
+as.numeric((x$statistic^2)) # t値の2乗を表示。次の(2)で計算するF値と比較する。
+
+```
+帰無仮説は「SW5とSW35に差がある」であり、対立仮説は「差はない」である。p＜0.05より帰無仮説は棄却され、差はあるとみなすことができる。
+
+#### (2)一元配置分散分析（等分散を仮定）を行った。
+```{r}
+anova_result <- aov(SW5_35 ~ Genotype, data=dataset)
+summary(anova_result)
+```
+p<0.05より「SW5とSW35の平均は等しい」という帰無仮説は否定され、0.1%水準で平均に有意差があると考えられる。
+
+#### (3)対応のないt検定（Welch）を行った。
+```{r}
+# t検定の結果をxに格納
+x<-t.test(SW5_35~Genotype, alternative='two.sided', 
+  conf.level=.95, var.equal=FALSE, 
+  data=dataset)
+x # t検定の結果を表示
+x$statistic # t値
+cat("t^2=")
+as.numeric((x$statistic^2)) # t値の2乗を表示。次の(4)で計算するF値と比較する。
+```
+p<0.05よりSW5と35の平均には有意な差があると考えられる。
+
+#### (4)等分散を仮定しないF検定を行った。
+
+Rには分散分析ができる関数が複数ある。oneway.testは等分散を仮定しないWelchのANOVAをデフォルトで実行する。
+
+```{r}
+oneway.test(SW5_35 ~ Genotype, data=dataset) # Welch ANOVA
+```
+p<0.05となり有意差があると考えられる。
+
+#### (5) 
+（1）と（２）および（３）と（４）は同じp値を与えたはずである。これは風前なのか？t値とF値の関係を確認し、2群の比較（独立2群のt検定）と1-way ANOVAとの関係を説明しなさい。（ネット等で調べた情報で十分である。）
+<font color="red">
+（答え）
+</font>

@@ -1,0 +1,181 @@
+---
+title: "1標本t検定・対応のあるt検定"
+author: "あなたの名前"
+date: "2025-11-xx"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 課題（対応のあるt検定）
+以下の表は、76系統からなるイネの遺伝解析分離集団において、出穂後のイネの茎葉部（穂以外の地上部, shoot weight, SW）の乾物重を測定したものである。
+
+SW5=出穂後5日の茎葉重 (g/個体)
+
+SW35=出穂後35日の茎葉重 (g/個体)
+
+を示す。出穂後時間が経つと、穂に栄養を送って「枯れ上がる」系統と、「枯れ上がりにくい」系統が存在する。
+
+課題１：Genotype=Aの系統群（Table 1, 24系統）において、SW35とSW5に差があるかどうかを検定しなさい。
+
+課題２：Genotyoe=Bの系統群（Table 2, 52系統）において、SW35とSW5に差があるかどうかを検定しなさい。
+
+課題３：Genotyoe=Bの系統群（Table 2, 52系統）において、SW35の平均がSW5よりも小さいかどうかを検定しなさい。
+
+
+## 課題1
+課題１：Genotype=Aの系統群（Table 1, 24系統）において、SW35とSW5に差があるかどうかを検定しなさい。
+
+#### データを読み込む
+課題ファイルをもとにデータファイルを作成して保存しておく。ファイル名は"table1.xlsx"とする。以下の操作を行う。
+
+- データファイルを左クリックして「Import Dataset...」を選びImportする。
+
+<font color="Red">
+ここまででエラーが出る人はすぐに挙手！
+</font>
+
+RstudioのConsoleパネルに上記の操作に対応するコードが残る。以下の感じになる。
+
+```
+library(readxl)
+table1 <- read_excel("table1.xlsx")
+View(table1)
+```
+
+```{r}
+library(readxl) # .xlsxファイルを読み込むライブラリ
+# table1.xlsxをデータフレームtable1に格納
+table1 <- read_excel("table1.xlsx")
+```
+
+
+#### グラフを描いてみる
+```{r}
+#### グラフを描いてみる
+# boxplotを描いてみる
+boxplot(table1)
+# boxplotの上にドットプロットを重ねて描く
+stripchart(table1, 
+  vertical=TRUE, # 縦に
+  method="jitter", # 近い点はランダムにずらす
+  add=TRUE) # 前のグラフに追加（上書き）
+```
+
+対応する点を結んだドットプロットも描いてみる。
+```{r}
+# ドットプロットを描いて
+stripchart(table1,vertical=TRUE) 
+# 線分を描く
+for(i in 1:length(table1$SW5)){
+lines(c(1,2),c(table1$SW5[i],table1$SW35[i]))
+}
+```
+
+<font color="Red">
+%%%%%グラフから受ける印象はどうか？%%%%%%
+</font>
+
+<br>
+<br>
+
+#### 対応のあるt検定、両側検定
+```{r}
+# 対応のあるt検定
+t.test(table1$SW5, table1$SW35, alternative='two.sided', conf.level=.95, paired=TRUE)
+```
+
+#### 課題1の結果の解釈
+<font color="Red">
+%%%%%レポートではここを検定の解釈に書き換えて下さい%%%%%%
+</font>
+
+<br>
+<br>
+
+## 課題2
+課題２：Genotyoe=Bの系統群（表2, 52系統）において、SW35とSW5に差があるかどうかを検定しなさい。
+
+#### データを読み込む
+表2からデータファイルtable2.xlsxを作成した。以下によりデータフレーム`table2`に読み込む。
+
+
+```{r}
+library(readxl) # .xlsxファイルを読み込むライブラリ
+# データフレームtable2にExcelファイル"table2.xlsx"を読み込む
+table2 <- read_excel("table2.xlsx")
+table2 # うまく読み込まれたか確認する
+```
+
+
+#### グラフを描いてみる
+箱ひげ図にドットプロットを重ねる。
+```{r}
+#### グラフを描いている
+# boxplotを描いてみる
+boxplot(table2)
+# boxplotの上にドットプロットを重ねて描く
+stripchart(table2, 
+  vertical=TRUE, # 縦に
+  method="jitter", # 近い点はランダムにずらす
+  add=TRUE) # 前のグラフに追加（上書き）
+```
+
+ヒストグラムも描いてみる。
+```{r}
+split.screen(figs=c(2,1))
+screen(1);hist(table2$SW5,xlim=c(0,100),breaks=c(seq(0,100,by=10)))
+screen(2);hist(table2$SW35,xlim=c(0,100),breaks=c(seq(0,100,by=10)))
+```
+
+別のヒストグラムの描き方（半透明カラーを使用）
+```{r}
+hist(table2$SW5,xlim=c(0,100),breaks=c(seq(0,100,by=10)),col=rgb(1,0.5,0,alpha=0.5))
+hist(table2$SW35,xlim=c(0,100),breaks=c(seq(0,100,by=10)),col=rgb(0,0,1,alpha=0.5),add=T)
+```
+
+対応する点を結んだドットプロットも描いてみる。
+```{r}
+# ドットプロットを用意して
+stripchart(table2,vertical=TRUE) 
+# 線分を描く
+for(i in 1:length(table2$SW5)){
+lines(c(1,2),c(table2$SW5[i],table2$SW35[i]))
+}
+```
+
+<font color="Red">
+%%%%%グラフから受ける印象はどうか？%%%%%%
+</font>
+
+
+
+#### 対応のあるt検定、両側検定
+```{r}
+# レポートではt検定のコードをここに書いてください
+```
+
+#### 課題2の結果の解釈
+<font color="Red">
+%%%%%レポートではここを検定の解釈に書き換えて下さい%%%%%%
+</font>
+
+## 課題3
+課題３：Genotyoe=Bの系統群（表2, 52系統）において、SW35の平均がSW5よりも小さいかどうかを検定しなさい。
+
+#### データ
+課題2のデータフレーム`table2`をそのまま使う。
+
+#### 対応のあるt検定、片側検定
+```{r}
+# レポートではt検定のコードをここに書いてください
+# 対立仮説 SW5>SW35
+```
+
+#### 課題3の結果の解釈
+<font color="Red">
+%%%%%レポートではここを検定の解釈に書き換えて下さい%%%%%%
+</font>
+

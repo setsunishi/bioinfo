@@ -1,0 +1,366 @@
+---
+title: "二元配置分散分析 授業での説明用です"
+author: "土井"
+date: "12/10/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 練習1
+二元配置分散分析、繰り返しあり、交互作用なし
+
+2種の植物に3種類の肥料を与えて一定期間育てた際の苗高（㎝）を測定した。肥料と種の違いが苗高に与える影響を二元配置分散分析で調べたい。
+
+
+### データを読み込む
+
+csvから読み込む。文字列は最初から因子として認識してほしいので、`stringsAsFactors=TRUE`をつける。
+
+```{r}
+renshu1 <- read.csv("renshu1.csv",stringsAsFactors=TRUE)
+```
+
+正しく読み込まれたか確認。
+
+```{r}
+summary(renshu1)
+```
+
+グラフを描いてデータを確認する。
+
+まずは肥料の違いを見てみる。
+```{r}
+boxplot(renshu1$Height~ renshu1$Fertilizer)
+stripchart(renshu1$Height~ renshu1$Fertilizer,vertical=TRUE, method="jitter", ylab="Height",add=TRUE)
+```
+
+
+次に種の違いを見てみる。
+```{r}
+boxplot(renshu1$Height~ renshu1$Species)
+stripchart(renshu1$Height~ renshu1$Species,vertical=TRUE, method="jitter", ylab="Height",add=TRUE)
+```
+
+
+### 正規性（正規分布であるか？）と等分散性の検定
+
+正規性のチェックにKolmogorov-Smirnov検定を用いる。
+
+```{r}
+require(nortest)
+tapply(renshu1$Height,renshu1$Fertilizer,lillie.test)
+tapply(renshu1$Height,renshu1$Species,lillie.test)
+```
+
+すべてp>0.05で正規性を満たす。
+
+等分散性はBartlett検定を行う。
+
+```{r}
+bartlett.test(Height ~ Fertilizer, data=renshu1)
+bartlett.test(Height ~ Species, data=renshu1)
+```
+
+すべてp>0.05で等分散を仮定して良い。
+
+### 二元配置分散分析
+すべてのデータに反復があり、対応はないので、繰り返しありの二元配置分散分析を行うことができる。
+
+繰り返しありの二元配置分散分析では主因子の効果だけでなく交互作用の効果の有無も検定できる。
+
+- 肥料（要因B）の主効果
+  - 帰無仮説H0: 種の効果がない　（FA<F(dfA,dfR,α)）
+  - 対立仮説H1: 種の効果がある　（FA≥F(dfA,dfR,α)）
+
+- 植物種（要因A）の主効果
+  - 帰無仮説H0: 肥料の効果がない（FB<F(dfB,dfR,α)）
+  - 対立仮説H1: 肥料の効果がある（FB≥F(dfB,dfR,α)）
+
+- 交互作用
+  - 帰無仮説H0: 植物種と肥料の効果に交互作用がない（FA×B<F(dfA×B,dfR,α)）
+  - 対立仮説H1: 交互作用がある（FA×B ≥ F(dfA×B,dfR,α)）
+
+`aov()`関数を`summary()`で囲んで一気に結果を出力する。
+
+```{r}
+summary(aov(Height~Fertilizer*Species,data=renshu1))
+```
+
+Fertilizerの効果のみ有意になった。多重比較をFertilizerについて行ってみる。
+
+
+### 多重比較
+どの肥料が異なるかを見つけるために多重比較を行う。
+
+多重比較にはTukey-Kramer法を`multcomp`ライブラリーで行う。
+
+```{r}
+library(multcomp)
+result1 <- aov(Height~Fertilizer,data=renshu1) # 分散分析の結果をresult1に格納
+summary(result1) # 結果を表示する
+result2 <- glht(result1, linfct = mcp(Fertilizer = "Tukey")) # Tukey-Kramerの結果をresult2に格納
+summary(result2) # 結果を表示する
+cld(result2) # compact letter displayで多重比較の結果を表示
+```
+
+やはりZだけ違うようだ。Compact letter displayをつけてグラフを描く。
+
+
+```{r}
+plot(cld(result2)) # compact letter displayつきの箱ひげ図を描く
+```
+
+（異なる文字の間では5%水準で有意な差があることを示す。）
+
+
+
+
+## 練習2
+薬品2種類と濃度3種類での成長量(g)の違いを比較したい。
+
+繰り返しありの二元配置分散分析、交互作用も検定する。
+
+### データ読み込み
+
+この例題のデータはタブ区切りテキスト（.tsv）になっている。`read.delim()`で読み込める。`stringsAsFactors=TRUE`で文字のデータを因子として認識させる。
+
+`Nodo`は因子のクラス名が数値のみで因子として認識してくれないので手動で因子に変換しておく。
+
+```{r}
+renshu2 <- read.delim("renshu2.tsv", stringsAsFactors=TRUE)
+renshu2$Nodo <- as.factor(renshu2$Nodo)
+summary(renshu2)
+```
+
+### 正規性、等分散性の検定
+
+さきほどと同様に行う。
+
+```{r}
+require(nortest)
+tapply(renshu2$Growth,renshu2$Yaku,lillie.test)
+tapply(renshu2$Growth,renshu2$Nodo,lillie.test)
+```
+
+すべてp>0.05で正規性を満たす。
+
+等分散性はBartlett検定を行う。
+
+```{r}
+require(nortest)
+bartlett.test(Growth~Yaku, data=renshu2)
+bartlett.test(Growth~Nodo, data=renshu2)
+```
+
+### 二元配置分散分析
+繰り返しありの二元配置分散分析
+
+- Yaku薬剤の主効果
+  - 帰無仮説H0: 薬剤の効果がない　（FA<F(dfA,dfR,α)）
+  - 対立仮説H1: 薬剤の効果がある　（FA≥F(dfA,dfR,α)）
+
+- Nodo濃度（要因A）の主効果
+  - 帰無仮説H0: 濃度の効果がない（FB<F(dfB,dfR,α)）
+  - 対立仮説H1: 濃度の効果がある（FB≥F(dfB,dfR,α)）
+
+- 交互作用
+  - 帰無仮説H0: 薬剤と濃度の効果に交互作用がない（FA×B<F(dfA×B,dfR,α)）
+  - 対立仮説H1: 交互作用がある（FA×B ≥ F(dfA×B,dfR,α)）
+
+```{r}
+summary(aov(Growth ~ Yaku*Nodo,data=renshu2))
+```
+
+薬剤、濃度ともにGrowthに影響を与える（p<0.001およびp=0）
+
+薬剤と濃度の間には交互作用がある（p=0.0156）
+
+となった。
+
+交互作用がある場合、主因子の比較につづき、交互作用について述べることができる。たとえば
+
+- 薬品VCのほうが効果への濃度の影響が大きい
+
+というような主張をすることができる。
+
+
+
+### 多重比較
+交互作用があるので、主因子の比較には意味がない（注意深く行う必要がある）。各試験区をばらばらにして比較する。**一元配置分散分析のときと全く同じように多重比較**することになる。
+
+`Yaku`と`Nodo`をつなげて`YakuNodo`という列を追加する。これで6つの試験区の間で比較することになる。
+
+```{r}
+renshu2$YakuNodo <- with(renshu2, paste(Yaku,Nodo,sep=""))
+summary(renshu2)
+```
+
+`YakuNodo`がcharacterとして認識されているようだ。因子に変換する。
+
+```{r}
+renshu2$YakuNodo <- as.factor(renshu2$YakuNodo)
+summary(renshu2)
+```
+
+変換された。
+
+次は**一元配置分散分析のときと全く同じように多重比較**を行う。
+
+まずは正規性・等分散性の検定
+```{r}
+require(nortest)
+tapply(renshu2$Growth,renshu2$YakuNodo,lillie.test)
+bartlett.test(Growth ~ YakuNodo, data=renshu2)
+```
+
+どちらもクリアできたので次に進む。
+
+### Tukey-Kramer法による多重比較
+
+おきまりのコード。
+```{r}
+library(multcomp)
+result1 <- aov(Growth~YakuNodo,data=renshu2) # 分散分析の結果をresult1に格納
+summary(result1) # 結果を表示する
+result2 <- glht(result1, linfct = mcp(YakuNodo = "Tukey")) # Tukey-Kramerの結果をresult2に格納
+summary(result2) # 結果を表示する
+cld(result2) # compact letter displayで多重比較の結果を表示
+plot(cld(result2)) # compact letter displayつきの箱ひげ図を描く
+```
+
+VC0.5の"a"が消えているので上のマージンを広げる。
+
+```{r}
+par()$mar # 上が切れるのでマージンを確認（私の場合は5.1 4.1 4.1 2.1）
+par(mar=c(5.1, 4.1, 6, 2.1)) # 上のマージンを広げる
+plot(cld(result2)) # compact letter displayつきの箱ひげ図を描く
+```
+
+VC0.5の"a"が表示された。
+
+
+
+
+
+## 練習3
+二元配置分散分析、繰り返しなし（交互作用は検定できない）
+
+### データ読み込み
+このデータは最初から因子として認識されやすいよう、数値だけの因子には頭文字をつけた。`stringsAsFactors=TRUE`をわすれないように。
+
+```{r}
+renshu3 <- read.delim("renshu3.tsv", stringsAsFactors=TRUE)
+summary(renshu3)
+```
+
+### 正規性、等分散性の検定
+
+正規性の検定 Shapiro-Wilkを用いてみる
+
+```{r}
+tapply(renshu3$Kyodo,renshu3$Temp,shapiro.test)
+tapply(renshu3$Kyodo,renshu3$Shoku,shapiro.test)
+```
+
+等分散性はBartlett検定を行う。
+
+```{r}
+bartlett.test(Kyodo~Temp, data=renshu3)
+bartlett.test(Kyodo~Shoku, data=renshu3)
+```
+
+### 二元配置分散分析
+繰り返しなしの二元配置分散分析
+
+- 仮説1：要因Aの主効果
+  - 帰無仮説H0: 要因Aの効果がない（FA<F(dfA,dfE,α)）
+  - 対立仮説H1: 要因Aの効果がある（FA≥F(dfA,dfE,α)）
+- 仮説2 ：要因Bの主効果
+  - 帰無仮説H0: 要因Bの効果がない（FB<F(dfB,dfE,α)）
+  - 対立仮説H1: 要因Bの効果がある（FB≥F(dfB,dfE,α)）
+  
+以下のコードで行った。Temp**+**Shokuなのに注意。
+
+
+```{r}
+summary(aov(Kyodo~Temp+Shoku,data=renshu3))
+```
+
+Temp（温度）の"."はｐが0.05と0.1の間であることを示す。判断を保留する場合が多い。Shoku（触媒）が有意になったので多重比較を行う。
+
+### 多重比較（Tukey-Kramer）
+
+触媒の量だけでなく、温度もモデルに考慮して、触媒量に関してモデル化して比較する。
+
+```{r}
+library(multcomp)
+result1 <- aov(Kyodo~Shoku+Temp,data=renshu3) # 分散分析の結果をresult1に格納
+summary(result1) # 結果を表示する
+result2 <- glht(result1, linfct = mcp(Shoku = "Tukey")) # Tukey-Kramerの結果をresult2に格納
+summary(result2) # 結果を表示する
+cld(result2) # compact letter displayで多重比較の結果を表示
+par()$mar # 上が切れるのでマージンを確認（私の場合は5.1 4.1 4.1 2.1）
+par(mar=c(5.1, 4.1, 6, 2.1)) # 上のマージンを広げる
+plot(cld(result2)) # compact letter displayつきの箱ひげ図を描く
+```
+
+触媒0.5と1.0の間に差があり、触媒1.5はどちらとも差がないと言える。
+
+ちなみに、温度Tempの影響を考慮しない場合はANOVA（一元配置）もTukeyHSDも有意にならない。
+```{r}
+summary(aov(Kyodo~Shoku,data=renshu3)) # Shokuのみ考慮
+TukeyHSD(aov(Kyodo~Shoku,data=renshu3)) # Shokuのみ考慮
+```
+
+念のためBoferroniをやってみる。
+
+```{r}
+pairwise.t.test(renshu3$Kyodo, renshu3$Temp, p.adjust.method="bonferroni")
+```
+
+有意なものは出てこない。
+
+
+## 練習4
+薬剤の投与前、投与1週後、2週後の血圧（mmHg）について比較する。
+
+これは反復測定一元配置分散分析、**対応あり**、繰り返しなし（交互作用は検定できない）。
+
+この検定は、同じ人が米の食味調査で採点するような場合が同じケースになる。
+
+### データ読み込み
+`stringsAsFactors=TRUE`をわすれないように。
+
+```{r}
+renshu4 <- read.delim("renshu4.tsv", stringsAsFactors=TRUE)
+summary(renshu4)
+```
+
+### （正規性、等分散性の検定はここではスキップします。）
+
+### 分散分析（繰り返し無しの二元配置分散分析と同じ）
+
+`mmHG ~ Time + ID`であることに注意。
+
+```{r}
+summary(aov(mmHg ~ Time + ID, data= renshu4))
+```
+
+時間経過の群間の差（有意になった）のでその詳細を知りたい。（被験者の違いも有意だがこのケースでは興味は無い。）
+
+Bonferroni法による多重比較の例。Tukey -Kramerは一発でする方法がわかりませんでした（地道にやればできる）
+
+`paired=TRUE`が必要。
+
+```{r}
+pairwise.t.test(renshu4$mmHg, renshu4$Time, paired=T, p.adj="bonf")
+```
+
+
+Maeだけが異なる、つまり1週間後、2週間後には薬が効いているとみなして良い。
+
+
+

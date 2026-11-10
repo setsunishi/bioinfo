@@ -1,0 +1,108 @@
+---
+title: "独立2群の検定 これは課題ではなく説明むけ資料です"
+author: "あなたの名前"
+date: "2025-11-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### データ読み込み
+
+データファイルを読み込む。<br>
+文字型（characterは因子（factor）として読み込む）
+```{r}
+library(readr)
+kinoko <- read.csv("kinoko.csv",stringsAsFactors=TRUE)
+```
+
+### データフレーム内のデータを検索して抜き出す方法
+
+あまり使わないが参考まで。
+
+```{r}
+# スタック形式のデータの取り扱い
+# データフレームのサブセットを作るパターン
+# もとのデータフレームkinokoと同じ形式のデータフレームkinoko_ueとkinoko_shitaができる
+kinoko_ue<-kinoko[kinoko$Shamen=="Ue",] # 最後のカンマ","が必要
+kinoko_ue
+kinoko_shita<-kinoko[kinoko$Shamen=="Shita",]
+kinoko_shita
+```
+
+
+### データの分布を確認
+ヒストグラムで「層別のプロット」を描く
+
+```{r}
+#### グラフを描いている
+# boxplotを描いてみる
+boxplot(kinoko$Length~kinoko$Shamen)
+# boxplotの上にドットプロットを重ねて描く
+stripchart(kinoko$Length~kinoko$Shamen,
+vertical=TRUE, # 縦に
+method="jitter", # 近い点はランダムにずらす
+add=TRUE) # 前のグラフに追加（上書き）
+```
+
+<font color="Red">
+%%%%%グラフから受ける印象はどうか？%%%%%%<br>
+そこそこばらつくが差はありそう？
+</font>
+
+
+### 等分散性の検定
+
+UeとShitaが等分散かどうかを検定する。
+```{r}
+# 等分散性の検定
+var.test(kinoko$Length~kinoko$Shamen)
+```
+
+
+<font color="Red">
+P>0.05でぎりぎり有意ではない<br>
+（等分散とみなして次に進む）<br>
+</font>
+
+### 等分散性を仮定したt検定（Studentのt検定）
+
+等分散性を仮定して独立2群の平均の差を検定するStudentのt検定を行う。
+```{r}
+# 等分散を仮定した独立2群のt検定
+t.test(kinoko$Length~kinoko$Shamen,
+alternative="two.sided", # 両側検定
+# paired=FALSE, # 対応なし（独立2群）
+# pairedオプションは2群の比較を行う場合に明示的に対応の有無を指定するものだが、
+# スタック形式のデータでチルダ（~）演算子を使う場合はpairedオプションはエラーになる
+var.equal=TRUE, # 等分散を仮定する
+conf.level=0.95) # 有意水準5%
+```
+
+<font color="Red">
+p<0.01なので、UeとShitaのキノコの長さには有意な差がある。<br>
+</font>
+
+参考：pairedオプションについて<br>
+もし本当に対応のあるデータ（例：同じ被験者の前後のデータ）を扱いたい場合は、数式メソッド（チルダ演算子）ではなく、データフレームの列を直接指定する方法で実行する必要があります。
+
+
+### 等分散性を仮定しないt検定（Welchのt検定）
+
+等分散性を考慮しないで独立2群の平均の差を検定するWelchのt検定を行う。
+```{r}
+# Welchの等分散を仮定しない独立2群のt検定
+t.test(kinoko$Length~kinoko$Shamen,
+alternative="two.sided", # 両側検定
+# paired=FALSE, # 対応なし（独立2群）
+var.equal=FALSE, # 等分散を仮定しない
+conf.level=0.95) # 有意水準5%
+```
+
+
+<font color="Red">
+p<0.01なのでUeとShitaのキノコの長さには有意な差がある。等分散の場合、等分散のt検定とWelchのt検定のp値はほぼ同じになる。<br>
+</font>

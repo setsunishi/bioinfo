@@ -1,0 +1,198 @@
+---
+title: "独立2標本t検定（対応無しのt検定）"
+author: "あなたの名前"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 課題（対応無しのt検定 / 独立2標本t検定）
+
+以下のデータは、76系統からなるイネの遺伝解析分離集団において、出穂後のイネの茎葉部（穂以外の地上部, shoot weight, SW）の乾物重を測定したものである。
+
+- **Genotype A群**（24系統, table1.xlsx）: ジャポニカ型アレルをもつ系統群
+- **Genotype B群**（52系統, table2.xlsx）: インディカ型アレルをもつ系統群
+- **SW5**: 出穂後5日の茎葉重 (g/個体)
+- **SW35**: 出穂後35日の茎葉重 (g/個体)
+- **Decrease**: 出穂後の茎葉重の減少量（$SW5 - SW35$, 枯れ上がり度合い）
+
+今回は、系統が互いに独立している（個体が別々で、サンプルサイズも24と52で異なる）2つのグループの間で平均値を比較する**「対応無しのt検定（Welchのt検定）」**を行います。
+
+---
+
+### 【本日の課題一覧】
+
+- **課題１**：Genotype A（24系統）と Genotype B（52系統）の間で、出穂後35日の茎葉重（`SW35`）に差があるかどうかを検定しなさい（両側検定）。
+- **課題２**：Genotype A と Genotype B の間で、茎葉重の減少量（`Decrease = SW5 - SW35`）に差があるかどうかを検定しなさい（両側検定）。
+- **課題３**：茎葉重の減少量において、Genotype B群の平均が Genotype A群よりも大きいかどうかを検定しなさい（片側検定）。
+
+---
+
+## データの読み込みと準備
+
+2つのExcelファイル（`table1.xlsx`, `table2.xlsx`）を読み込み、それぞれの群に遺伝子型ラベルを付与して結合します。
+
+```{r}
+library(readxl)
+
+# Genotype A (24系統) の読み込み
+table1 <- read_excel("table1.xlsx")
+table1$Genotype <- "A"
+table1$Decrease <- table1$SW5 - table1$SW35
+
+# Genotype B (52系統) の読み込み
+table2 <- read_excel("table2.xlsx")
+table2$Genotype <- "B"
+table2$Decrease <- table2$SW5 - table2$SW35
+
+# 結合したデータフレームを作成
+rice_data <- rbind(table1, table2)
+rice_data$Genotype <- as.factor(rice_data$Genotype)
+
+# データの先頭を確認
+head(rice_data)
+# 要約統計量の確認
+summary(rice_data)
+```
+
+---
+
+## 課題1：出穂後35日の茎葉重 (SW35) の比較
+
+### 1. グラフを描いてみる（箱ひげ図＋ドットプロット）
+
+```{r}
+# 箱ひげ図の描画
+boxplot(SW35 ~ Genotype, data = rice_data,
+        col = c("#bbf7d0", "#bfdbfe"),
+        xlab = "Genotype", ylab = "Shoot Weight at 35 DAH (g)",
+        main = "SW35: Genotype A vs Genotype B")
+
+# ドットプロット（ジッター）を重ねる
+stripchart(SW35 ~ Genotype, data = rice_data,
+           vertical = TRUE, method = "jitter",
+           pch = 16, col = "#334155", add = TRUE)
+```
+
+**【グラフから受ける印象】**
+- Genotype A（中央値 約42.1g, 平均 約45.2g）と Genotype B（中央値 約39.6g, 平均 約41.3g）の分布を比較すると、ややAの方が高い傾向に見えるものの、分布の重なりが非常に大きく、明らかな差があるとは断定しにくい印象を受ける。
+
+### 2. 対応無しのt検定（Welchのt検定、両側検定）
+
+```{r}
+# Welchのt検定（Rでは var.equal = FALSE がデフォルト）
+t.test(SW35 ~ Genotype, data = rice_data, alternative = "two.sided", conf.level = 0.95)
+```
+
+### 3. 課題1の結果の解釈
+
+- **仮説の設定**
+  - **帰無仮説 ($H_0$)**: Genotype A と Genotype B のSW35の母平均に差はない（$\mu_A = \mu_B$）
+  - **対立仮説 ($H_1$)**: Genotype A と Genotype B のSW35の母平均に差がある（$\mu_A \neq \mu_B$）
+  - **有意水準**: $\alpha = 0.05$ (5%)、両側検定
+
+- **検定結果**
+  - 検定統計量: $t = 1.1491$
+  - 自由度: $df = 37.263$
+  - $p$値: $p = 0.2579$
+  - 95%信頼区間: $[-3.017, 10.924]$（0を含む）
+  - 標本平均: Genotype A = 45.24 g, Genotype B = 41.29 g
+
+- **結論と解釈**
+  - $p$値は $0.2579$ であり、有意水準 $0.05$ よりも大きい（$p > 0.05$）。
+  - したがって、帰無仮説は棄却されない。
+  - **結論**: Genotype A と Genotype B の間で、出穂後35日の茎葉重に統計学的に有意な差があるとはいえない。
+
+---
+
+## 課題2：茎葉重減少量 (Decrease = SW5 - SW35) の比較
+
+出穂から登熟期にかけての茎葉重の「減少量（枯れ上がり度合い）」を比較します。
+
+### 1. グラフを描いてみる
+
+```{r}
+# 箱ひげ図
+boxplot(Decrease ~ Genotype, data = rice_data,
+        col = c("#bbf7d0", "#bfdbfe"),
+        xlab = "Genotype", ylab = "Decrease in SW (g)",
+        main = "SW Decrease: Genotype A vs Genotype B")
+
+# ドットプロット
+stripchart(Decrease ~ Genotype, data = rice_data,
+           vertical = TRUE, method = "jitter",
+           pch = 16, col = "#334155", add = TRUE)
+```
+
+**【グラフから受ける印象】**
+- Genotype A の減少量は 0 付近に集中している（平均 約2.21g）のに対し、Genotype B の減少量は明らかに全体が高くシフトしている（平均 約11.84g）。両群の間で分布に明確な差があり、Genotype Bの方が明らかに減少量が大きい印象を受ける。
+
+### 2. 対応無しのt検定（Welchのt検定、両側検定）
+
+```{r}
+# Welchのt検定
+t.test(Decrease ~ Genotype, data = rice_data, alternative = "two.sided", conf.level = 0.95)
+```
+
+### 3. 課題2の結果の解釈
+
+- **仮説の設定**
+  - **帰無仮説 ($H_0$)**: Genotype A と Genotype B の茎葉重減少量の母平均に差はない（$\mu_A = \mu_B$）
+  - **対立仮説 ($H_1$)**: Genotype A と Genotype B の茎葉重減少量の母平均に差がある（$\mu_A \neq \mu_B$）
+  - **有意水準**: $\alpha = 0.05$ (5%)、両側検定
+
+- **検定結果**
+  - 検定統計量: $t = -4.9457$
+  - 自由度: $df = 49.342$
+  - $p$値: $p = 9.193 \times 10^{-6}$ ($p < 0.001$)
+  - 95%信頼区間: $[-13.540, -5.717]$（0を含まない）
+  - 標本平均: Genotype A = 2.21 g, Genotype B = 11.84 g
+
+- **結論と解釈**
+  - $p$値は $9.193 \times 10^{-6}$ であり、有意水準 $0.05$（さらには $0.001$）よりも極めて小さい（$p < 0.001$）。
+  - したがって、帰無仮説は棄却され、対立仮説が採択される。
+  - **結論**: Genotype A と Genotype B の間で、茎葉重の減少量に統計学的に極めて有意な差が認められる。
+
+---
+
+## 課題3：茎葉重減少量の片側検定
+
+Genotype B の減少量が Genotype A よりも大きいかどうかを片側検定で検証します。
+
+```{r}
+# 片側検定（Genotype A の平均 < Genotype B の平均、すなわち A - B < 0 なので alternative = "less"）
+t.test(Decrease ~ Genotype, data = rice_data, alternative = "less", conf.level = 0.95)
+```
+
+### 課題3の結果の解釈
+
+- **仮説の設定**
+  - **帰無仮説 ($H_0$)**: Genotype A の減少量は Genotype B 以上である（$\mu_A \ge \mu_B$）
+  - **対立仮説 ($H_1$)**: Genotype B の減少量は Genotype A よりも大きい（$\mu_A < \mu_B$）
+  - **有意水準**: $\alpha = 0.05$ (5%)、片側検定
+
+- **検定結果**
+  - 検定統計量: $t = -4.9457$
+  - 自由度: $df = 49.342$
+  - $p$値: $p = 4.597 \times 10^{-6}$ ($p < 0.001$)
+  - 95%片側信頼区間: $[-\infty, -6.368]$
+
+- **結論と解釈**
+  - $p$値は有意水準 $0.05$ を大幅に下回るため、帰無仮説は棄却される。
+  - **結論**: Genotype B の茎葉重減少量は、Genotype A よりも統計学的に有意に大きい（平均して約9.63 g 大きい）。
+
+---
+
+## 全体の考察（対応のあるt検定と対応無しのt検定の統合理解）
+
+1. **対応ありと対応無しの使い分け**:
+   - 前回の演習では、同一系統内における出穂後5日（SW5）と35日（SW35）の前後比較を「対応のあるt検定」で解析した。
+   - 今回は、別個体・別系統からなる「Genotype A群（24系統）」と「Genotype B群（52系統）」という独立した2群の差を「対応無しのt検定」で解析した。
+
+2. **生物学的意義**:
+   - SW35単独の比較では、系統間の個体差（ばらつき）が大きいため有意差は検出されなかった（$p = 0.2579$）。
+   - しかし、各系統の出穂時の茎葉重を基準とした減少量（`SW5 - SW35`）を評価すると、両群間に極めて顕著な有意差が認められた（$p = 9.193 \times 10^{-6}$）。
+   - これは、Genotype A（ジャポニカ型アレル）は出穂後も茎葉部が枯れ上がりにくい「ステイグリーン（stay-green）」特性をもち、Genotype B（インディカ型アレル）は穂への栄養再転流や葉の老化が急速に進んで「枯れ上がる」表現型を決定づける遺伝的要因（QTL）であることを強力に裏付けている。

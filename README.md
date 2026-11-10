@@ -10,17 +10,24 @@
 bioinfo/
 ├── index.html                        # 演習シリーズ全体ポータル表紙
 ├── README.md                         # 本ドキュメント（Remote Agent 引き継ぎ仕様含む）
-└── paired_t_test/                    # 【第7回】検定①：1標本t検定 & 対応のあるt検定
-    ├── index.html                    # 第7回 学生向けポータル（表紙）
-    ├── slieds.html / slides.html     # Web講義スライド（全33枚、KaTeX・コピーボタン付）
-    ├── slides.md                     # スライド原稿 Markdown
-    ├── kadai7_interactive.html       # 学生用インタラクティブ課題ワークブック（提出用HTML出力機能付）
-    ├── grader_dashboard.html         # 【教員用・非公開リンク】ドラッグ＆ドロップ一括採点ダッシュボード
-    ├── grade_submissions.R           # 【教員用・非公開リンク】Rによる提出HTML一括採点スクリプト
-    └── kadai/                        # 演習用データセット
-        ├── table1.xlsx               # Genotype A（24系統：出穂後5日 SW5 / 35日 SW35 茎葉重）
-        ├── table2.xlsx               # Genotype B（52系統：出穂後5日 SW5 / 35日 SW35 茎葉重）
-        └── 検定1_課題ファイル.xlsx    # 元データブック
+├── paired_t_test/                    # 【第7回】検定①：1標本t検定 & 対応のあるt検定（完成版）
+│   ├── index.html                    # 第7回 学生向けポータル（表紙）
+│   ├── slieds.html / slides.html     # Web講義スライド（全33枚、KaTeX・コピーボタン付）
+│   ├── slides.md                     # スライド原稿 Markdown
+│   ├── 生物情報処理演習_検定1_改善版スライド.pptx # PowerPoint版スライド
+│   ├── ひな型.Rmd                    # R Markdown 演習ひな型
+│   ├── kadai7_interactive.html       # 学生用インタラクティブ課題ワークブック（提出用HTML出力機能付）
+│   ├── grader_dashboard.html         # 【教員用・非公開リンク】ドラッグ＆ドロップ一括採点ダッシュボード
+│   ├── grade_submissions.R           # 【教員用・非公開リンク】Rによる提出HTML一括採点スクリプト
+│   └── kadai/                        # 演習用データセット
+│       ├── table1.xlsx               # Genotype A（24系統：出穂後5日 SW5 / 35日 SW35 茎葉重）
+│       ├── table2.xlsx               # Genotype B（52系統：出穂後5日 SW5 / 35日 SW35 茎葉重）
+│       └── 検定1_課題ファイル.xlsx    # 元データブック
+├── 2025lecture7/                     # 【過去資料】第7回（対応のあるt検定）元資料一式
+├── 2025lecture8/                     # 【次回作成用】第8回（独立2群のt検定）元資料 & 試作HTML一式
+├── 2025lecture9/                     # 【次回作成用】第9回（1元配置分散分析・多重比較）元資料一式
+├── 2025lecture10/                    # 【次回作成用】第10回（2元配置分散分析・交互作用）元資料一式
+└── 2025lecture11/                    # 【次回作成用】第11回（ノンパラメトリック検定）元資料一式
 ```
 
 > **重要（教員用採点ファイルについて）**  

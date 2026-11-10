@@ -1,0 +1,63 @@
+# 生物情報処理演習（統計学的仮説検定シリーズ）
+
+名古屋大学 農学部・資源生物科学科「生物情報処理演習」の講義スライド・インタラクティブWeb教材・自動採点対応ワークブックのリポジトリです。
+
+## 📁 ディレクトリ構成
+
+本リポジトリ（`bioinfo`）は、講義回（テーマ）ごとのサブフォルダで構成されています。
+
+```text
+bioinfo/
+├── index.html                        # 演習シリーズ全体ポータル表紙
+├── README.md                         # 本ドキュメント（Remote Agent 引き継ぎ仕様含む）
+└── paired_t_test/                    # 【第7回】検定①：1標本t検定 & 対応のあるt検定
+    ├── index.html                    # 第7回 学生向けポータル（表紙）
+    ├── slieds.html / slides.html     # Web講義スライド（全33枚、KaTeX・コピーボタン付）
+    ├── slides.md                     # スライド原稿 Markdown
+    ├── kadai7_interactive.html       # 学生用インタラクティブ課題ワークブック（提出用HTML出力機能付）
+    ├── grader_dashboard.html         # 【教員用・非公開リンク】ドラッグ＆ドロップ一括採点ダッシュボード
+    ├── grade_submissions.R           # 【教員用・非公開リンク】Rによる提出HTML一括採点スクリプト
+    └── kadai/                        # 演習用データセット
+        ├── table1.xlsx               # Genotype A（24系統：出穂後5日 SW5 / 35日 SW35 茎葉重）
+        ├── table2.xlsx               # Genotype B（52系統：出穂後5日 SW5 / 35日 SW35 茎葉重）
+        └── 検定1_課題ファイル.xlsx    # 元データブック
+```
+
+> **重要（教員用採点ファイルについて）**  
+> `grader_dashboard.html` および `grade_submissions.R` は管理・継続開発のため同じフォルダ（`paired_t_test/`）内に配置していますが、**学生向けの表紙（`index.html`）からは一切リンクしていません**。
+
+---
+
+## 🗺️ カリキュラム全体構成（全5回シリーズ）
+
+1. **第7回（`paired_t_test/`）**：1標本t検定・対応のあるt検定（同一株の前後比較、個体差ノイズ相殺）
+2. **第8回（`unpaired_t_test/` 予定）**：対応のない2標本t検定（独立2群比較、Student vs Welch）
+3. **第9回（`one_way_anova/` 予定）**：1元配置分散分析（One-way ANOVA）と多重比較（Tukey / Dunnett）
+4. **第10回（`two_way_anova/` 予定）**：2元配置分散分析（Two-way ANOVA）と交互作用
+5. **第11回（`non_parametric/` 予定）**：ノンパラメトリック検定（Wilcoxon / Mann-Whitney / Kruskal-Wallis）
+
+---
+
+## 🤖 Remote Agent 引き継ぎ・開発ガイドライン
+
+Remote Agent で本リポジトリの作業を継続する際は、以下の設計方針・仕様に従ってください。
+
+### 1. 教育的デザインの柱（第7回 `paired_t_test` の実装仕様）
+- **数理ステップの丁寧な接続**：母標準偏差 $\sigma$ 既知の $Z$ 値 $\rightarrow$ 標本標準偏差 $s$ で代用する $t$ 統計量 $\rightarrow$ 自由度 $df = n-1$ の $t$ 分布 $\rightarrow$ 裾野の面積としての $p$ 値。
+- **2大「Wow!（納得・発見）」体験の組み込み**：
+  1. **統計的ノイズキャンセリング（発展4）**：`table2.xlsx` に対して本来の `paired = TRUE`（$t = 10.106, df = 51, p = 8.986 \times 10^{-14}$）と、あえて対応を無視した `paired = FALSE`（Welch検定：$t = 4.487, df = 97.35, p = 1.978 \times 10^{-5}$）を比較させ、個体差を差し引くことで $p$ 値が約10億倍シャープになることを体感させる。
+  2. **逆走個体の探偵ワーク（発展5）**：`table2.xlsx`（52系統）は平均では $-11.84\text{ g}$ 激減するが、個体別の差 `SW35 - SW5` を見ると **系統8（$+6.61\text{ g}$）、系統11（$+7.07\text{ g}$）、系統28（$+3.09\text{ g}$）の3系統だけが増加**していることを発見させ、生物学的・実験的理由を考察させる。
+- **カリキュラム範囲**：QTL解析やGWASは本演習の範囲外のため扱わず、全5回の検定シリーズの基礎として位置づける。
+
+### 2. 第7回データの正解値リファレンス
+- **課題1（`table1.xlsx`, Genotype A, $n = 24$, 両側）**：
+  - $t = 1.4210$, $df = 23$, $p = 0.1688$, 95% CI $[-1.007, 5.426]$, 平均差 $2.209\text{ g}$ $\rightarrow$ 有意差なし（Stay-green性）
+- **課題2（`table2.xlsx`, Genotype B, $n = 52$, 両側）**：
+  - $t = 10.106$, $df = 51$, $p = 8.986 \times 10^{-14}$, 95% CI $[9.486, 14.189]$, 平均差 $11.838\text{ g}$ $\rightarrow$ 1%水準で有意な減少（枯れ上がり）
+- **課題3（`table2.xlsx`, Genotype B, 片側 `alternative = "greater"` on `SW5, SW35`）**：
+  - $t = 10.106$, $df = 51$, $p = 4.493 \times 10^{-14}$（両側検定の半分）
+
+### 3. UI / コードブロック規約
+- すべてのRコードブロックにはワンクリック「📋 コピー」ボタンを付与する。
+- コードブロック（`.code-box`）は上下に余計な空白が入らないよう、`<code>` 内の先頭・末尾の改行を除去し、コンパクトなパディング（`padding: 8px 14px;`）を維持する。
+- 学生用課題ページ（`kadai7_interactive.html`）から出力される提出用HTMLには `<script id="grading-data" type="application/json">` として解答JSONが埋め込まれ、`grader_dashboard.html`（ブラウザ上でのドラッグ＆ドロップ）または `grade_submissions.R` で即座に一括採点・CSV出力ができる仕組みになっている。

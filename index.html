@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 ポータル（統計学的仮説検定シリーズ）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --secondary: #0d9488;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', 'BIZ UDGothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
+      color: white;
+      padding: 64px 20px;
+      text-align: center;
+    }
+    .hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
+    .hero p { font-size: 1.05rem; opacity: 0.92; max-width: 680px; margin: 0 auto; }
+    .container { max-width: 960px; margin: 40px auto; padding: 0 20px; }
+    .card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .card.active { border-left: 5px solid var(--secondary); }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .badge-open { background: #ccfbf1; color: #0f766e; }
+    .badge-soon { background: #f1f5f9; color: #64748b; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-outline { border: 1px solid var(--border); color: var(--text); background: #f8fafc; }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>🌾 生物情報処理演習</h1>
+    <p>名古屋大学 農学部・資源生物科学科 | 統計学的仮説検定シリーズ（第7回〜第11回）</p>
+  </div>
+
+  <div class="container">
+    <div class="card active">
+      <div>
+        <span class="badge badge-open">公開中・第7回</span>
+        <h2 style="font-size: 1.3rem; color: var(--primary); margin-bottom: 4px;">第7回：統計学的仮説検定 ①（1標本t検定・対応のあるt検定）</h2>
+        <p style="font-size: 0.9rem; color: var(--muted);">同一株の前・後比較による個体差ノイズの相殺（統計的ノイズキャンセリング）とR演習</p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="paired_t_test/index.html" class="btn btn-primary">📖 講義ページを開く</a>
+        <a href="paired_t_test/kadai7_interactive.html" class="btn btn-outline">📝 Web課題</a>
+        <a href="paired_t_test/slieds.html" class="btn btn-outline">📊 スライド</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="badge badge-soon">第8回</span>
+        <h2 style="font-size: 1.15rem; color: #334155;">第8回：統計学的仮説検定 ②（独立2標本のt検定：Student vs Welch）</h2>
+        <p style="font-size: 0.88rem; color: var(--muted);">異なる個体群同士の比較と等分散性を仮定しないWelchのt検定</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="badge badge-soon">第9回</span>
+        <h2 style="font-size: 1.15rem; color: #334155;">第9回：1元配置分散分析（One-way ANOVA）と多重比較</h2>
+        <p style="font-size: 0.88rem; color: var(--muted);">3群以上の平均値比較とTukey法・Dunnett法</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="badge badge-soon">第10回</span>
+        <h2 style="font-size: 1.15rem; color: #334155;">第10回：2元配置分散分析（Two-way ANOVA）と交互作用</h2>
+        <p style="font-size: 0.88rem; color: var(--muted);">2つの要因（品種×環境など）の主効果と相乗効果の検証</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="badge badge-soon">第11回</span>
+        <h2 style="font-size: 1.15rem; color: #334155;">第11回：ノンパラメトリック検定</h2>
+        <p style="font-size: 0.88rem; color: var(--muted);">正規性が仮定できないデータの順位和検定（Wilcoxon / Mann-Whitney / Kruskal-Wallis）</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    生物情報処理演習 | 名古屋大学 農学部・資源生物科学科
+  </footer>
+</body>
+</html>

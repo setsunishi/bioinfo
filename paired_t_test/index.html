@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第7回：統計学的仮説検定 ①（1標本t検定・対応のあるt検定）</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- KaTeX CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]})"></script>
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --secondary: #0d9488;
+      --secondary-light: #14b8a6;
+      --accent: #d97706;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --code-bg: #0f172a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', 'BIZ UDGothic', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* Top Navigation */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .nav-brand {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+    .badge-lecture {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 20% 150%, rgba(20, 184, 166, 0.25) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 2.3rem;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      opacity: 0.92;
+      max-width: 720px;
+      margin: 0 auto 30px auto;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #ffffff;
+      color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .btn-primary:hover {
+      background: #f8fafc;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(6px);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Section Styles */
+    section { margin-bottom: 50px; }
+    .section-header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Grid & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+    }
+    .card-accent {
+      border-top: 4px solid var(--secondary);
+    }
+    .card-wow {
+      border-top: 4px solid var(--accent);
+      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100px);
+    }
+
+    /* Roadmap Timeline */
+    .roadmap {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .roadmap-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .roadmap-item {
+      padding: 14px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .roadmap-item.active {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .roadmap-num {
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    /* Code Box with Copy Button */
+    .code-box {
+      background: var(--code-bg);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      position: relative;
+      margin: 8px 0 14px 0;
+      overflow-x: auto;
+      border: 1px solid #334155;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      z-index: 5;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    /* Callout */
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 0.95rem;
+    }
+    .callout-wow {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+
+    /* Download List */
+    .download-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .download-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 14px 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .download-item:hover {
+      border-color: var(--primary-light);
+      background: #f8fafc;
+      transform: translateY(-1px);
+    }
+    .download-icon {
+      font-size: 1.4rem;
+      color: var(--primary-light);
+    }
+
+    /* Workflow Steps */
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 0.82rem;
+      font-weight: 800;
+      margin-right: 8px;
+    }
+
+    /* Footer */
+    footer {
+      background: #0f172a;
+      color: #94a3b8;
+      padding: 40px 20px;
+      text-align: center;
+      font-size: 0.88rem;
+    }
+    footer a { color: #cbd5e1; text-decoration: none; }
+    footer a:hover { color: white; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav>
+    <a href="index.html" class="nav-brand">
+      <span>🌾</span> 生物情報処理演習
+    </a>
+    <div class="nav-links">
+      <span class="badge-lecture">第7回：対応のあるt検定</span>
+      <a href="#workflow">演習の進め方</a>
+      <a href="#wow">2大発見（Wow）</a>
+      <a href="#theory">理論解説</a>
+      <a href="#cheatsheet">Rコード</a>
+      <a href="#downloads">資料・データDL</a>
+      <a href="kadai7_interactive.html" style="color: var(--secondary); font-weight: 700;">📝 Web課題を開く</a>
+    </div>
+  </nav>
+
+  <!-- Hero Header -->
+  <div class="hero">
+    <div class="hero-container">
+      <div class="hero-badge">2026年度 | 名古屋大学 農学部・資源生物科学科</div>
+      <h1>生物情報処理演習 第7回<br>統計学的仮説検定 ①</h1>
+      <p>母集団の差を見極める：1標本t検定と対応のあるt検定<br>イネの出穂後茎葉重データ（枯れ上がり / Stay-green）を題材に、統計的ノイズキャンセリングの威力を体感しよう！</p>
+      <div class="hero-buttons">
+        <a href="kadai7_interactive.html" class="btn btn-primary">
+          📝 インタラクティブWeb課題を開く
+        </a>
+        <a href="slieds.html" class="btn btn-secondary" target="_blank">
+          📊 講義スライドを開く (全33枚)
+        </a>
+        <a href="#downloads" class="btn btn-secondary">
+          📥 演習データをダウンロード
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- 5-Lecture Roadmap -->
+    <section>
+      <div class="roadmap">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--primary);">🗺️ 仮説検定ロードマップ（全5回シリーズ）</h2>
+          <span style="font-size: 0.85rem; color: var(--text-muted);">本演習で生物実験の統計検定を体系的にマスター</span>
+        </div>
+        <div class="roadmap-list">
+          <div class="roadmap-item active">
+            <div class="roadmap-num">👉 第7回（本日）</div>
+            <strong>1標本 & 対応のあるt検定</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.82rem;">同一株の前・後比較。引き算でノイズ相殺！</span>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-num">第8回（次回）</div>
+            <strong>独立2群の検定</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.82rem;">異なる株同士（野生型 vs 変異体）。Welch検定</span>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-num">第9回</div>
+            <strong>1元配置分散分析</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.82rem;">3群以上の比較。多重比較（Tukey）</span>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-num">第10回</div>
+            <strong>2元配置分散分析</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.82rem;">2要因（品種×施肥）と「交互作用」</span>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-num">第11回</div>
+            <strong>ノンパラメトリック検定</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.82rem;">正規性が仮定できない場合の検定</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How to Proceed (Workflow) -->
+    <section id="workflow">
+      <div class="section-header">
+        <h2 class="section-title">🚀 本日の演習と課題提出の流れ</h2>
+        <span class="section-subtitle">4ステップで完結</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="font-size: 1.02rem; font-weight: 700; margin-bottom: 8px;">
+            <span class="step-badge">1</span>講義スライドで理論を確認
+          </h3>
+          <p style="font-size: 0.9rem; color: #475569;">
+            <a href="slieds.html" target="_blank" style="color: var(--primary-light); font-weight: 600;">Web講義スライド</a>を開き、背理法の考え方、$Z$値から$t$統計量・自由度（$df$）・$p$値へのつながりを確認します。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="font-size: 1.02rem; font-weight: 700; margin-bottom: 8px;">
+            <span class="step-badge">2</span>データをDLしてRStudioで解析
+          </h3>
+          <p style="font-size: 0.9rem; color: #475569;">
+            下の<a href="#downloads" style="color: var(--primary-light); font-weight: 600;">ダウンロード欄</a>から <code>table1.xlsx</code> と <code>table2.xlsx</code> を保存し、RStudioで <code>t.test()</code> を実行します。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="font-size: 1.02rem; font-weight: 700; margin-bottom: 8px;">
+            <span class="step-badge">3</span>Web課題に入力＆自動判定
+          </h3>
+          <p style="font-size: 0.9rem; color: #475569;">
+            <a href="kadai7_interactive.html" style="color: var(--secondary); font-weight: 600;">インタラクティブWeb課題</a>を開き、Rの出力結果や考察を入力します。その場で正誤判定とスコア確認ができます。
+          </p>
+        </div>
+        <div class="card">
+          <h3 style="font-size: 1.02rem; font-weight: 700; margin-bottom: 8px;">
+            <span class="step-badge">4</span>提出用HTMLを保存して提出
+          </h3>
+          <p style="font-size: 0.9rem; color: #475569;">
+            課題ページ最下部の「提出用レポートHTMLを保存」ボタンを押すと、あなたの解答が記録されたHTMLファイルがダウンロードされます。それをTACTへ提出してください。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 Great Wow Points -->
+    <section id="wow">
+      <div class="section-header">
+        <h2 class="section-title">🌟 本回の2大「Wow!（納得・発見）」体験</h2>
+        <span class="section-subtitle">ただコードを動かすだけではない、データサイエンスの真髄</span>
+      </div>
+
+      <div class="grid-2">
+        <!-- Wow 1 -->
+        <div class="card card-wow">
+          <div style="font-weight: 800; font-size: 0.85rem; color: var(--accent); margin-bottom: 6px;">【Wow体験 ①】</div>
+          <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text); margin-bottom: 10px;">🎧 統計的ノイズキャンセリングの威力</h3>
+          <p style="font-size: 0.92rem; color: #475569; margin-bottom: 12px;">
+            植物実験では、同じ品種でも「元々巨大な株（80g）」と「小ぶりな株（30g）」が混在します（個体差ノイズ）。
+            もし対応を無視して独立2群検定（Welch）を実行すると、個体差ノイズに邪魔されて $t=4.49, p=2 \times 10^{-5}$ にとどまります。
+          </p>
+          <div class="callout callout-wow" style="margin: 0; font-size: 0.88rem;">
+            <strong>引き算（差）をとると…</strong><br>
+            株ごとの元々の大きさが完全に相殺され、純粋な時間変化（$-11.8$g）だけが浮き彫りに！<br>
+            $\rightarrow$ <strong>$t=10.11, p=9 \times 10^{-14}$ へと、$p$値が約10億倍も明確に跳ね上がる！</strong>
+          </div>
+        </div>
+
+        <!-- Wow 2 -->
+        <div class="card card-wow">
+          <div style="font-weight: 800; font-size: 0.85rem; color: var(--accent); margin-bottom: 6px;">【Wow体験 ②】</div>
+          <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text); margin-bottom: 10px;">🕵️‍♂️ 要約統計量の罠と「逆走個体」の探偵団</h3>
+          <p style="font-size: 0.92rem; color: #475569; margin-bottom: 12px;">
+            Table 2（52系統）は全員枯れ上がったのでしょうか？<br>
+            平均値（約11.8g減少）や箱ひげ図だけ見ていると全員が激減したように錯覚します。しかし個体ごとの変化量（<code>SW35 - SW5</code>）を計算すると…
+          </p>
+          <div class="callout callout-wow" style="margin: 0; font-size: 0.88rem;">
+            <strong>全体が激減する中で、逆に増えている3系統を発見！</strong><br>
+            ・系統8（$+6.6$g）、系統11（$+7.1$g）、系統28（$+3.1$g）<br>
+            $\rightarrow$ 晩生系統で成長が続いていたのか？ 不稔で穂に実が入らなかったのか？ <strong>例外個体を探究する面白さを体感！</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Theory Section -->
+    <section id="theory">
+      <div class="section-header">
+        <h2 class="section-title">📐 理論の階段（背理法から $t$分布・$p$値へ）</h2>
+        <span class="section-subtitle">統計学の論理を一本の線でつなぐ</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="card card-accent">
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">1. 背理法の思考</h3>
+          <p style="font-size: 0.88rem; color: #475569;">
+            あえて「差はない（偶然だ）」という<strong>帰無仮説（$H_0$）</strong>を立て、そんな世界で手元のデータが出る確率（<strong>$p$値</strong>）を計算。確率が5%未満（$p &lt; 0.05$）なら仮説を棄却して「差がある！」と結論づける。
+          </p>
+        </div>
+
+        <div class="card card-accent">
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">2. なぜ「$t$分布」なのか？</h3>
+          <p style="font-size: 0.88rem; color: #475569;">
+            母分散 $\sigma^2$ は未知のため、標本標準偏差 $s$ で代用する。分母の $s$ も実験ごとにブレるため、正規分布（$Z$）よりも裾野が広い<strong>$t$分布（自由度 $df = n-1$）</strong>に従う。
+          </p>
+        </div>
+
+        <div class="card card-accent">
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">3. $p$値の幾何学的直感</h3>
+          <p style="font-size: 0.88rem; color: #475569;">
+            自由度 $df$ の $t$分布の山を描き、計算した $t$値 より外側の<strong>「裾野の面積（確率）」</strong>こそが $p$値。$t$値が山の中心から離れるほど面積（$p$値）は極小になり有意と判定される。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- R Code Cheatsheet -->
+    <section id="cheatsheet">
+      <div class="section-header">
+        <h2 class="section-title">💻 Rコード完全チートシート</h2>
+        <span class="section-subtitle">ワンクリックでコピーしてRStudioで実行可能</span>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">Step 1: データの読み込み</h3>
+        <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>library(readxl)
+table1 &lt;- read_excel("table1.xlsx")
+table2 &lt;- read_excel("table2.xlsx")
+head(table1)</code></div>
+
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">Step 2: データの可視化（箱ひげ図＋対応線プロット）</h3>
+        <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># 箱ひげ図にドットプロットを重ねる
+boxplot(table2, ylab = "茎葉重 (g)")
+stripchart(table2, vertical = TRUE, method = "jitter", add = TRUE)
+
+# 対応する点を線分で結ぶ
+stripchart(table2, vertical = TRUE)
+for(i in 1:nrow(table2)){
+  lines(c(1, 2), c(table2$SW5[i], table2$SW35[i]), col = "gray40")
+}</code></div>
+
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">課題1: Genotype A の両側検定（24系統）</h3>
+        <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>t.test(table1$SW5, table1$SW35, paired = TRUE, alternative = "two.sided")</code></div>
+
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">課題2: Genotype B の両側検定（52系統）</h3>
+        <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>t.test(table2$SW5, table2$SW35, paired = TRUE, alternative = "two.sided")</code></div>
+
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">課題3: Genotype B の片側検定（SW35 &lt; SW5）</h3>
+        <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>t.test(table2$SW5, table2$SW35, paired = TRUE, alternative = "greater")</code></div>
+
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">発展4: あえて対応なし（Welch）を実行して比較</h3>
+        <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>t.test(table2$SW5, table2$SW35, paired = FALSE)</code></div>
+
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">発展5: 逆走した3系統の抽出</h3>
+        <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>diff_B &lt;- table2$SW35 - table2$SW5
+which(diff_B &gt; 0) # 系統 8, 11, 28 がヒット！</code></div>
+      </div>
+    </section>
+
+    <!-- Downloads Section -->
+    <section id="downloads">
+      <div class="section-header">
+        <h2 class="section-title">📥 演習資料・データダウンロード</h2>
+        <span class="section-subtitle">演習に必要なすべてのファイルをここで取得</span>
+      </div>
+
+      <div class="download-list">
+        <a href="kadai/table1.xlsx" download class="download-item">
+          <span class="download-icon">📊</span>
+          <div>
+            <div>table1.xlsx</div>
+            <span style="font-size: 0.8rem; color: #64748b;">Genotype A（24系統）データ</span>
+          </div>
+        </a>
+        <a href="kadai/table2.xlsx" download class="download-item">
+          <span class="download-icon">📊</span>
+          <div>
+            <div>table2.xlsx</div>
+            <span style="font-size: 0.8rem; color: #64748b;">Genotype B（52系統）データ</span>
+          </div>
+        </a>
+        <a href="kadai/検定1_課題ファイル.xlsx" download class="download-item">
+          <span class="download-icon">📁</span>
+          <div>
+            <div>検定1_課題ファイル.xlsx</div>
+            <span style="font-size: 0.8rem; color: #64748b;">課題用元データブック</span>
+          </div>
+        </a>
+        <a href="slieds.html" target="_blank" class="download-item">
+          <span class="download-icon">🌐</span>
+          <div>
+            <div>講義スライド (Web版)</div>
+            <span style="font-size: 0.8rem; color: #64748b;">ブラウザで全画面プレゼン閲覧</span>
+          </div>
+        </a>
+        <a href="slides.md" download class="download-item">
+          <span class="download-icon">📄</span>
+          <div>
+            <div>slides.md</div>
+            <span style="font-size: 0.8rem; color: #64748b;">講義スライド Markdown原稿</span>
+          </div>
+        </a>
+        <a href="kadai7_interactive.html" class="download-item" style="border-color: #14b8a6; background: #f0fdfa;">
+          <span class="download-icon" style="color: #0d9488;">⚡</span>
+          <div>
+            <div style="color: #0d9488;">インタラクティブWeb課題</div>
+            <span style="font-size: 0.8rem; color: #0d9488;">ブラウザ上で回答・即時採点・提出</span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ & Troubleshooting -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title">❓ よくある質問とトラブルシューティング</h2>
+        <span class="section-subtitle">エラーが出たときはここを確認</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-bottom: 6px;">⚠️ 'table1.xlsx' does not exist エラー</h3>
+          <p style="font-size: 0.88rem; color: #475569;">
+            作業ディレクトリ（Working Directory）が Excel ファイルの置き場所と一致していません。<br>
+            RStudio メニューの <code>Session</code> $\rightarrow$ <code>Set Working Directory</code> $\rightarrow$ <code>Choose Directory...</code> で、ダウンロードした <code>table1.xlsx</code> があるフォルダを選択してください。
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-bottom: 6px;">⚠️ 片側検定で p値が 0.999... になった</h3>
+          <p style="font-size: 0.88rem; color: #475569;">
+            対立仮説の向き（<code>greater</code> / <code>less</code>）が逆になっています。R は第1引数から第2引数を引く（<code>x - y</code>）ため、<code>t.test(SW5, SW35, ...)</code> で「35日目に減少した（SW5 &gt; SW35）」を検定する場合は <code>alternative = "greater"</code> を指定します。
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 900px; margin: 0 auto;">
+      <p style="font-weight: 700; color: white; margin-bottom: 6px;">生物情報処理演習（統計学的仮説検定シリーズ 第7回〜第11回）</p>
+      <p style="font-size: 0.82rem; margin-bottom: 12px;">名古屋大学 / 東海国立大学機構 農学部・資源生物科学科</p>
+      <div style="display: flex; gap: 16px; justify-content: center; font-size: 0.82rem; flex-wrap: wrap;">
+        <a href="index.html">第7回トップ</a>
+        <a href="kadai7_interactive.html">インタラクティブWeb課題</a>
+        <a href="slieds.html">講義スライド</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Copy Code Helper
+    function copyCode(btn) {
+      const box = btn.closest('.code-box');
+      const clone = box.cloneNode(true);
+      const b = clone.querySelector('.copy-btn');
+      if (b) b.remove();
+      navigator.clipboard.writeText(clone.innerText.trim()).then(() => {
+        btn.innerText = '✓ コピー完了！';
+        setTimeout(() => { btn.innerText = '📋 コピー'; }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>

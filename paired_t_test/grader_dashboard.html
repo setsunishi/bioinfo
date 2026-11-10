@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教員用 一括自動採点ダッシュボード（第7回課題）</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --secondary: #0d9488;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 { font-size: 1.5rem; color: var(--primary); font-weight: 800; }
+    p { color: #64748b; font-size: 0.95rem; }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed #94a3b8;
+      background: white;
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 24px;
+    }
+    .drop-zone.dragover {
+      border-color: var(--primary);
+      background: #eff6ff;
+    }
+    .drop-zone p { font-size: 1.1rem; color: #475569; font-weight: 600; margin-top: 8px; }
+
+    /* Stats Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+    .stat-val { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+    .stat-lbl { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-top: 4px; }
+
+    /* Table */
+    .table-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { background: #f8fafc; color: #475569; font-weight: 700; white-space: nowrap; }
+    tr:hover td { background: #f1f5f9; }
+    .score-cell { font-weight: 700; color: #0284c7; }
+    .text-preview { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #64748b; }
+
+    /* Actions */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      background: var(--secondary);
+      color: white;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #0f766e; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div>
+        <h1>📊 教員用 一括自動採点ダッシュボード</h1>
+        <p>学生から集まった提出HTML（複数ファイル）をドロップするだけで、客観点を自動採点＆一覧化します</p>
+      </div>
+      <button class="btn" id="btn-export" style="display: none;" onclick="exportCSV()">
+        📥 成績表CSVをダウンロード
+      </button>
+    </header>
+
+    <!-- File Drop Zone -->
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div style="font-size: 2.5rem;">📁</div>
+      <p>ここに学生の提出HTMLファイルをまとめてドラッグ＆ドロップ</p>
+      <span style="font-size: 0.85rem; color: #94a3b8;">またはここをクリックしてファイルを選択（複数選択可）</span>
+      <input type="file" id="file-input" multiple accept=".html" style="display: none;" onchange="handleFiles(this.files)">
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="stats-row" id="stats-row" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-count">0</div>
+        <div class="stat-lbl">提出人数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-avg">0</div>
+        <div class="stat-lbl">平均点（満点100点）</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-perfect">0</div>
+        <div class="stat-lbl">満点 (100点) 達成者</div>
+      </div>
+    </div>
+
+    <!-- Grade Table -->
+    <div class="table-card" id="table-card" style="display: none;">
+      <h2 style="font-size: 1.1rem; color: var(--primary); margin-bottom: 12px; font-weight: 700;">採点結果一覧</h2>
+      <table id="grade-table">
+        <thead>
+          <tr>
+            <th>学籍番号</th>
+            <th>氏名</th>
+            <th>客観点</th>
+            <th>課題1 (20)</th>
+            <th>課題2 (20)</th>
+            <th>課題3 (20)</th>
+            <th>発展4 (20)</th>
+            <th>発展5 (20)</th>
+            <th>逆走系統回答</th>
+            <th>発展4 考察抜粋</th>
+            <th>発展5 考察抜粋</th>
+            <th>総合考察抜粋</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    let studentDataList = [];
+
+    const dropZone = document.getElementById('drop-zone');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    function handleFiles(files) {
+      if (!files || files.length === 0) return;
+
+      studentDataList = [];
+      let pending = files.length;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const content = e.target.result;
+          parseSubmissionHTML(content, file.name);
+          pending--;
+          if (pending === 0) {
+            renderDashboard();
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function parseSubmissionHTML(html, fileName) {
+      // Find embedded JSON metadata
+      const match = html.match(/<script id="submission-metadata" type="application\/json"[^>]*>([\s\S]*?)<\/script>/);
+      if (match && match[1]) {
+        try {
+          const data = JSON.parse(match[1]);
+          studentDataList.push(data);
+        } catch (err) {
+          console.warn('JSON parse error in:', fileName);
+        }
+      }
+    }
+
+    function renderDashboard() {
+      if (studentDataList.length === 0) {
+        alert('有効な提出レポートHTMLが見つかりませんでした。');
+        return;
+      }
+
+      // Sort by student ID
+      studentDataList.sort((a, b) => (a.studentId > b.studentId ? 1 : -1));
+
+      // Update Stats
+      const count = studentDataList.length;
+      const totalScore = studentDataList.reduce((acc, cur) => acc + (cur.score || 0), 0);
+      const avg = (totalScore / count).toFixed(1);
+      const perfect = studentDataList.filter(s => s.score === 100).length;
+
+      document.getElementById('stat-count').innerText = count + ' 名';
+      document.getElementById('stat-avg').innerText = avg + ' 点';
+      document.getElementById('stat-perfect').innerText = perfect + ' 名';
+
+      // Build Table
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      studentDataList.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${s.studentId || '-'}</strong></td>
+          <td>${s.studentName || '-'}</td>
+          <td class="score-cell">${s.score || 0}</td>
+          <td>${s.scoresDetail?.q1 || 0}</td>
+          <td>${s.scoresDetail?.q2 || 0}</td>
+          <td>${s.scoresDetail?.q3 || 0}</td>
+          <td>${s.scoresDetail?.q4 || 0}</td>
+          <td>${s.scoresDetail?.q5 || 0}</td>
+          <td><code>${s.q5?.reversedIdx || '-'}</code></td>
+          <td class="text-preview" title="${escapeHtml(s.q4?.text || '')}">${s.q4?.text || '-'}</td>
+          <td class="text-preview" title="${escapeHtml(s.q5?.text || '')}">${s.q5?.text || '-'}</td>
+          <td class="text-preview" title="${escapeHtml(s.overallText || '')}">${s.overallText || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('stats-row').style.display = 'grid';
+      document.getElementById('table-card').style.display = 'block';
+      document.getElementById('btn-export').style.display = 'inline-flex';
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function exportCSV() {
+      if (studentDataList.length === 0) return;
+
+      const headers = [
+        '学籍番号', '氏名', '提出日時', '客観得点合計',
+        '課題1得点', '課題2得点', '課題3得点', '発展4得点', '発展5得点',
+        '課題1考察', '課題2考察', '発展4考察', '発展5考察', '総合考察'
+      ];
+
+      const rows = studentDataList.map(s => [
+        `"${s.studentId || ''}"`,
+        `"${s.studentName || ''}"`,
+        `"${s.submissionDate || ''}"`,
+        s.score || 0,
+        s.scoresDetail?.q1 || 0,
+        s.scoresDetail?.q2 || 0,
+        s.scoresDetail?.q3 || 0,
+        s.scoresDetail?.q4 || 0,
+        s.scoresDetail?.q5 || 0,
+        `"${(s.q1?.text || '').replace(/"/g, '""')}"`,
+        `"${(s.q2?.text || '').replace(/"/g, '""')}"`,
+        `"${(s.q4?.text || '').replace(/"/g, '""')}"`,
+        `"${(s.q5?.text || '').replace(/"/g, '""')}"`,
+        `"${(s.overallText || '').replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `第7回課題_採点結果一覧_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

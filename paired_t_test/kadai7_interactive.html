@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第7回：インタラクティブ演習ワークブック</title>
+
+  <!-- KaTeX CSS & JS for Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]})"></script>
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0d9488;
+      --secondary-light: #14b8a6;
+      --accent: #d97706;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 120px;
+    }
+
+    /* Header & Navigation Bar */
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+    header p { font-size: 1rem; opacity: 0.9; }
+
+    /* Sticky Status Bar */
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .user-inputs {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .user-inputs input {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .user-inputs input:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .score-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.95rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    /* Section Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .badge-primary { background: #dbeafe; color: #1e40af; }
+    .badge-wow { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Code Box */
+    .code-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      position: relative;
+      margin: 8px 0 14px 0;
+      overflow-x: auto;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background: #f8fafc;
+      transition: border 0.2s, background 0.2s;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      background: white;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+    textarea.input-field {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.5;
+      font-family: inherit;
+    }
+
+    /* Check Button & Feedback */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-check {
+      background: var(--secondary);
+      color: white;
+    }
+    .btn-check:hover { background: #0f766e; }
+    .btn-submit {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      font-size: 1.1rem;
+      padding: 14px 28px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    }
+    .btn-submit:hover {
+      box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .feedback-box {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .feedback-success {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .feedback-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+
+    /* Fixed Bottom Submission Bar */
+    .submit-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 2px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
+      z-index: 99;
+    }
+    .progress-info {
+      font-size: 0.95rem;
+      color: #475569;
+    }
+    .progress-bar-wrap {
+      width: 220px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* Callout */
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 0.92rem;
+    }
+    .callout-wow {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div style="max-width: 900px; margin: 0 auto 10px auto; text-align: left;">
+      <a href="index.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 999px;">← 第7回講義トップへ戻る</a>
+    </div>
+    <h1>🌾 生物情報処理演習 第7回：インタラクティブ演習ワークブック</h1>
+    <p>統計学的仮説検定 ① 〜1標本t検定と対応のあるt検定〜 | イネ登熟期茎葉重解析</p>
+  </header>
+
+  <!-- Sticky Top Bar for Student Identity & Score -->
+  <div class="sticky-bar">
+    <div class="user-inputs">
+      <label for="student-id" style="font-weight: 700; font-size: 0.9rem;">学籍番号:</label>
+      <input type="text" id="student-id" placeholder="例: 26101234" required oninput="updateProgress()">
+      <label for="student-name" style="font-weight: 700; font-size: 0.9rem;">氏名:</label>
+      <input type="text" id="student-name" placeholder="例: 名大 太郎" required oninput="updateProgress()">
+    </div>
+    <div class="score-badge">
+      <span>客観テスト得点:</span>
+      <span id="score-display" style="font-size: 1.15rem; color: #0284c7;">0</span>
+      <span>/ 100 点</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Overview -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📖 演習の背景と本日のゴール</h2>
+        <span class="badge badge-primary">背景知識</span>
+      </div>
+      <p style="font-size: 0.95rem; margin-bottom: 12px;">
+        イネ76系統の分離集団において、出穂後の茎葉重（穂以外の地上部乾物重）を測定しました。<br>
+        出穂後、栄養を穂に送って茎葉が枯れる<strong>「枯れ上がる系統（Senescence）」</strong>と、緑と重さを保ち続ける<strong>「枯れ上がりにくい系統（Stay-green）」</strong>が存在します。
+      </p>
+      <div class="callout">
+        <strong>データセット（クリックでダウンロード）：</strong><br>
+        ・<a href="kadai/table1.xlsx" download style="color: #1e40af; font-weight: 700;"><code>table1.xlsx</code></a>: Genotype = A（24系統, ジャポニカ型アレル）<br>
+        ・<a href="kadai/table2.xlsx" download style="color: #1e40af; font-weight: 700;"><code>table2.xlsx</code></a>: Genotype = B（52系統, インディカ型アレル）<br>
+        ・<code>SW5</code>: 出穂後5日重 (g/個体)　／　<code>SW35</code>: 出穂後35日重 (g/個体)
+      </div>
+    </div>
+
+    <!-- Task 1 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題1：Genotype A の両側検定（Table 1, 24系統）</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        RStudioで以下のコードを実行し、出力された数値を入力してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>library(readxl)
+table1 <- read_excel("table1.xlsx")
+t.test(table1$SW5, table1$SW35, paired = TRUE, alternative = "two.sided")</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">$t$ 値:</label>
+          <input type="number" step="0.001" id="q1-t" class="input-field" placeholder="例: 1.42">
+        </div>
+        <div class="form-group">
+          <label class="form-label">自由度 ($df$):</label>
+          <input type="number" id="q1-df" class="input-field" placeholder="例: 23">
+        </div>
+        <div class="form-group">
+          <label class="form-label">$p$ 値:</label>
+          <input type="number" step="0.0001" id="q1-p" class="input-field" placeholder="例: 0.1688">
+        </div>
+        <div class="form-group">
+          <label class="form-label">統計的判定 ($\alpha=0.05$):</label>
+          <select id="q1-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="sig">有意差あり（帰無仮説を棄却）</option>
+            <option value="nonsig">有意差なし（帰無仮説を保留）</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ1()">🔍 課題1を検証する</button>
+      <div id="q1-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題1の生物学的解釈・考察:</label>
+        <textarea id="q1-text" class="input-field" placeholder="Genotype A の系統群では出穂後に茎葉重はどうなっているか？ 枯れ上がり特性について考察を記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題2：Genotype B の両側検定（Table 2, 52系統）</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        RStudioで以下のコードを実行し、数値を入力してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>table2 <- read_excel("table2.xlsx")
+t.test(table2$SW5, table2$SW35, paired = TRUE, alternative = "two.sided")</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">$t$ 値:</label>
+          <input type="number" step="0.01" id="q2-t" class="input-field" placeholder="例: 10.11">
+        </div>
+        <div class="form-group">
+          <label class="form-label">自由度 ($df$):</label>
+          <input type="number" id="q2-df" class="input-field" placeholder="例: 51">
+        </div>
+        <div class="form-group">
+          <label class="form-label">$p$ 値 (指数表記可):</label>
+          <input type="text" id="q2-p" class="input-field" placeholder="例: 8.99e-14">
+        </div>
+        <div class="form-group">
+          <label class="form-label">統計的判定 ($\alpha=0.05$):</label>
+          <select id="q2-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="sig">有意差あり（帰無仮説を棄却）</option>
+            <option value="nonsig">有意差なし（帰無仮説を保留）</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ2()">🔍 課題2を検証する</button>
+      <div id="q2-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題2の生物学的解釈・考察:</label>
+        <textarea id="q2-text" class="input-field" placeholder="Genotype B における出穂後茎葉重の変動について考察を記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題3：Genotype B の片側検定（SW35 < SW5）</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        「出穂後35日の茎葉重が5日よりも小さい（減少している）」ことを片側検定で検証します。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># SW5 - SW35 が正（>0）であることを検証
+t.test(table2$SW5, table2$SW35, paired = TRUE, alternative = "greater")</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">使用した alternative 引数:</label>
+          <select id="q3-alt" class="input-field">
+            <option value="">選択してください</option>
+            <option value="greater">greater (SW5 > SW35)</option>
+            <option value="less">less (SW35 < SW5)</option>
+            <option value="two.sided">two.sided</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">$p$ 値 (指数表記可):</label>
+          <input type="text" id="q3-p" class="input-field" placeholder="例: 4.49e-14">
+        </div>
+        <div class="form-group">
+          <label class="form-label">片側検定の結論:</label>
+          <select id="q3-concl" class="input-field">
+            <option value="">選択してください</option>
+            <option value="decreased">SW35はSW5より有意に小さい（枯れ上がっている）</option>
+            <option value="not_decreased">有意に小さいとはいえない</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ3()">🔍 課題3を検証する</button>
+      <div id="q3-feedback" class="feedback-box"></div>
+    </div>
+
+    <!-- Task 4 (Wow 1) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題4【Wow①：統計的ノイズキャンセリングの威力】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> もし Table 2 のデータに対して、対応をうっかり無視して次回（第8回）で学ぶ「独立2標本検定（Welchのt検定: <code>paired=FALSE</code>）」を実行するとどうなるでしょうか？
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># あえて対応なし（Welch検定）を実行
+t.test(table2$SW5, table2$SW35, paired = FALSE)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">対応なし時の $t$ 値:</label>
+          <input type="number" step="0.01" id="q4-t" class="input-field" placeholder="例: 4.49">
+        </div>
+        <div class="form-group">
+          <label class="form-label">対応なし時の $p$ 値:</label>
+          <input type="text" id="q4-p" class="input-field" placeholder="例: 1.98e-05">
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ4()">🔍 発展課題4を検証する</button>
+      <div id="q4-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">なぜ対応をとるだけで $p$ 値が約10億倍も明確になるのか？（ノイズキャンセリングの解説）:</label>
+        <textarea id="q4-text" class="input-field" placeholder="株本来の大きさ（個体差ノイズ）と、引き算による相殺の観点から説明してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 5 (Wow 2) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題5【Wow②：要約統計量の罠と逆走個体の探偵団】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> Table 2 の52系統は全員枯れ上がった（減少した）のでしょうか？<br>
+        変化量（<code>diff <- table2$SW35 - table2$SW5</code>）を計算し、全体が激減する中で<strong>「逆走して増加した（差がプラス）3系統の行番号」</strong>を突き止めてください！
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># 逆走した系統（差がプラス）を抽出するRコード
+diff_B <- table2$SW35 - table2$SW5
+which(diff_B > 0)</code></div>
+
+      <div class="form-group">
+        <label class="form-label">逆走していた3つの系統番号（行番号）を入力（半角スペースまたはカンマ区切り）:</label>
+        <input type="text" id="q5-idx" class="input-field" placeholder="例: 1, 2, 3" style="max-width: 320px;">
+      </div>
+      <button class="btn btn-check" onclick="checkQ5()">🔍 逆走系統を検証する</button>
+      <div id="q5-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">なぜこの3系統だけ逆走したのか？（生物学的・実験的な仮説考察）:</label>
+        <textarea id="q5-text" class="input-field" placeholder="要約統計量（平均値や箱ひげ図）だけを見ていると見落とすリスクと、逆走した原因（出穂時期のズレ、不稔、組換え、測定誤差など）を考察してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Overall Discussion -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">総合考察：Genotype A と B の比較 ＆ 次回への展望</h2>
+        <span class="badge badge-primary">総合まとめ</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">総合考察（Genotype AとBの枯れ上がり特性の違い、次回・第8回「対応なし検定」へのつながり）:</label>
+        <textarea id="overall-text" class="input-field" style="min-height: 120px;" placeholder="本日の演習全体のまとめと、出穂後の養分転流に関する生物学的知見を整理して記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Submission Controller -->
+  <div class="submit-bar">
+    <div>
+      <div class="progress-info">
+        <strong>課題入力進捗:</strong> <span id="progress-percent">0%</span>
+        （必須入力項目をすべて入力すると提出可能になります）
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar-fill"></div>
+      </div>
+    </div>
+    <button class="btn btn-submit" id="btn-download" onclick="generateReportHTML()">
+      📥 提出用レポートHTMLを書き出す
+    </button>
+  </div>
+
+  <script>
+    // Copy Code Helper
+    function copyCode(btn) {
+      const box = btn.closest('.code-box');
+      const clone = box.cloneNode(true);
+      const b = clone.querySelector('.copy-btn');
+      if (b) b.remove();
+      navigator.clipboard.writeText(clone.innerText.trim()).then(() => {
+        btn.innerText = '✓ コピー完了！';
+        setTimeout(() => { btn.innerText = '📋 コピー'; }, 1500);
+      });
+    }
+
+    // Scores
+    let scores = { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 };
+
+    function updateTotalScore() {
+      const total = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      document.getElementById('score-display').innerText = total;
+      updateProgress();
+    }
+
+    // Validation Functions
+    function checkQ1() {
+      const t = parseFloat(document.getElementById('q1-t').value);
+      const df = parseInt(document.getElementById('q1-df').value);
+      const p = parseFloat(document.getElementById('q1-p').value);
+      const judge = document.getElementById('q1-judge').value;
+      const fb = document.getElementById('q1-feedback');
+
+      if (isNaN(t) || isNaN(df) || isNaN(p) || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力してください。');
+        return;
+      }
+
+      const tOk = Math.abs(t - 1.42) <= 0.05;
+      const dfOk = (df === 23);
+      const pOk = Math.abs(p - 0.1688) <= 0.01;
+      const judgeOk = (judge === 'nonsig');
+
+      if (tOk && dfOk && pOk && judgeOk) {
+        scores.q1 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) t=1.421, df=23, p=0.1688 で有意差なし（帰無仮説は棄却されない）と正しく判定できました。');
+      } else {
+        scores.q1 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。Rの t.test 出力（t値: 約1.42, df: 23, p値: 約0.169）をもう一度ご確認ください。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ2() {
+      const t = parseFloat(document.getElementById('q2-t').value);
+      const df = parseInt(document.getElementById('q2-df').value);
+      const pStr = document.getElementById('q2-p').value.toLowerCase();
+      const p = parseFloat(pStr);
+      const judge = document.getElementById('q2-judge').value;
+      const fb = document.getElementById('q2-feedback');
+
+      if (isNaN(t) || isNaN(df) || isNaN(p) || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力してください。');
+        return;
+      }
+
+      const tOk = Math.abs(t - 10.11) <= 0.05;
+      const dfOk = (df === 51);
+      const pOk = (p < 0.0001) || pStr.includes('e-14') || pStr.includes('8.9');
+      const judgeOk = (judge === 'sig');
+
+      if (tOk && dfOk && pOk && judgeOk) {
+        scores.q2 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) t=10.106, df=51, p=8.986e-14 で極めて高度に有意差ありと正しく判定できました。');
+      } else {
+        scores.q2 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。t値は約10.11、dfは51、p値は 10のマイナス14乗オーダー（極小値）になります。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ3() {
+      const alt = document.getElementById('q3-alt').value;
+      const pStr = document.getElementById('q3-p').value.toLowerCase();
+      const p = parseFloat(pStr);
+      const concl = document.getElementById('q3-concl').value;
+      const fb = document.getElementById('q3-feedback');
+
+      if (!alt || isNaN(p) || !concl) {
+        showFeedback(fb, false, 'すべての項目を入力してください。');
+        return;
+      }
+
+      const altOk = (alt === 'greater' || alt === 'less');
+      const pOk = (p < 0.0001) || pStr.includes('e-14') || pStr.includes('4.49');
+      const conclOk = (concl === 'decreased');
+
+      if (altOk && pOk && conclOk) {
+        scores.q3 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 片側検定でも極めて有意（p=4.493e-14）となり、出穂後35日に有意に減少していると立証できました。');
+      } else {
+        scores.q3 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。対立仮説の向きと結論を再確認してください。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ4() {
+      const t = parseFloat(document.getElementById('q4-t').value);
+      const pStr = document.getElementById('q4-p').value.toLowerCase();
+      const p = parseFloat(pStr);
+      const fb = document.getElementById('q4-feedback');
+
+      if (isNaN(t) || isNaN(p)) {
+        showFeedback(fb, false, 't値とp値を入力してください。');
+        return;
+      }
+
+      const tOk = Math.abs(t - 4.49) <= 0.05;
+      const pOk = (p < 0.001) || pStr.includes('e-05') || pStr.includes('1.98');
+
+      if (tOk && pOk) {
+        scores.q4 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 対応なし（Welch）では t=4.49, p=1.98e-05。対応ありの t=10.11, p=10^-14 と比べ、t値が半分以下に落ちる現象を確認できました！');
+      } else {
+        scores.q4 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。t.test(table2$SW5, table2$SW35, paired=FALSE) の出力を確認してください（t≈4.49, p≈1.98e-5）。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ5() {
+      const raw = document.getElementById('q5-idx').value;
+      const fb = document.getElementById('q5-feedback');
+      const nums = raw.match(/\d+/g);
+
+      if (!nums || nums.length < 3) {
+        showFeedback(fb, false, '3つの系統番号を入力してください（例: 8, 11, 28）。');
+        return;
+      }
+
+      const intNums = nums.map(n => parseInt(n)).sort((a,b) => a - b);
+      const expected = [8, 11, 28];
+
+      if (intNums[0] === 8 && intNums[1] === 11 && intNums[2] === 28) {
+        scores.q5 = 20;
+        showFeedback(fb, true, '🎉 探偵団ミッション大成功！(+20点) 逆走した【系統 8 (+6.6g)】【系統 11 (+7.1g)】【系統 28 (+3.1g)】を完全に特定しました！');
+      } else {
+        scores.q5 = 0;
+        showFeedback(fb, false, '❌ 番号が一致しません。Rで which(table2$SW35 - table2$SW5 > 0) を実行して確認してみましょう。');
+      }
+      updateTotalScore();
+    }
+
+    function showFeedback(elem, isSuccess, msg) {
+      elem.style.display = 'block';
+      elem.className = 'feedback-box ' + (isSuccess ? 'feedback-success' : 'feedback-error');
+      elem.innerText = msg;
+    }
+
+    // Progress Calculation
+    function updateProgress() {
+      const studentId = document.getElementById('student-id').value.trim();
+      const studentName = document.getElementById('student-name').value.trim();
+      const q1Text = document.getElementById('q1-text').value.trim();
+      const q2Text = document.getElementById('q2-text').value.trim();
+      const q4Text = document.getElementById('q4-text').value.trim();
+      const q5Text = document.getElementById('q5-text').value.trim();
+      const overallText = document.getElementById('overall-text').value.trim();
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+
+      let filledCount = 0;
+      if (studentId) filledCount++;
+      if (studentName) filledCount++;
+      if (totalScore >= 60) filledCount += 2;
+      if (totalScore >= 100) filledCount += 1;
+      if (q1Text.length >= 10) filledCount++;
+      if (q2Text.length >= 10) filledCount++;
+      if (q4Text.length >= 15) filledCount++;
+      if (q5Text.length >= 15) filledCount++;
+      if (overallText.length >= 20) filledCount += 2;
+
+      const pct = Math.min(100, Math.round((filledCount / 10) * 100));
+      document.getElementById('progress-percent').innerText = pct + '%';
+      document.getElementById('progress-bar-fill').style.width = pct + '%';
+    }
+
+    // Generate Submission HTML
+    function generateReportHTML() {
+      const sid = document.getElementById('student-id').value.trim();
+      const sname = document.getElementById('student-name').value.trim();
+
+      if (!sid || !sname) {
+        alert('学籍番号と氏名を入力してください。');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      const now = new Date().toLocaleString('ja-JP');
+
+      // Generate report metadata
+      const reportData = {
+        studentId: sid,
+        studentName: sname,
+        submissionDate: now,
+        score: totalScore,
+        scoresDetail: scores,
+        q1: {
+          t: document.getElementById('q1-t').value,
+          df: document.getElementById('q1-df').value,
+          p: document.getElementById('q1-p').value,
+          judge: document.getElementById('q1-judge').value,
+          text: document.getElementById('q1-text').value
+        },
+        q2: {
+          t: document.getElementById('q2-t').value,
+          df: document.getElementById('q2-df').value,
+          p: document.getElementById('q2-p').value,
+          judge: document.getElementById('q2-judge').value,
+          text: document.getElementById('q2-text').value
+        },
+        q3: {
+          alt: document.getElementById('q3-alt').value,
+          p: document.getElementById('q3-p').value,
+          concl: document.getElementById('q3-concl').value
+        },
+        q4: {
+          t: document.getElementById('q4-t').value,
+          p: document.getElementById('q4-p').value,
+          text: document.getElementById('q4-text').value
+        },
+        q5: {
+          reversedIdx: document.getElementById('q5-idx').value,
+          text: document.getElementById('q5-text').value
+        },
+        overallText: document.getElementById('overall-text').value
+      };
+
+      const metaJSON = JSON.stringify(reportData);
+
+      // Simple hash checksum for basic tamper detection
+      let hash = 0;
+      for (let i = 0; i < metaJSON.length; i++) {
+        hash = ((hash << 5) - hash) + metaJSON.charCodeAt(i);
+        hash |= 0;
+      }
+
+      // Build standalone printable HTML
+      const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>${sid}_${sname}_第7回課題レポート</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #1e293b; background: #fff; }
+    h1 { color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; font-size: 1.6rem; }
+    h2 { color: #0d9488; margin-top: 24px; font-size: 1.2rem; border-left: 4px solid #0d9488; padding-left: 8px; }
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+    .score-badge { font-size: 1.3rem; font-weight: 800; color: #0284c7; }
+    .item-box { background: #f1f5f9; padding: 12px; border-radius: 6px; margin: 8px 0; }
+    .text-box { background: #fff; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-top: 6px; white-space: pre-wrap; font-size: 0.95rem; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-size: 0.9rem; }
+    th { background: #f8fafc; }
+    @media print { body { margin: 0; padding: 0; } }
+  </style>
+  <!-- Embedded Grading Metadata for Automated Evaluation -->
+  <script id="submission-metadata" type="application/json" data-checksum="${hash}">
+  ${metaJSON}
+  <\/script>
+</head>
+<body>
+  <h1>生物情報処理演習 第7回 課題レポート</h1>
+  <div class="meta-box">
+    <div>
+      <p><strong>学籍番号：</strong> ${sid}</p>
+      <p><strong>氏名：</strong> ${sname}</p>
+      <p style="font-size: 0.85rem; color: #64748b;">提出生成日時: ${now}</p>
+    </div>
+    <div style="text-align: right;">
+      <p>客観テスト得点</p>
+      <div class="score-badge">${totalScore} / 100 点</div>
+    </div>
+  </div>
+
+  <h2>1. 課題1（Genotype A 両側検定: 20点）</h2>
+  <table>
+    <tr><th>検定統計量 t</th><th>自由度 df</th><th>p値</th><th>統計的判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q1.t || '-'}</td><td>${reportData.q1.df || '-'}</td><td>${reportData.q1.p || '-'}</td><td>${reportData.q1.judge || '-'}</td><td>${scores.q1} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>生物学的考察:</strong>
+    <div class="text-box">${reportData.q1.text || '（未記入）'}</div>
+  </div>
+
+  <h2>2. 課題2（Genotype B 両側検定: 20点）</h2>
+  <table>
+    <tr><th>検定統計量 t</th><th>自由度 df</th><th>p値</th><th>統計的判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q2.t || '-'}</td><td>${reportData.q2.df || '-'}</td><td>${reportData.q2.p || '-'}</td><td>${reportData.q2.judge || '-'}</td><td>${scores.q2} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>生物学的考察:</strong>
+    <div class="text-box">${reportData.q2.text || '（未記入）'}</div>
+  </div>
+
+  <h2>3. 課題3（Genotype B 片側検定: 20点）</h2>
+  <table>
+    <tr><th>alternative 引数</th><th>p値</th><th>結論</th><th>得点</th></tr>
+    <tr><td>${reportData.q3.alt || '-'}</td><td>${reportData.q3.p || '-'}</td><td>${reportData.q3.concl || '-'}</td><td>${scores.q3} / 20点</td></tr>
+  </table>
+
+  <h2>4. 発展課題4【Wow①：ノイズキャンセリングの威力】(20点)</h2>
+  <table>
+    <tr><th>対応なし時の t値</th><th>対応なし時の p値</th><th>得点</th></tr>
+    <tr><td>${reportData.q4.t || '-'}</td><td>${reportData.q4.p || '-'}</td><td>${scores.q4} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>ノイズキャンセリングの解説・考察:</strong>
+    <div class="text-box">${reportData.q4.text || '（未記入）'}</div>
+  </div>
+
+  <h2>5. 発展課題5【Wow②：逆走個体の探偵団】(20点)</h2>
+  <table>
+    <tr><th>特定した逆走系統番号</th><th>判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q5.reversedIdx || '-'}</td><td>${scores.q5 === 20 ? '正解 (8, 11, 28)' : '要確認'}</td><td>${scores.q5} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>逆走原因の仮説考察:</strong>
+    <div class="text-box">${reportData.q5.text || '（未記入）'}</div>
+  </div>
+
+  <h2>6. 総合考察</h2>
+  <div class="item-box">
+    <div class="text-box">${reportData.overallText || '（未記入）'}</div>
+  </div>
+</body>
+</html>`;
+
+      // Trigger download
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sid}_${sname}_第7回課題レポート.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert(`✅ レポートHTMLを生成・保存しました！\n\nファイル名: ${sid}_${sname}_第7回課題レポート.html\n\nこのファイルを大学の提出システム（小テスト・TACT）に提出してください。`);
+    }
+  </script>
+</body>
+</html>

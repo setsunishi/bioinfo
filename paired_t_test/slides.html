@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第7回：統計学的仮説検定 ①</title>
+
+  <!-- KaTeX CSS & JS for Math Rendering (Primary: jsdelivr, Fallback: cdnjs) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css';">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"
+          onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js';"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+          onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js';"
+          onload="initKaTeX()"></script>
+  
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0d9488;
+      --secondary-light: #14b8a6;
+      --accent: #d97706;
+      --bg: #0f172a;
+      --slide-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --border: #e2e8f0;
+      --highlight: #fef3c7;
+      --highlight-border: #f59e0b;
+      --badge-theory: #e0f2fe;
+      --badge-theory-text: #0369a1;
+      --badge-practice: #dcfce7;
+      --badge-practice-text: #15803d;
+      --badge-intro: #f3e8ff;
+      --badge-intro-text: #7e22ce;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Header Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+
+    .top-bar .title {
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-bar .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    /* Slide Container */
+    .slide-viewport {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .slide {
+      background: var(--slide-bg);
+      width: 100%;
+      max-width: 1200px;
+      aspect-ratio: 16 / 9;
+      max-height: calc(100vh - 110px);
+      border-radius: 14px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      padding: 40px 50px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.985); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 14px;
+    }
+
+    .slide-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-intro { background: var(--badge-intro); color: var(--badge-intro-text); }
+    .badge-theory { background: var(--badge-theory); color: var(--badge-theory-text); }
+    .badge-practice { background: var(--badge-practice); color: var(--badge-practice-text); }
+
+    .slide-title {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.25;
+    }
+
+    .slide-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      font-size: 1.08rem;
+      line-height: 1.65;
+    }
+
+    /* Grid & Columns */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      height: 100%;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Cards */
+    .card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card.primary {
+      border-left: 4px solid var(--primary-light);
+    }
+
+    .card.secondary {
+      border-left: 4px solid var(--secondary);
+    }
+
+    .card.accent {
+      border-left: 4px solid var(--accent);
+      background: #fffbeb;
+    }
+
+    .card.danger {
+      border-left: 4px solid #ef4444;
+      background: #fef2f2;
+    }
+
+    .card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Code Block */
+    .code-box {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.90rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      position: relative;
+      border: 1px solid #334155;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+
+    .code-box .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #94a3b8;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .code-box .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+
+    .hl-kw { color: #f43f5e; font-weight: 600; }
+    .hl-str { color: #38bdf8; }
+    .hl-num { color: #f59e0b; }
+    .hl-com { color: #94a3b8; font-style: italic; }
+    .hl-fn { color: #a78bfa; font-weight: 600; }
+    .hl-hi { background: rgba(245, 158, 11, 0.25); border-radius: 2px; padding: 0 4px; font-weight: bold; color: #fbbf24; }
+
+    /* Key takeaway box */
+    .takeaway {
+      background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-weight: 600;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .takeaway-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    /* Math Formula Display */
+    .formula-box {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-family: "Cambria Math", "Times New Roman", serif;
+      letter-spacing: 0.05em;
+      color: #0f172a;
+      border: 1px dashed #cbd5e1;
+    }
+
+    /* KaTeX Styles */
+    .katex {
+      font-size: 1.08em !important;
+    }
+    .formula-box .katex {
+      font-size: 1.25em !important;
+    }
+    .formula-box .katex-display {
+      margin: 0.2em 0 !important;
+    }
+
+    /* Lists */
+    ul, ol {
+      padding-left: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    li {
+      line-height: 1.6;
+    }
+
+    li strong {
+      color: var(--primary);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text-main);
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      z-index: 10;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-wrap {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 20px;
+      background: rgba(255, 255, 255, 0.1);
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--primary-light));
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    /* Modal for Slide Jump */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .modal-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .modal-item {
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .modal-item:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e3a8a;
+    }
+
+    /* Print Style */
+    @media print {
+      body {
+        background: transparent;
+        overflow: visible;
+        height: auto;
+      }
+      .top-bar, .bottom-bar, .modal { display: none !important; }
+      .slide-viewport { padding: 0; display: block; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <div class="top-bar">
+    <div class="title">
+      <span>🌾 生物情報処理演習 第7回</span>
+      <span style="color: #64748b;">|</span>
+      <span style="font-weight: 400; color: #cbd5e1;">統計学的仮説検定 ①（1標本t検定と対応のあるt検定）</span>
+    </div>
+    <div class="controls">
+      <button class="btn" onclick="toggleModal()">📋 スライド目次</button>
+      <button class="btn" onclick="toggleFullScreen()">⛶ 全画面</button>
+    </div>
+  </div>
+
+  <!-- Main Slide Viewport -->
+  <div class="slide-viewport">
+
+    <!-- Slide 1: Title -->
+    <div class="slide active">
+      <div class="slide-header" style="border: none; margin-bottom: 10px;">
+        <span class="badge badge-intro">第7回 講義・演習</span>
+      </div>
+      <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; gap: 24px;">
+        <div style="font-size: 1.1rem; color: var(--secondary); font-weight: 700; letter-spacing: 0.1em;">
+          BIOLOGICAL DATA ANALYSIS & INFERENCE
+        </div>
+        <h1 style="font-size: 2.7rem; font-weight: 900; color: var(--primary); line-height: 1.25;">
+          統計学的仮説検定 ①
+        </h1>
+        <div style="font-size: 1.4rem; color: var(--text-muted); font-weight: 500;">
+          〜母集団の差を見極める：1標本t検定と対応のあるt検定〜
+        </div>
+        <div style="margin-top: 20px; padding: 12px 28px; background: #f8fafc; border-radius: 9999px; border: 1px solid var(--border); font-size: 0.95rem; color: #475569;">
+          生物情報処理演習 | 実習課題：イネの出穂後茎葉重（枯れ上がり/Stay-green）解析
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Goals -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">イントロダクション</span>
+          <h2 class="slide-title">本日のゴール（What & Why）</h2>
+        </div>
+        <span class="slide-subtitle">差があると言える科学的な根拠を手に入れる</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🎯</span>
+          <span>実験データの「見かけの差」が、単なる偶然（実験誤差）なのか、科学的に本物の差なのかを確率的にジャッジする！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>1. 検定の論理（背理法）を理解する</h3>
+            <p>「差がない」という帰無仮説を立て、それが偶然起きる確率（$p$値）が極めて低いことを示して棄却する思考法を身につける。</p>
+          </div>
+          <div class="card secondary">
+            <h3>2. Z値からt値・t分布への繋がりを掴む</h3>
+            <p>なぜ正規分布（$Z$）ではなく「$t$分布」なのか？ 母分散が未知という現実と「自由度（$df$）」の意味を理解する。</p>
+          </div>
+          <div class="card accent">
+            <h3>3. 【Wow①】ノイズキャンセリングの威力</h3>
+            <p>対応を無視した検定（Welch）と比較し、なぜ対応をとるだけで $p$値が約10億倍も劇的に跳ね上がるのかを体感する。</p>
+          </div>
+          <div class="card">
+            <h3>4. 【Wow②】生データの探偵団になる</h3>
+            <p>要約統計量（平均値・箱ひげ図）に騙されず、全体が激減する中で「逆に増えている例外個体」を発見・考察する。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: 5-Lecture Roadmap -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">全体像</span>
+          <h2 class="slide-title">生物統計・仮説検定ロードマップ（全5回）</h2>
+        </div>
+        <span class="slide-subtitle">本日から始まる5回シリーズで主要検定を網羅</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🗺️</span>
+          <span>「どんな実験デザインのときに、どの検定を使うのか？」を体系的に身につけます。</span>
+        </div>
+        <div class="grid-2">
+          <div class="card primary" style="border-width: 2px;">
+            <div style="font-weight: 800; color: var(--primary); margin-bottom: 6px;">👉 第7回（本日）：1標本 & 対応のあるt検定</div>
+            <p><strong>同一サンプルの前後比較</strong>（イネの登熟前後の茎葉重）。引き算で1標本問題に帰着させ、個体差ノイズを相殺する！</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 6px;">第8回：独立2群の検定（対応なし）</div>
+            <p><strong>異なる個体群の比較</strong>（野生型 vs 変異体、施肥区 vs 無施肥区）。Studentのt検定 vs Welchのt検定。</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 6px;">第9回：1元配置分散分析（1-way ANOVA）</div>
+            <p><strong>3群以上の比較</strong>（多重比較問題、Tukey-Kramer法）。</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 6px;">第10回：2元配置分散分析（2-way ANOVA）</div>
+            <p><strong>2つの要因の組み合わせ</strong>（品種 × 施肥量）と「交互作用」。</p>
+          </div>
+        </div>
+        <div style="padding: 10px 16px; background: #f1f5f9; border-radius: 8px; font-size: 0.88rem; color: #475569;">
+          <strong>第11回：ノンパラメトリック検定</strong> ── データが正規分布に従わない場合の検定（Wilcoxon検定、Kruskal-Wallis検定）。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: AI Usage Guide -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">学習のコツ</span>
+          <h2 class="slide-title">生成AI活用ガイド（賢い活用のコツ）</h2>
+        </div>
+        <span class="slide-subtitle">AIに使われるのではなく、AIを使い倒す研究者になろう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card secondary">
+            <h3 style="color: var(--secondary);">⭕ 賢い質問の例（理解が深まる）</h3>
+            <ul style="margin-left: 20px; font-size: 0.95rem; line-height: 1.6;">
+              <li>「なぜ母分散が未知だと正規分布ではなくt分布になるの？」</li>
+              <li>「Rの <code>t.test</code> で <code>alternative='greater'</code> と <code>'less'</code> の向きの決め方を教えて」</li>
+              <li>「このRコードで <code>object not found</code> エラーが出ました。原因を教えて」</li>
+            </ul>
+          </div>
+          <div class="card accent">
+            <h3 style="color: var(--accent);">△ もったいない使い方</h3>
+            <p style="font-size: 0.95rem; line-height: 1.6;">
+              <strong>「今日の課題のレポート全部書いて」</strong><br>
+              AIは定型文を埋めるのは一瞬ですが、<strong>「なぜ対応を無視するとp値が10億倍変わるのか？」「なぜこの3個体だけ逆走したのか？」</strong>という生データの発見や生物学的解釈は、あなた自身が手元で動かして初めて血肉になります！
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: Theory - Population and Sample -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">統計学的推測とは？（母集団と標本）</h2>
+        </div>
+        <span class="slide-subtitle">一部のデータから全体の真実を見通す技術</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>母集団（Population）</h3>
+            <p><strong>知りたい対象の全体</strong>（例: あるイネ品種のすべての個体）。<br>母平均 $\mu$ や母分散 $\sigma^2$ は通常、神のみぞ知る未知の値。</p>
+          </div>
+          <div class="card">
+            <h3>標本（Sample）</h3>
+            <p><strong>実験で実際に測定できた一部</strong>（例: 圃場で育てた24株や52株）。<br>標本平均 $\bar{x}$ や不偏分散 $s^2$ は手元で計算できる。</p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">⚠️</span>
+          <span><strong>実験科学のジレンマ：</strong> 標本平均には必ずサンプリングの偶然（実験誤差）が含まれる。「平均値が違って見えた」とき、それは偶然のブレか？ 本当の差か？</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Central Limit Theorem and SE -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">中心極限定理と標準誤差（SE）</h2>
+        </div>
+        <span class="slide-subtitle">サンプル数を増やすと、平均値のブレは縮まる</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="formula-box">
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 6px;">標本平均のばらつき（標準誤差）</div>
+            $$SE = \frac{s}{\sqrt{n}}$$
+            <div style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+              $s$: 標本の標準偏差, $n$: サンプルサイズ
+            </div>
+          </div>
+          <div class="card secondary">
+            <h3>中心極限定理の直感</h3>
+            <p>サイコロ1個の目は平らですが、サイコロ10個の「平均」をとると綺麗な正規分布になります。<br><strong>「独立な多数の誤差の平均は正規分布に従う」</strong> ── これが仮説検定の土台です！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Proof by Contradiction in Testing -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">仮説検定の思考法：背理法のアプローチ</h2>
+        </div>
+        <span class="slide-subtitle">「差がある！」と直接証明できないときの科学的戦略</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>なぜ直接証明できないのか？</h3>
+            <p>どんなに差があっても、「たまたま偏った株を引いただけ（偶然だ）」と言い逃れされてしまうから。</p>
+          </div>
+          <div class="card primary">
+            <h3>科学者の背理法アプローチ</h3>
+            <ol style="margin-left: 20px; font-size: 0.95rem; line-height: 1.6;">
+              <li>あえて<strong>「差はない（偶然だ）」</strong>と仮定する（帰無仮説）</li>
+              <li>もし差がない世界なら、こんな極端なデータが出る確率は？（$p$値）</li>
+              <li>確率が極めて低ければ（$p < 0.05$）仮定を破棄！ $\rightarrow$ <strong>差がある！</strong></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Hypotheses -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">帰無仮説（$H_0$）と対立仮説（$H_1$）</h2>
+        </div>
+        <span class="slide-subtitle">検定を始める前に必ず言葉と数式で定義する</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>帰無仮説（Null Hypothesis: $H_0$）</h3>
+            <p><strong>無に帰したい（否定したい）仮説</strong><br>「差はない」「変化量はゼロである」<br>数式: $\mu_d = 0$（差の母平均は0）</p>
+          </div>
+          <div class="card primary">
+            <h3>対立仮説（Alternative Hypothesis: $H_1$）</h3>
+            <p><strong>主張したい本命の仮説</strong><br>「差がある」「変化している」<br>数式: $\mu_d \neq 0$（両側） または $\mu_d > 0$（片側）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Z-value -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">標準化と $Z$値（理想の世界：母分散が既知）</h2>
+        </div>
+        <span class="slide-subtitle">観測されたズレを標準誤差で割って「共通の物差し」にする</span>
+      </div>
+      <div class="slide-body">
+        <div class="formula-box">
+          $$Z = \frac{\bar{x} - \mu_0}{\frac{\sigma}{\sqrt{n}}} = \frac{\text{標本平均と基準値の差}}{\text{母標準誤差 (SE)}} \sim N(0, 1)$$
+        </div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>標準正規分布 $N(0, 1)$ の性質</h3>
+            <p>・平均 $0$、分散 $1$ の左右対称な釣鐘型<br>・<strong>95% のデータは $[-1.96, +1.96]$ の間に収まる！</strong><br>・$Z > 1.96$ または $Z < -1.96$ が出る確率はわずか <strong>5% 未満</strong></p>
+          </div>
+          <div class="card accent">
+            <h3>もし母分散 $\sigma^2$ が既知なら…</h3>
+            <p>$Z$ を計算し、$\pm 1.96$ より外側に出れば「偶然の誤差とは言えない（有意差あり）」と即座に判定可能（これが <strong>$Z$検定</strong>）。<br><strong>しかし、ここに実験科学の大きな壁が立ちはだかる…！</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 10: From Z to t, Why t-distribution -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">$Z$値から $t$値へ：なぜ「$t$分布」が必要なのか？</h2>
+        </div>
+        <span class="slide-subtitle">実験科学の冷酷な現実：母分散 $\sigma^2$ なんて誰も知らない！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>母標準偏差 $\sigma$ を標本 $s$ で代用する</h3>
+            $$t = \frac{\bar{x} - \mu_0}{\frac{s}{\sqrt{n}}}$$
+            <p style="margin-top: 8px;">母分散 $\sigma^2$ は神のみぞ知る値。そこで手元の標本から計算した標本標準偏差 $s$ を代わりに使ったのが <strong>$t$値</strong> です。</p>
+          </div>
+          <div class="card primary">
+            <h3>なぜ正規分布（$Z$）からズレるのか？</h3>
+            <p>・分子の平均だけでなく、<strong>分母の $s$ も実験ごとにランダムにブレる！</strong><br>・分母の不確実性の分、正規分布よりも<strong>「裾野が広く（外れ値が出やすく）、頂点が低い山」</strong>になる。<br>・ギネスビールの技師 Gosset（ペンネーム: Student）が導いた <strong>「$t$分布」</strong> に従う！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: t-distribution shape and degrees of freedom -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">$t$分布の形を決める「自由度（$df$）」</h2>
+        </div>
+        <span class="slide-subtitle">サンプルサイズ $n$ が小さいほど、$t$分布の裾野は重く広がる</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>自由度（Degrees of Freedom: $df$）</h3>
+            $$df = n - 1$$
+            <p style="margin-top: 8px;">標本分散 $s^2$ を計算するとき、標本平均 $\bar{x}$ という「1つの拘束条件」を使うため、自由に動けるデータの数は $n - 1$ 個。<br><strong>$t$分布の形を決める唯一のパラメータ！</strong></p>
+          </div>
+          <div class="card secondary">
+            <h3>自由度による95%境界の変化</h3>
+            <ul style="margin-left: 20px; font-size: 0.95rem; line-height: 1.6;">
+              <li>$n = 5$ ($df = 4$): 95%境界は <strong>$\pm 2.776$</strong>（裾が極めて広い）</li>
+              <li>$n = 10$ ($df = 9$): 95%境界は <strong>$\pm 2.262$</strong></li>
+              <li>$n = 25$ ($df = 24$): 95%境界は <strong>$\pm 2.064$</strong></li>
+              <li>$n \to \infty$: 正規分布の <strong>$\pm 1.960$</strong> にピタリと一致！</li>
+            </ul>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">💡</span>
+          <span><strong>だから R の出力に必ず自由度が出る！</strong> <code>t.test()</code> の結果に <code>df = 23</code>（$n=24$）や <code>df = 51$</code>（$n=52$）と出るのは、<strong>「どの形の $t$分布を使って確率を計算したか」</strong>を表しているのです！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 12: From t to p-value -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">$t$分布から $p$値へ（幾何学的な直感）</h2>
+        </div>
+        <span class="slide-subtitle">$p$値とは「$t$分布の曲線の裾野の面積（確率）」である！</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">📐</span>
+          <span>自由度 $df$ の $t$分布の山を描き、計算した $t$値 より外側の「裾野の面積（積分値）」を求めたもの ＝ <strong>$p$値</strong>！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>$t$値 が小さいとき（山の中央付近）</h3>
+            <p>裾野の面積が広い $\rightarrow$ <strong>$p$値が大きい（$p > 0.05$）</strong><br>「差がない世界（$H_0$）」でも普通に起きる偶然の範囲内（有意差なし）。</p>
+          </div>
+          <div class="card primary">
+            <h3>$t$値 が大きいとき（山の裾野の遠く）</h3>
+            <p>裾野の面積が極小 $\rightarrow$ <strong>$p$値が極小（$p < 0.05$）</strong><br>「差がない世界」ではまず起こり得ない珍事（帰無仮説を棄却、有意差あり！）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 13: p-value correct definition -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">$p$値の正しい定義（最重要！）</h2>
+        </div>
+        <span class="slide-subtitle">テスト・面接で最も頻出の概念</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">💡</span>
+          <span><strong>$p$値とは：</strong>「帰無仮説が正しい（差がない世界）としたとき、手元のデータ以上に極端な結果が得られる確率」</span>
+        </div>
+        <div class="grid-2">
+          <div class="card accent">
+            <h3>❌ よくある誤解</h3>
+            <p>・帰無仮説が正しい確率（誤り）<br>・対立仮説が正しい確率（誤り）<br>・実験が成功した確率（誤り）</p>
+          </div>
+          <div class="card secondary">
+            <h3>⭕ 正しい理解</h3>
+            <p>「差がない世界」を仮定したシミュレーション確率。<br>$p = 0.001$ なら「差がないとしたら0.1%しか起きない珍事。だから差がないという仮定を捨てよう！」</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 14: Significance Level -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">有意水準（$\alpha$）と判定基準</h2>
+        </div>
+        <span class="slide-subtitle">どこまで珍しければ「偶然ではない」と認めるか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>$p < \alpha$（例: $p < 0.05$）</h3>
+            <p><strong>帰無仮説を棄却（Reject）</strong><br>「統計学的に有意な差がある（Statistically significant）」と判定。</p>
+          </div>
+          <div class="card">
+            <h3>$p \ge \alpha$（例: $p \ge 0.05$）</h3>
+            <p><strong>帰無仮説を保留（Fail to reject）</strong><br>「有意な差があるとはいえない」（差がないと証明されたわけではない）。</p>
+          </div>
+        </div>
+        <div style="font-size: 0.9rem; color: #64748b; margin-top: 10px;">
+          ※ 有意水準 $\alpha$ は、実験前・解析前にあらかじめ決めておくルール（通常 0.05 または 0.01）。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 15: What is Paired Data? -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">「対応のある2標本」とは何か？</h2>
+        </div>
+        <span class="slide-subtitle">2つのデータ群に1対1のペア関係があるか</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>⭕ 対応のあるデータ（Paired）</h3>
+            <ul style="margin-left: 20px; font-size: 0.95rem; line-height: 1.6;">
+              <li><strong>同一のイネ個体</strong>を出穂後5日と35日に測定</li>
+              <li><strong>同一の被験者</strong>の投薬前と投薬後の血圧</li>
+              <li><strong>同一の圃場ブロック内</strong>の日なたと日陰</li>
+            </ul>
+            <p style="margin-top: 8px; font-weight: 700; color: var(--primary);">ペアイコール「個体の元々の性質」が共通！</p>
+          </div>
+          <div class="card">
+            <h3>❌ 独立な2標本（Unpaired）</h3>
+            <ul style="margin-left: 20px; font-size: 0.95rem; line-height: 1.6;">
+              <li>品種Aの24株 と 品種Bの52株</li>
+              <li>野生型マウス と 遺伝子変異マウス</li>
+              <li>施肥区画の植物 と 無施肥区画の植物</li>
+            </ul>
+            <p style="margin-top: 8px; color: var(--text-muted);">ペア関係なし $\rightarrow$ <strong>次回（第8回）で扱います</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 16: Mathematical Essence of Paired t-test -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">対応のあるt検定の数学的本質</h2>
+        </div>
+        <span class="slide-subtitle">引き算（差）をとれば、一瞬で1標本問題にワープする！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>各ペアの差 $d_i$ を計算する</h3>
+            $$d_i = x_{i, \text{後}} - x_{i, \text{前}}$$
+            <p style="margin-top: 10px;">2列あったデータが、「差」という<strong>1列のデータ</strong>に圧縮される！</p>
+          </div>
+          <div class="formula-box">
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 6px;">検定統計量 $t$</div>
+            $$t = \frac{\bar{d} - 0}{\frac{s_d}{\sqrt{n}}}$$
+            <div style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+              完全にもとの「基準値0に対する1標本t検定（自由度 $n-1$）」と同じ！
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 17: Wow 1 - Noise Cancelling -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">Wow体験 ①</span>
+          <h2 class="slide-title">対応のある検定の真の威力：ノイズキャンセリング</h2>
+        </div>
+        <span class="slide-subtitle">なぜ対応をとるのか？ ── 個体差ノイズを消し去るため！</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🎧</span>
+          <span><strong>統計的ノイズキャンセリング：</strong> 個体本来のばらつき（背景ノイズ）を引き算で相殺し、純粋な時間変化（シグナル）だけを抽出する！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card accent">
+            <h3>個体差がデカすぎる問題</h3>
+            <p>植物実験では、同じ品種でも「元々巨大な株（80g）」と「小ぶりな株（30g）」が混在します。<br>普通に2群を並べると、個体差ノイズでシグナルが埋もれてしまいます。</p>
+          </div>
+          <div class="card secondary">
+            <h3>引き算のマジック</h3>
+            <p>・大株：$80\text{g} \rightarrow 68\text{g}$（差: $-12\text{g}$）<br>・小株：$30\text{g} \rightarrow 18\text{g}$（差: $-12\text{g}$）<br>$\rightarrow$ <strong>引き算した瞬間、株の大小が相殺され、全員 $-12\text{g}$ という純粋なシグナルだけが浮き彫りになる！</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 18: Wow 1 Demonstration - Welch vs Paired -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">Wow体験 ① 実演</span>
+          <h2 class="slide-title">同じデータで対応を無視したらどうなるか？</h2>
+        </div>
+        <span class="slide-subtitle">Table 2（52系統）で実際に比較してみると…衝撃の結果！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>あえて対応を無視（Welch検定）</h3>
+            <div class="code-box" style="margin: 8px 0;"><code>t.test(SW5, SW35, paired = FALSE)</code></div>
+            <p>・$t = 4.49, df = 97.35$<br>・<strong>$p = 1.98 \times 10^{-5}$（約 0.00002）</strong><br>個体差ノイズが分母に入り、$t$値が伸び悩む。</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <h3>正しく対応を考慮（Paired検定）</h3>
+            <div class="code-box" style="margin: 8px 0;"><code>t.test(SW5, SW35, paired = TRUE)</code></div>
+            <p>・<strong>$t = 10.11$（2倍以上！）</strong>, $df = 51$<br>・<strong>$p = 8.99 \times 10^{-14}$</strong><br><strong>$p$値が約10億倍も明確に！</strong> ノイズが消えてシグナルが爆発！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 19: Two-sided vs One-sided -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">両側検定 vs 片側検定</h2>
+        </div>
+        <span class="slide-subtitle">検定をかける前に、対立仮説の向きを決める</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>両側検定（Two-sided）</h3>
+            <p><strong>対立仮説: $\mu_1 \neq \mu_2$（差がある）</strong><br>増えるか減るか事前に予測できない場合。棄却域は両端に 2.5% ずつ（計 5%）。<br><strong>迷ったら両側検定が科学の基本！</strong></p>
+          </div>
+          <div class="card">
+            <h3>片側検定（One-sided）</h3>
+            <p><strong>対立仮説: $\mu_1 > \mu_2$ または $\mu_1 < \mu_2$</strong><br>「枯れる方向（減少）しかあり得ない」など事前に明確な場合。棄却域は片側に 5% まとめ配置。<br>⚠️ データを見てから片側にするのはズル（p-hacking）！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 20: R Direction rule -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">実践テクニック</span>
+          <h2 class="slide-title">【超重要】Rでの片側検定の向き（迷子防止）</h2>
+        </div>
+        <span class="slide-subtitle"><code>alternative="greater"</code> なのか <code>"less"</code> なのか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🔑</span>
+          <span>Rは第1引数から第2引数を引き算（<code>x - y</code>）します。「対立仮説の引き算がプラスなら greater、マイナスなら less」と覚える！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>パターン1: SW5 > SW35 を検証</h3>
+            <div class="code-box"><code>t.test(SW5, SW35, paired=T, alternative="greater")</code></div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 6px;">SW5 - SW35 が「大（>0）」なので greater</p>
+          </div>
+          <div class="card">
+            <h3>パターン2: SW35 < SW5 を検証</h3>
+            <div class="code-box"><code>t.test(SW35, SW5, paired=T, alternative="less")</code></div>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 6px;">SW35 - SW5 が「小（<0）」なので less</p>
+          </div>
+        </div>
+        <p style="text-align: center; font-size: 0.9rem; color: var(--secondary); font-weight: 700;">どちらで書いても全く同じ結果（$p = 4.493 \times 10^{-14}$）になります！</p>
+      </div>
+    </div>
+
+    <!-- Slide 21: Biology Context -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">実験背景</span>
+          <h2 class="slide-title">実習の背景：イネの枯れ上がり（Stay-green）</h2>
+        </div>
+        <span class="slide-subtitle">出穂後、イネの体内では何が起きているか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>登熟期のシンク・ソース関係</h3>
+            <p><strong>葉・茎（ソース）</strong>に蓄えた光合成産物や窒素を、登熟中の<strong>穂・子実（シンク）</strong>へと急速に送り出します（転流 / 再転流）。</p>
+          </div>
+          <div class="card primary">
+            <h3>2つの表現型</h3>
+            <p>・<strong>枯れ上がる系統（Senescence）</strong>：茎葉から穂へ養分を送り出し、茎葉重が激減。<br>・<strong>枯れ上がりにくい系統（Stay-green）</strong>：出穂後も緑と茎葉重を維持。</p>
+          </div>
+        </div>
+        <div style="padding: 10px 16px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
+          <strong>解析データ：</strong> Table 1（Genotype A, 24系統: ジャポニカ型） vs Table 2（Genotype B, 52系統: インディカ型）
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 22: Hands-on Flow -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">実習手順</span>
+          <h2 class="slide-title">本日の実習フロー（5ステップ）</h2>
+        </div>
+        <span class="slide-subtitle"><code>ひな型.Rmd</code> を完成させてHTMLレポートを出力しよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>Step 1〜3：基本検定</h3>
+            <p>1. <code>readxl</code> でデータ読み込み<br>2. 箱ひげ図＋対応線プロットの描画<br>3. 課題1〜3（Genotype A / B の両側・片側検定）</p>
+          </div>
+          <div class="card accent">
+            <h3>Step 4〜5：発展探究（Wow!）</h3>
+            <p>4. <strong>発展課題4</strong>：あえて対応なし検定を実行し、ノイズキャンセリングの威力を体感<br>5. <strong>発展課題5</strong>：差を計算し、逆走した3系統を特定・考察！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 23: Step 1 Data Loading -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">Step 1</span>
+          <h2 class="slide-title">データの読み込み（Excel $\rightarrow$ データフレーム）</h2>
+        </div>
+        <span class="slide-subtitle"><code>readxl</code> パッケージを使用</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>library(readxl)
+table1 <- read_excel("table1.xlsx")
+table2 <- read_excel("table2.xlsx")
+head(table1)</code></div>
+        <div class="takeaway">
+          <span class="takeaway-icon">💡</span>
+          <span><code>head(table1)</code> で最初の数行を表示し、SW5 と SW35 の列が正しく読み込まれているか確認しましょう。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 24: Step 2 Visualization -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">Step 2</span>
+          <h2 class="slide-title">データの可視化（箱ひげ図＋対応線）</h2>
+        </div>
+        <span class="slide-subtitle">ペアの対応関係を可視化するコード</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># 箱ひげ図にドットプロットを重ねる
+boxplot(table2, ylab="茎葉重 (g)")
+stripchart(table2, vertical=TRUE, method="jitter", add=TRUE)
+
+# さらに対応する点を線分で結ぶ
+stripchart(table2, vertical=TRUE)
+for(i in 1:nrow(table2)){
+  lines(c(1, 2), c(table2$SW5[i], table2$SW35[i]), col="gray40")
+}</code></div>
+      </div>
+    </div>
+
+    <!-- Slide 25: Boxplot Trap -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">可視化の極意</span>
+          <h2 class="slide-title">箱ひげ図に騙されるな！</h2>
+        </div>
+        <span class="slide-subtitle">要約図だけ見ていると、真のシグナルを見落とす</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>箱ひげ図だけ見た印象</h3>
+            <p>SW5のヒゲの下端とSW35の箱が大きく重なり合っているため、「個体差のばらつきが大きくて、あまり差がないのでは？」と錯覚しやすい。</p>
+          </div>
+          <div class="card primary">
+            <h3>対応線プロットを見た印象</h3>
+            <p><strong>ほぼ全ての線が綺麗に右下がり！</strong><br>個々の株が全員一斉に10g前後減っていることが一目瞭然！「対応関係」を見る重要性がここにあります。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 26: Task 1 Result -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">課題 1</span>
+          <h2 class="slide-title">課題1：Genotype A の両側検定結果</h2>
+        </div>
+        <span class="slide-subtitle">ジャポニカ型アレル（24系統）の解析</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>t.test(table1$SW5, table1$SW35, paired=TRUE, alternative="two.sided")</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>検定結果</h3>
+            <p>・$t = 1.4209, df = 23$<br>・<strong>$p = 0.1688$（$p > 0.05$）</strong><br>・95%信頼区間: $[-1.007, 5.426]$（0を含む）</p>
+          </div>
+          <div class="card secondary">
+            <h3>判定と解釈</h3>
+            <p>有意差なし。帰無仮説は棄却されない。<br>$\rightarrow$ Genotype A は出穂後35日を経過しても茎葉重が維持される（<strong>ステイグリーン・枯れ上がりにくい特性</strong>）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 27: Task 2 Result -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">課題 2</span>
+          <h2 class="slide-title">課題2：Genotype B の両側検定結果</h2>
+        </div>
+        <span class="slide-subtitle">インディカ型アレル（52系統）の解析</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>t.test(table2$SW5, table2$SW35, paired=TRUE, alternative="two.sided")</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>検定結果</h3>
+            <p>・$t = 10.106, df = 51$<br>・<strong>$p = 8.986 \times 10^{-14}$（$p < 0.001$）</strong><br>・95%信頼区間: $[9.486, 14.189]$（0を含まない）</p>
+          </div>
+          <div class="card primary">
+            <h3>判定と解釈</h3>
+            <p>極めて高度に有意。帰無仮説は棄却される。<br>$\rightarrow$ Genotype B は出穂後5日と35日で茎葉重に明らかな差が存在する。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 28: Task 3 Result -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">課題 3</span>
+          <h2 class="slide-title">課題3：Genotype B の片側検定結果</h2>
+        </div>
+        <span class="slide-subtitle">出穂後35日の茎葉重は5日より「小さい」か？</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>t.test(table2$SW5, table2$SW35, paired=TRUE, alternative="greater")</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>検定結果</h3>
+            <p>・$t = 10.106, df = 51$<br>・<strong>$p = 4.493 \times 10^{-14}$</strong><br>・差の平均: $11.838\text{ g}$ 減少</p>
+          </div>
+          <div class="card primary">
+            <h3>判定と解釈</h3>
+            <p>有意差あり。帰無仮説は棄却される。<br>$\rightarrow$ Genotype B は出穂後35日に茎葉重が統計学的に有意に減少している（<strong>枯れ上がり特性</strong>）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 29: Wow 2 - Detecting Reversed Individuals -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">Wow体験 ②</span>
+          <h2 class="slide-title">要約統計量の罠と「逆走個体」の探偵団</h2>
+        </div>
+        <span class="slide-subtitle">全員が一様に枯れ上がったのか？ 生データの差を調べよ！</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>diff_B <- table2$SW35 - table2$SW5
+reversed_idx <- which(diff_B > 0)
+cat("逆走している系統番号:", reversed_idx)</code></div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>ヒットした3系統の数値</h3>
+            <p>・<strong>系統 8</strong>: $66.19\text{g} \rightarrow 72.80\text{g}$（$+6.61\text{g}$）<br>・<strong>系統 11</strong>: $49.48\text{g} \rightarrow 56.55\text{g}$（$+7.07\text{g}$）<br>・<strong>系統 28</strong>: $22.32\text{g} \rightarrow 25.41\text{g}$（$+3.09\text{g}$）</p>
+          </div>
+          <div class="card accent">
+            <h3>要約値の罠</h3>
+            <p>全体平均（$-11.8\text{g}$）や $p$値（$10^{-14}$）だけ見ていると、「52株すべてが枯れ上がった」と錯覚します。しかし実際には<strong>逆走した株が3株存在した</strong>のです！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 30: Wow 2 Discussion -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">Wow体験 ② 考察</span>
+          <h2 class="slide-title">なぜこの3系統だけ逆走したのか？</h2>
+        </div>
+        <span class="slide-subtitle">生物学的・実験的な仮説を立ててみよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card secondary">
+            <h3>生物学的な仮説</h3>
+            <p>・<strong>出穂期のズレ（晩生系統）</strong>：出穂後5日の判定が早すぎ、35日までにさらに光合成で葉茎部が成長した可能性。<br>・<strong>シンク器官の不稔</strong>：穂に実が入らず、茎葉から子実への養分転流がストップした可能性。</p>
+          </div>
+          <div class="card">
+            <h3>遺伝的・実験的な仮説</h3>
+            <p>・<strong>遺伝的組換え</strong>：DNAマーカーと原因遺伝子の間で組換えが起きた個体。<br>・<strong>測定・管理誤差</strong>：サンプリング時の個体選別ミスやラベルの取り違え。</p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">🔬</span>
+          <span>例外個体を見つけて「なぜだろう？」と問いを立てることこそ、データサイエンスと生物学の最高の醍醐味！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 31: Report Submission -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出準備</span>
+          <h2 class="slide-title">レポート作成の仕上げ方（<code>ひな型.Rmd</code>）</h2>
+        </div>
+        <span class="slide-subtitle">RStudioで Knit ボタンを押してHTMLを出力する</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>1. 氏名・学籍番号の入力</h3>
+            <p><code>ひな型.Rmd</code> の冒頭の <code>author: "氏名・学籍番号"</code> を書き換える。</p>
+          </div>
+          <div class="card">
+            <h3>2. 課題1〜3の記述</h3>
+            <p>コードを実行し、仮説・$t$値・$p$値・信頼区間・生物学的意味を記述。</p>
+          </div>
+          <div class="card accent">
+            <h3>3. 発展課題4の考察</h3>
+            <p>Welch検定との比較表をまとめ、「ノイズキャンセリング」の仕組みを自分の言葉で説明。</p>
+          </div>
+          <div class="card primary">
+            <h3>4. 発展課題5の考察</h3>
+            <p>逆走した3系統を特定し、要約統計量の罠と生物学的要因を考察。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 32: Troubleshooting -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">FAQ</span>
+          <h2 class="slide-title">トラブルシューティング（よくある困りごと）</h2>
+        </div>
+        <span class="slide-subtitle">エラーが出ても慌てずチェック</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>⚠️ ファイルが見つからない</h3>
+            <p><code>Error: 'table1.xlsx' does not exist</code><br>$\rightarrow$ 作業ディレクトリを確認！<br><code>Session</code> $\rightarrow$ <code>Set Working Directory</code> $\rightarrow$ <code>To Source File Location</code></p>
+          </div>
+          <div class="card">
+            <h3>⚠️ 列名が見つからない</h3>
+            <p><code>Error: object 'SW5' not found</code><br>$\rightarrow$ データフレーム名を前につける！<br><code>table1$SW5</code> のように <code>$</code> で指定する。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ パッケージ未インストール</h3>
+            <p><code>there is no package called 'readxl'</code><br>$\rightarrow$ Consoleで <code>install.packages("readxl")</code> を実行。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ 片側検定で p値が 0.999... になった</h3>
+            <p>$\rightarrow$ 向き（greater / less）が逆！ 引き算の正負を確認して反転させる。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 33: Summary and Next Lecture -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">まとめ</span>
+          <h2 class="slide-title">本日のまとめと次回（第8回）への予告</h2>
+        </div>
+        <span class="slide-subtitle">初回の学びを整理し、次回へバトンを繋ぐ</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>本日の3大マスターポイント</h3>
+            <p>1. <strong>Zからtへ</strong>：母分散未知の現実から $t$分布と自由度 $df$ が生まれ、$p$値が決まる。<br>2. <strong>ノイズキャンセリング</strong>：引き算で個体差ノイズを消し、検出力を劇的向上。<br>3. <strong>データの探偵</strong>：要約統計量に惑わされず、逆走する例外個体を発見・探究。</p>
+          </div>
+          <div class="card secondary">
+            <h3>次回（第8回）への予告</h3>
+            <p>今日は同一株の前・後（対応あり）だったから引き算でノイズを相殺できました。<br>しかし次回は<strong>「野生型 vs 変異体」「施肥区 vs 無施肥区」のように、全く別の個体群（対応なし）</strong>を比較します！<br>$\rightarrow$ <strong>第8回「検定②：独立2群の検定（Welchのt検定）」</strong>をお楽しみに！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.slide-viewport -->
+
+  <!-- Bottom Navigation Footer -->
+  <div class="bottom-bar">
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSlide()">◀ 前へ</button>
+      <button class="btn" onclick="nextSlide()">次へ ▶</button>
+      <span style="font-size: 0.8rem; color: #64748b; margin-left: 8px;">[← / → / Spaceキーで操作可能]</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="slideCounter" style="font-weight: 600; color: #f1f5f9;">
+      1 / 30
+    </div>
+  </div>
+
+  <!-- Slide Jump Modal -->
+  <div class="modal" id="slideModal" onclick="if(event.target === this) toggleModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="color: var(--primary);">📋 スライド一覧</h3>
+        <button class="btn" onclick="toggleModal()">✕ 閉じる</button>
+      </div>
+      <div class="modal-list" id="modalList"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    const modalList = document.getElementById('modalList');
+
+    // Build modal item list
+    slides.forEach((s, idx) => {
+      const titleElem = s.querySelector('.slide-title') || s.querySelector('h1') || s.querySelector('h2');
+      const titleText = titleElem ? titleElem.innerText.replace(/\n/g, ' ') : `スライド ${idx + 1}`;
+      const item = document.createElement('div');
+      item.className = 'modal-item';
+      item.innerHTML = `<strong>${idx + 1}.</strong> ${titleText}`;
+      item.onclick = () => {
+        goToSlide(idx);
+        toggleModal();
+      };
+      modalList.appendChild(item);
+    });
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+      progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(idx) {
+      currentSlide = idx;
+      updateSlide();
+    }
+
+    function toggleModal() {
+      document.getElementById('slideModal').classList.toggle('active');
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function copyCode(btn) {
+      const codeBox = btn.closest('.code-box');
+      const clone = codeBox.cloneNode(true);
+      const btnInClone = clone.querySelector('.copy-btn');
+      if (btnInClone) btnInClone.remove();
+      const text = clone.innerText.trim();
+      
+      const copySuccess = () => {
+        btn.innerHTML = '✓ コピー完了！';
+        btn.style.color = '#4ade80';
+        btn.style.background = 'rgba(74, 222, 128, 0.2)';
+        setTimeout(() => {
+          btn.innerHTML = '📋 コピー';
+          btn.style.color = '#94a3b8';
+          btn.style.background = 'rgba(255, 255, 255, 0.15)';
+        }, 1800);
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(copySuccess).catch(() => fallbackCopy(text, copySuccess));
+      } else {
+        fallbackCopy(text, copySuccess);
+      }
+    }
+
+    function fallbackCopy(text, callback) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        callback();
+      } catch (err) {
+        console.error('Copy failed', err);
+      }
+      document.body.removeChild(ta);
+    }
+
+    // すべての .code-box にコピーボタンを自動追加
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.code-box').forEach(box => {
+        if (!box.querySelector('.copy-btn')) {
+          const btn = document.createElement('button');
+          btn.className = 'copy-btn';
+          btn.type = 'button';
+          btn.innerHTML = '📋 コピー';
+          btn.onclick = function() { copyCode(this); };
+          box.appendChild(btn);
+        }
+      });
+    });
+
+    // Keyboard Navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      } else if (e.key === 'Escape') {
+        document.getElementById('slideModal').classList.remove('active');
+      }
+    });
+
+    // KaTeX Math Rendering
+    function initKaTeX() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          ignoredClasses: ['code-box', 'copy-btn', 'no-math'],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Attempt to render on DOM ready and window load
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(initKaTeX, 50);
+    });
+    window.addEventListener('load', () => {
+      setTimeout(initKaTeX, 100);
+      setTimeout(initKaTeX, 500);
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>

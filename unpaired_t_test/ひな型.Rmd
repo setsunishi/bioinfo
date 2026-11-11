@@ -1,0 +1,404 @@
+---
+title: "生物情報処理演習 第8回：独立2群の検定（Student vs Welch）"
+author: "氏名・学籍番号をここに記入"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{=html}
+<!-- コードブロック用コピーボタンのスタイル & スクリプト -->
+<style>
+div.sourceCode, pre.sourceCode {
+  position: relative !important;
+  padding-top: 28px !important;
+}
+.btn-code-copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 600;
+  color: #475569;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: all 0.2s ease;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn-code-copy:hover {
+  opacity: 1;
+  background-color: #ffffff;
+  color: #1e293b;
+  border-color: #94a3b8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+.btn-code-copy.copied {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var blocks = document.querySelectorAll('div.sourceCode, pre.sourceCode');
+  blocks.forEach(function(block) {
+    if (block.querySelector('.btn-code-copy')) return;
+    
+    var btn = document.createElement('button');
+    btn.className = 'btn-code-copy';
+    btn.type = 'button';
+    btn.innerHTML = '📋 コピー';
+    
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var codeElem = block.querySelector('code');
+      var textToCopy = codeElem ? codeElem.innerText : block.innerText;
+      
+      var copySuccess = function() {
+        btn.innerHTML = '✓ コピー完了！';
+        btn.classList.add('copied');
+        setTimeout(function() {
+          btn.innerHTML = '📋 コピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      };
+      
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(copySuccess).catch(function() {
+          fallbackCopy(textToCopy, copySuccess);
+        });
+      } else {
+        fallbackCopy(textToCopy, copySuccess);
+      }
+    });
+    
+    block.appendChild(btn);
+  });
+  
+  function fallbackCopy(text, callback) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+      callback();
+    } catch (err) {
+      console.error('コピーに失敗しました', err);
+    }
+    document.body.removeChild(ta);
+  }
+});
+</script>
+```
+
+# はじめに（演習の背景と目的）
+
+本演習（第7回〜第11回）では、生物実験や農学研究で必須となる**「統計学的仮説検定の体系」**を5回にわたって実践的に習得します。
+
+| 回 | テーマ | 主な対象と検定手法 |
+|:---|:---|:---|
+| 第7回 | 検定①：1標本 & 対応のある2標本のt検定 | 同一個体の前後比較（イネの登熟前後の茎葉重） |
+| **第8回（本日）** | **検定②：独立2群の検定（対応なし）** | **異なる個体群同士の比較（F検定、Student vs Welch）** |
+| 第9回 | 検定③：1元配置分散分析 | 3群以上の比較（ANOVA ＋ 多重比較） |
+| 第10回 | 検定④：2元配置分散分析 | 2つの要因の主効果と交互作用 |
+| 第11回 | 検定⑤：ノンパラメトリック検定 | 正規性が仮定できない場合の検定（Wilcoxon検定など） |
+
+第2回となる本日は、**互いに独立した（対応のない）2つのグループ**の平均値を比較する**「独立2群のt検定（Studentのt検定・Welchのt検定）」**および**「等分散性の検定（F検定）」**を学びます。
+
+---
+
+### 実験データの背景（`kadai.txt`）
+76系統からなるイネの遺伝解析分離集団において、出穂後の茎葉部（穂以外の地上部, shoot weight, SW）の乾物重 (g/個体) を測定した。今回は1行が1系統に対応する**スタック形式（縦持ち、タブ区切りテキスト `kadai.txt`）**のデータを用いる。
+
+- `Genotype`：枯れ上がり関連遺伝子座に連鎖したDNAマーカーの遺伝子型
+  - **`A`（24系統）**：ジャポニカ型アレルをもつ系統群
+  - **`B`（52系統）**：インディカ型アレルをもつ系統群
+- `SW5`：出穂後5日の茎葉重 (g)
+- `SW35`：出穂後35日の茎葉重 (g)
+- `SW5_35`：出穂後5日と35日の茎葉重の差（`SW5 - SW35` ＝ 茎葉重の減少量・枯れ上がり度合い）
+
+### データの読み込み
+今回はタブ区切りテキスト（`kadai.txt`）なので、`read.delim()` を用いて読み込みます。列 `Genotype` は文字列（string）ですが、`stringsAsFactors = TRUE` により因子（`factor`）として読み込まれます。
+
+```{r}
+kadai <- read.delim("kadai.txt", stringsAsFactors = TRUE)
+head(kadai)
+summary(kadai)
+```
+
+---
+
+# 課題1：`SW5`（出穂後5日の茎葉重）が Genotype ごとに異なるかの検定
+
+**課題内容**：出穂後5日の茎葉重（`SW5`）が `Genotype`（A群 vs B群）ごとに異なるかどうかを両側検定しなさい。
+
+## データの分布を確認（`SW5`）
+チルダ（`~`）演算子を使って、遺伝子型ごとの箱ひげ図とドットプロットを重ねて描きます。
+
+```{r}
+# 箱ひげ図を描く
+boxplot(kadai$SW5 ~ kadai$Genotype,
+        main = "課題1: SW5 by Genotype", xlab = "Genotype", ylab = "SW5 (g)",
+        col = c("#dbeafe", "#fed7aa"))
+# 箱ひげ図の上にドットプロットを重ねて描く
+stripchart(kadai$SW5 ~ kadai$Genotype,
+           vertical = TRUE, # 縦に
+           method = "jitter", # 近い点はランダムにずらす
+           pch = 16, col = "#334155",
+           add = TRUE) # 前のグラフに追加（上書き）
+```
+
+### 【グラフから受ける印象】
+- Genotype A（中央値 約43.0g, 平均 47.45g）よりも Genotype B（中央値 約51.2g, 平均 53.13g）の方がやや高めに見えるものの、両群とも 20g〜90g 付近まで広くばらついており、分布の重なりが大きいため明確な差があるとは言い切れない印象を受けます。
+
+## 等分散性の検定（F検定）
+A群とB群の母分散が等しいかどうかを `var.test()` で検定します。
+
+```{r}
+# 等分散性の検定
+var.test(kadai$SW5 ~ kadai$Genotype)
+```
+
+- **判定**：$F = 1.0837, p = 0.7865 (> 0.05)$ なので有意ではない（**等分散とみなせる**）。
+
+## 等分散性を仮定したt検定（Studentのt検定）
+```{r}
+# 等分散を仮定した独立2群のt検定 (var.equal = TRUE)
+# ※チルダ (~) を使う場合は paired オプションは指定しない
+t.test(kadai$SW5 ~ kadai$Genotype,
+       alternative = "two.sided",
+       var.equal = TRUE,
+       conf.level = 0.95)
+```
+
+## 等分散性を仮定しないt検定（Welchのt検定）
+```{r}
+# Welchの等分散を仮定しない独立2群のt検定 (var.equal = FALSE)
+t.test(kadai$SW5 ~ kadai$Genotype,
+       alternative = "two.sided",
+       var.equal = FALSE,
+       conf.level = 0.95)
+```
+
+## 課題1の結果の解釈
+- **仮説設定**:
+  - 帰無仮説 $H_0$: Genotype A と B の `SW5` の母平均に差はない（$\mu_A = \mu_B$）
+  - 対立仮説 $H_1$: Genotype A と B の `SW5` の母平均に差がある（$\mu_A \neq \mu_B$）
+- **検定結果**:
+  - Studentのt検定: $t = -1.5288, df = 74, p = 0.1306$, 95%信頼区間 $[-13.070, 1.721]$
+  - Welchのt検定: $t = -1.5060, df = 43.226, p = 0.1393$, 95%信頼区間 $[-13.272, 1.923]$
+  - 等分散性が高いため、StudentとWelchの $p$値はほぼ同じ値になります。
+- **結論**:
+  - いずれの検定でも $p > 0.05$ であり、帰無仮説は棄却されません。
+  - したがって、**出穂後5日の時点では遺伝子型AとBの間で茎葉重（`SW5`）に統計学的に有意な差があるとはいえない**（スタートラインでは有意差なし）。
+
+---
+
+# 課題2：`SW35`（出穂後35日の茎葉重）が Genotype ごとに異なるかの検定
+
+**課題内容**：出穂後35日の茎葉重（`SW35`）が `Genotype`（A群 vs B群）ごとに異なるかどうかを両側検定しなさい。
+
+## データの分布を確認（`SW35`）
+```{r}
+boxplot(kadai$SW35 ~ kadai$Genotype,
+        main = "課題2: SW35 by Genotype", xlab = "Genotype", ylab = "SW35 (g)",
+        col = c("#dbeafe", "#fed7aa"))
+stripchart(kadai$SW35 ~ kadai$Genotype,
+           vertical = TRUE, method = "jitter", pch = 16, col = "#334155", add = TRUE)
+```
+
+### 【グラフから受ける印象】
+- 出穂後5日とは逆に、Genotype A（平均 45.24g）の方が Genotype B（平均 41.29g）よりもやや高い位置に分布していますが、やはり系統ごとのばらつき（個体差）が大きく、2つの箱ひげ図は大きく重なっています。
+
+## 等分散性の検定（F検定）
+```{r}
+var.test(kadai$SW35 ~ kadai$Genotype)
+```
+
+- **判定**：$F = 1.5483, p = 0.1947 (> 0.05)$ で有意ではない（**等分散とみなせる**）。
+
+## 等分散性を仮定したt検定（Studentのt検定）
+```{r}
+t.test(kadai$SW35 ~ kadai$Genotype,
+       alternative = "two.sided",
+       var.equal = TRUE,
+       conf.level = 0.95)
+```
+
+## 等分散性を仮定しないt検定（Welchのt検定）
+```{r}
+t.test(kadai$SW35 ~ kadai$Genotype,
+       alternative = "two.sided",
+       var.equal = FALSE,
+       conf.level = 0.95)
+```
+
+## 課題2の結果の解釈
+- **仮説設定**:
+  - 帰無仮説 $H_0$: Genotype A と B の `SW35` の母平均に差はない（$\mu_A = \mu_B$）
+  - 対立仮説 $H_1$: Genotype A と B の `SW35` の母平均に差がある（$\mu_A \neq \mu_B$）
+- **検定結果**:
+  - Studentのt検定: $t = 1.2455, df = 74, p = 0.2169$, 95%信頼区間 $[-2.371, 10.279]$
+  - Welchのt検定: $t = 1.1491, df = 37.263, p = 0.2579$, 95%信頼区間 $[-3.017, 10.924]$
+- **結論**:
+  - いずれの検定でも $p > 0.05$ であり、帰無仮説は棄却されません。
+  - **出穂後35日単独の測定値（`SW35`）を比較しても、遺伝子型AとBの間で茎葉重に有意な差があるとはいえない**。
+
+---
+
+# 課題3：`SW5_35`（`SW5 - SW35`：減少量）が Genotype ごとに異なるかの検定
+
+**課題内容**：出穂後5日と35日の茎葉重の差（`SW5_35 = SW5 - SW35`、すなわち茎葉重の減少量・枯れ上がり量）が `Genotype` ごとに異なるかどうかを両側検定しなさい。
+
+## データの分布を確認（`SW5_35`）
+```{r}
+boxplot(kadai$SW5_35 ~ kadai$Genotype,
+        main = "課題3: SW5_35 (SW5 - SW35) by Genotype", xlab = "Genotype", ylab = "SW5 - SW35 (g)",
+        col = c("#dbeafe", "#fed7aa"))
+stripchart(kadai$SW5_35 ~ kadai$Genotype,
+           vertical = TRUE, method = "jitter", pch = 16, col = "#334155", add = TRUE)
+abline(h = 0, lty = 2, col = "gray40")
+```
+
+### 【グラフから受ける印象】
+- Genotype A の減少量は 0g 付近（平均 2.21g）に集まっているのに対し、Genotype B の減少量は大きくプラス側（平均 11.84g）へシフトしており、2群の分布の位置に明瞭な差が認められます。
+
+## 等分散性の検定（F検定）
+```{r}
+var.test(kadai$SW5_35 ~ kadai$Genotype)
+```
+
+- **判定**：$F = 0.81339, p = 0.6000 (> 0.05)$ で有意ではない（**等分散とみなせる**）。
+
+## 等分散性を仮定したt検定（Studentのt検定）
+```{r}
+t.test(kadai$SW5_35 ~ kadai$Genotype,
+       alternative = "two.sided",
+       var.equal = TRUE,
+       conf.level = 0.95)
+```
+
+## 等分散性を仮定しないt検定（Welchのt検定）
+```{r}
+t.test(kadai$SW5_35 ~ kadai$Genotype,
+       alternative = "two.sided",
+       var.equal = FALSE,
+       conf.level = 0.95)
+```
+
+## 課題3の結果の解釈
+- **仮説設定**:
+  - 帰無仮説 $H_0$: Genotype A と B の茎葉重減少量（`SW5_35`）の母平均に差はない（$\mu_A = \mu_B$）
+  - 対立仮説 $H_1$: Genotype A と B の茎葉重減少量（`SW5_35`）の母平均に差がある（$\mu_A \neq \mu_B$）
+- **検定結果**:
+  - Studentのt検定: $t = -4.7593, df = 74, p = 9.394 \times 10^{-6} (< 0.001)$, 95%信頼区間 $[-13.659, -5.597]$
+  - Welchのt検定: $t = -4.9457, df = 49.342, p = 9.193 \times 10^{-6} (< 0.001)$, 95%信頼区間 $[-13.540, -5.717]$
+  - 標本平均: Genotype A $= 2.209\text{ g}$, Genotype B $= 11.838\text{ g}$（差: $-9.628\text{ g}$）
+- **結論**:
+  - $p < 0.001$（0.1%水準でも高度に有意）であり、帰無仮説は棄却されます。
+  - **遺伝子型AとBの間で、出穂後の茎葉重の減少量（`SW5 - SW35`）には極めて有意な差がある**（Genotype B の方が平均して約 $9.63\text{ g}$ 多く減少する）。
+
+---
+
+# 発展課題4【Wow体験①：なぜ単一時点（SW5, SW35）では差が見えず、変化量（SW5_35）で劇的な差が出たのか？】
+
+> **問い**：課題1（`SW5`: $p = 0.139$）でも課題2（`SW35`: $p = 0.258$）でも有意差がなかったのに、なぜ差をとった課題3（`SW5_35`: $p = 9.19 \times 10^{-6}$）では約28,000倍もシャープな有意差が出現したのでしょうか？ また、B群の方が減少量が大きいかを片側検定で検証してみましょう。
+
+## `SW5_35` の片側検定（Genotype A < Genotype B）と標準偏差の比較
+```{r}
+# Rの因子順は第1群が A、第2群が B なので、「Aの減少量 < Bの減少量 (A - B < 0)」は alternative = "less"
+t.test(kadai$SW5_35 ~ kadai$Genotype, alternative = "less", var.equal = FALSE)
+
+# 各変数の群別平均と標準偏差 (SD) を比較
+aggregate(cbind(SW5, SW35, SW5_35) ~ Genotype, data = kadai,
+          FUN = function(x) c(Mean = round(mean(x), 2), SD = round(sd(x), 2)))
+```
+
+## 比較表と統計学的・生物学的考察
+
+| 変数 | Genotype A 平均 (SD) | Genotype B 平均 (SD) | 2群の平均差 (A - B) | Welch $t$値 | Welch $p$値 (両側) |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **課題1：`SW5`** | $47.45\text{ g}$ ($15.46$) | $53.13\text{ g}$ ($14.85$) | $-5.67\text{ g}$ | $-1.506$ | $0.1393$ (NS) |
+| **課題2：`SW35`** | $45.24\text{ g}$ ($14.80$) | $41.29\text{ g}$ ($11.89$) | $+3.95\text{ g}$ | $+1.149$ | $0.2579$ (NS) |
+| **課題3：`SW5_35`** | **$2.21\text{ g}$ ($7.62$)** | **$11.84\text{ g}$ ($8.45$)** | **$-9.63\text{ g}$** | **$-4.946$** | **$9.193 \times 10^{-6}$ (\*\*\*)** |
+
+### 【なぜ単一時点では差が見えず、変化量で劇的な有意差が出たのか？】
+1. **平均値の逆転（交差）現象**:
+   - 出穂後5日（`SW5`）では B群の方が $+5.67\text{ g}$ 重かったのに、出穂後35日（`SW35`）では B群が猛烈に枯れ上がった結果、A群の方が $+3.95\text{ g}$ 重くなり、**大小関係が途中で逆転（交差）**していました。そのため、各時点の断面だけでは群間差が $4〜5.7\text{ g}$ 程度にとどまっていました。
+2. **個体差ノイズの相殺（第7回×第8回の融合）**:
+   - 76系統は遺伝的背景が分離しているため、元々の株のサイズに巨大な個体差（SD $\approx 12〜15\text{ g}$）があります。
+   - しかし各系統内で `SW5 - SW35` を計算して初期サイズを差し引くと、株固有の大きさノイズが相殺され、**標準偏差が約半分（SD $\approx 7.6〜8.4\text{ g}$）に縮小**します。
+   - 「シグナル（差）が $9.63\text{ g}$ に広がり、ノイズ（SD）が半分に減った」ことで、$t$値が爆発的に大きくなり、遺伝子座の効果（Stay-green vs 枯れ上がり）を明確に証明できました。
+
+---
+
+# 発展課題5【Wow体験②：キノコ例題 `kinoko.csv` の境界線F検定（$p = 0.05096$）とWelch検定の頑健性】
+
+> **問い**：講義例題の `kinoko.csv`（斜面上部 `Ue` 68本 vs 斜面下部 `Shita` 61本のキノコの柄の長さ）を解析し、等分散性の検定で $p = 0.05096$ という「有意水準5%ギリギリ」の値が出たときの解釈と、Student法 vs Welch法の違いを考察しなさい。
+
+## キノコ例題データの読み込みと一連の検定
+```{r}
+kinoko <- read.csv("kinoko.csv", stringsAsFactors = TRUE)
+
+# 箱ひげ図＋ドットプロット
+boxplot(kinoko$Length ~ kinoko$Shamen,
+        main = "発展課題5: キノコの柄の長さ (Shita vs Ue)",
+        xlab = "斜面位置 (Shamen)", ylab = "柄の長さ Length (mm)",
+        col = c("#fef08a", "#bbf7d0"))
+stripchart(kinoko$Length ~ kinoko$Shamen,
+           vertical = TRUE, method = "jitter", pch = 16, col = "#334155", add = TRUE)
+
+# 等分散性の検定 (F検定)
+var.test(kinoko$Length ~ kinoko$Shamen)
+
+# Studentのt検定 (var.equal = TRUE)
+t.test(kinoko$Length ~ kinoko$Shamen, alternative = "two.sided", var.equal = TRUE)
+
+# Welchのt検定 (var.equal = FALSE)
+t.test(kinoko$Length ~ kinoko$Shamen, alternative = "two.sided", var.equal = FALSE)
+```
+
+### 【境界線F検定とWelch検定に関する考察】
+1. **境界線 $p = 0.05096$ の危うさと「多重検定の罠」**:
+   - `var.test()` の結果は $F = 1.635, p = 0.05096$ であり、有意水準 $0.05$ をわずか $0.00096$ 上回るだけの境界線上にある。
+   - もし「F検定の後にStudentかWelchを選ぶ」という二段階検定を行うと、わずか1個体の測定値が $0.1\text{ mm}$ 動いて $p = 0.049$ になった瞬間に検定手法が切り替わってしまう不自然さがあり、さらに検定を2回繰り返すことで誤判定（第1種の過誤）の確率が増大する。
+2. **Welchのt検定による滑らかな自由度補正**:
+   - Student検定（$t = -3.9532, df = 127, p = 0.0001273$）に対し、Welch検定（$t = -3.9014, df = 113.35, p = 0.0001626$）では、2群の分散比（$1.635$倍）に応じて自由度が $127 \to 113.35$ へと連続的に割り引かれている。
+   - このように Welch の方法は等分散・不等分散を問わず安全に機能するため、現代の統計解析では最初から Welch 検定を用いる（そして確認として両方を比較する）のが合理的である。
+
+---
+
+# 全体のまとめと次回（第9回）への展望
+
+1. **第7回と第8回の統合的理解**:
+   - 第7回（対応のあるt検定）では各遺伝子型内の前後比較を行い、第8回（対応のない独立2群のt検定）では遺伝子型間（Genotype A 24系統 vs Genotype B 52系統）の直接比較を行った。
+   - 単一時点（`SW5` や `SW35`）の比較では個体差ノイズに阻まれて有意差が見えなかったが、各系統の減少量（`SW5_35`）を独立2群検定にかけることで、Genotype B（インディカ型アレル）が Genotype A（ジャポニカ型アレル）よりも有意に大きく枯れ上がること（$p = 9.193 \times 10^{-6}$）を証明できた。
+2. **次回（第9回）への展望**:
+   - 今回までは「2群」の比較を扱ったが、実際の実験では「3品種以上の比較」や「複数濃度の薬剤処理区の比較」など**3群以上の多群比較**が頻繁に登場する。
+   - 次回（第9回）は、3群以上の比較でt検定を繰り返してはいけない理由（多重検定の罠）と、**「1元配置分散分析（One-way ANOVA）および多重比較（Tukey法・Dunnett法）」**を学ぶ。

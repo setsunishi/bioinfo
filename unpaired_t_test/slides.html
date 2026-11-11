@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第8回：統計学的仮説検定 ②（独立2群のt検定）</title>
+
+  <!-- KaTeX CSS & JS for Math Rendering (Primary: jsdelivr, Fallback: cdnjs) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css';">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"
+          onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js';"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+          onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js';"
+          onload="initKaTeX()"></script>
+  
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0d9488;
+      --secondary-light: #14b8a6;
+      --accent: #d97706;
+      --bg: #0f172a;
+      --slide-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --border: #e2e8f0;
+      --highlight: #fef3c7;
+      --highlight-border: #f59e0b;
+      --badge-theory: #e0f2fe;
+      --badge-theory-text: #0369a1;
+      --badge-practice: #dcfce7;
+      --badge-practice-text: #15803d;
+      --badge-intro: #f3e8ff;
+      --badge-intro-text: #7e22ce;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Header Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+
+    .top-bar .title {
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-bar .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    /* Slide Container */
+    .slide-viewport {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .slide {
+      background: var(--slide-bg);
+      width: 100%;
+      max-width: 1200px;
+      aspect-ratio: 16 / 9;
+      max-height: calc(100vh - 110px);
+      border-radius: 14px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      padding: 36px 48px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.985); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .slide-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-intro { background: var(--badge-intro); color: var(--badge-intro-text); }
+    .badge-theory { background: var(--badge-theory); color: var(--badge-theory-text); }
+    .badge-practice { background: var(--badge-practice); color: var(--badge-practice-text); }
+
+    .slide-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.25;
+    }
+
+    .slide-subtitle {
+      font-size: 1.0rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    /* Grid & Columns */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    /* Cards */
+    .card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card.primary {
+      border-left: 4px solid var(--primary-light);
+    }
+
+    .card.secondary {
+      border-left: 4px solid var(--secondary);
+    }
+
+    .card.accent {
+      border-left: 4px solid var(--accent);
+      background: #fffbeb;
+    }
+
+    .card.danger {
+      border-left: 4px solid #ef4444;
+      background: #fef2f2;
+    }
+
+    .card h3 {
+      font-size: 1.12rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Code Block */
+    .code-box {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      overflow-x: auto;
+      position: relative;
+      border: 1px solid #334155;
+      user-select: text;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+
+    .code-box .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #94a3b8;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .code-box .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+
+    /* Key takeaway box */
+    .takeaway {
+      background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-weight: 600;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .takeaway-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    /* Math Formula Display */
+    .formula-box {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 1.15rem;
+      color: #0f172a;
+      border: 1px dashed #cbd5e1;
+    }
+
+    /* KaTeX Styles */
+    .katex {
+      font-size: 1.06em !important;
+    }
+    .formula-box .katex {
+      font-size: 1.2em !important;
+    }
+    .formula-box .katex-display {
+      margin: 0.2em 0 !important;
+    }
+
+    /* Lists */
+    ul, ol {
+      padding-left: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    li {
+      line-height: 1.55;
+    }
+
+    li strong {
+      color: var(--primary);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text-main);
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      z-index: 10;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-wrap {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 20px;
+      background: rgba(255, 255, 255, 0.1);
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--primary-light));
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    /* Modal for Slide Jump */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 90%;
+      max-width: 820px;
+      max-height: 80vh;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .modal-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .modal-item {
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .modal-item:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e3a8a;
+    }
+
+    /* Print Style */
+    @media print {
+      body {
+        background: transparent;
+        overflow: visible;
+        height: auto;
+      }
+      .top-bar, .bottom-bar, .modal { display: none !important; }
+      .slide-viewport { padding: 0; display: block; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <div class="top-bar">
+    <div class="title">
+      <span>🌾 生物情報処理演習 第8回</span>
+      <span style="color: #64748b;">|</span>
+      <span style="font-weight: 400; color: #cbd5e1;">統計学的仮説検定 ②（独立2群のt検定：Student vs Welch）</span>
+    </div>
+    <div class="controls">
+      <a href="index.html" class="btn">🏠 講義ポータル</a>
+      <button class="btn" onclick="toggleModal()">📋 スライド目次</button>
+      <button class="btn" onclick="toggleFullScreen()">⛶ 全画面</button>
+    </div>
+  </div>
+
+  <!-- Main Slide Viewport -->
+  <div class="slide-viewport">
+
+    <!-- Slide 1: Title -->
+    <div class="slide active">
+      <div class="slide-header" style="border: none; margin-bottom: 10px;">
+        <span class="badge badge-intro">第8回 講義・演習</span>
+      </div>
+      <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; gap: 24px;">
+        <div style="font-size: 1.1rem; color: var(--secondary); font-weight: 700; letter-spacing: 0.1em;">
+          BIOLOGICAL DATA ANALYSIS & INFERENCE
+        </div>
+        <h1 style="font-size: 2.65rem; font-weight: 900; color: var(--primary); line-height: 1.25;">
+          統計学的仮説検定 ②
+        </h1>
+        <div style="font-size: 1.35rem; color: var(--text-muted); font-weight: 500;">
+          〜独立2群のt検定（Student vs Welch）と等分散性〜
+        </div>
+        <div style="margin-top: 20px; padding: 12px 28px; background: #f8fafc; border-radius: 9999px; border: 1px solid var(--border); font-size: 0.95rem; color: #475569;">
+          生物情報処理演習 | 実習課題：イネ76系統の遺伝子型間（Genotype A vs B）比較解析
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Goals -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">イントロダクション</span>
+          <h2 class="slide-title">本日のゴール（What & Why）</h2>
+        </div>
+        <span class="slide-subtitle">「野生型 vs 変異体」「品種A vs 品種B」の差を科学的に証明する</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🎯</span>
+          <span>互いに独立した2つのグループ（サンプル数 $n_1 \neq n_2$ でもOK）の平均値に統計的な差があるかを判定する！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>1. 対応あり vs 対応なしを見分ける</h3>
+            <p>同一株の前後比較（第7回）と、別々の個体群同士の比較（第8回）の実験デザインと数理の違いを理解する。</p>
+          </div>
+          <div class="card secondary">
+            <h3>2. Student検定・Welch検定・F検定の習得</h3>
+            <p>等分散性の検定（<code>var.test</code>）と2種類のt検定（<code>var.equal=TRUE/FALSE</code>）の仕組みと「多重検定の罠」を理解する。</p>
+          </div>
+          <div class="card accent">
+            <h3>3. 【Wow①】スナップショットの罠と変化量</h3>
+            <p>なぜ <code>SW5</code> も <code>SW35</code> も有意差がないのに、差（<code>SW5_35</code>）をとると $p = 9.19 \times 10^{-6}$ の劇的な有意差が出現するのかを体験する。</p>
+          </div>
+          <div class="card">
+            <h3>4. 【Wow②】スタック形式と境界線データの探究</h3>
+            <p>1データ1行の「スタック形式」とチルダ（<code>~</code>）記法をマスターし、キノコ例題（$p=0.05096$）からWelch検定の真価を学ぶ。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: 5-Lecture Roadmap -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">全体像</span>
+          <h2 class="slide-title">生物統計・仮説検定ロードマップ（全5回）</h2>
+        </div>
+        <span class="slide-subtitle">実験デザインに応じた検定手法の体系マップ</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🗺️</span>
+          <span>第8回は生物・農学実験でもっとも登場頻度が高い「独立した2群の比較」です！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第7回（前回）：1標本 & 対応のあるt検定</div>
+            <p><strong>同一サンプルの前後比較</strong>（イネ登熟前後の茎葉重）。引き算で1標本問題に帰着し、個体差ノイズを相殺。</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <div style="font-weight: 800; color: var(--primary); margin-bottom: 4px;">👉 第8回（本日）：独立2群の検定（対応なし）</div>
+            <p><strong>異なる個体群同士の比較</strong>（Genotype A 24系統 vs B 52系統、斜面の上 vs 下）。Student検定 vs Welch検定。</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第9回（次回）：1元配置分散分析（1-way ANOVA）</div>
+            <p><strong>3群以上の比較</strong>と多重比較（Tukey法・Dunnett法）。</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第10回・第11回：2元配置分散分析 / ノンパラメトリック</div>
+            <p>2要因の<strong>交互作用</strong>（第10回）、正規性が仮定できない場合の<strong>順位和検定</strong>（第11回）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Timeline -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">進行予定</span>
+          <h2 class="slide-title">本日のタイムライン</h2>
+        </div>
+        <span class="slide-subtitle">理論からR実践、そして2つの「Wow!」発見へ</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>Part 1：講義・理論編（約35分）</h3>
+            <ol>
+              <li>前回のおさらい：「対応あり」vs「対応なし」</li>
+              <li>独立2群の平均の差と誤差の伝播（なぜ分散を足すのか？）</li>
+              <li>等分散を仮定する <strong>Studentのt検定</strong></li>
+              <li>等分散性の検定（<strong>F検定</strong>とR.A. FisherのF分布）</li>
+              <li>等分散を仮定しない <strong>Welchのt検定</strong></li>
+              <li><strong>【重要】多重検定の罠と現代統計学の推奨</strong></li>
+            </ol>
+          </div>
+          <div class="card secondary">
+            <h3>Part 2：実践・HandsOn編（約45分）</h3>
+            <ol>
+              <li>データ形式の基本：<strong>ワイド形式 vs スタック形式</strong></li>
+              <li>チルダ（<code>~</code>）演算子による層別プロットと検定</li>
+              <li>例題実習：斜面の上下でキノコの長さは違うか？（<code>kinoko.csv</code>）</li>
+              <li>課題1〜3：イネ76系統（<code>kadai.txt</code>）の遺伝子型間比較</li>
+              <li><strong>【Wow①】なぜ単一時点では見えず「差」で劇的に見えるのか？</strong></li>
+              <li><strong>【Wow②】キノコ境界線データ（$p=0.05096$）の探究</strong></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: AI Guide -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">学習のコツ</span>
+          <h2 class="slide-title">生成AI活用ガイド（第8回編）</h2>
+        </div>
+        <span class="slide-subtitle">Rの出力結果の解釈に困ったらAIに聞いてみよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card secondary">
+            <h3>⭕ 理解が深まる良い質問例</h3>
+            <div class="code-box" style="margin: 6px 0;"><code>この t 検定の結果の解釈を教えて下さい。
+Welch Two Sample t-test
+data: A_class and B_class
+t = -2.9207, df = 16.057, p-value = 0.01038</code></div>
+            <ul>
+              <li>「Rで <code>t.test(y ~ x, paired=FALSE)</code> と書いたらエラーになるのはなぜ？」</li>
+              <li>「Welchのt検定で自由度 df が小数になる理由を直感的に教えて」</li>
+            </ul>
+          </div>
+          <div class="card accent">
+            <h3>△ もったいない使い方</h3>
+            <p><strong>「課題1〜3の考察を全部書いて」</strong><br>
+            定型文をAIに出させるだけでは、本日の最大の発見である<strong>「なぜ出穂後5日（SW5）も35日（SW35）も有意差がないのに、差（SW5_35）をとると $p = 10^{-6}$ の圧倒的有意差になるのか？」</strong>という科学的醍醐味を味わえません。ぜひ自分の目でグラフと数値を比べてみてください！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Review of Lecture 7 -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">前回のおさらい</span>
+          <h2 class="slide-title">第7回の復習：1群の検定・対応のあるt検定</h2>
+        </div>
+        <span class="slide-subtitle">前回のコアロジックを1枚で振り返る</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>仮説検定の基本ステップ（背理法）</h3>
+            <ol>
+              <li><strong>帰無仮説 $H_0$</strong>：「差はない（$\mu_d = 0$）」と仮定する</li>
+              <li><strong>検定統計量 $t$</strong>：観測された差を標準誤差（$SE = s/\sqrt{n}$）で割る</li>
+              <li><strong>$p$値の計算</strong>：自由度 $df = n-1$ の $t$分布の裾野の面積を求める</li>
+              <li><strong>判定</strong>：$p < 0.05$ なら $H_0$ を棄却し「有意差あり」！</li>
+            </ol>
+          </div>
+          <div class="card primary">
+            <h3>対応のある2群（Paired）のポイント</h3>
+            <p>・<strong>同一のイネ個体</strong>の出穂後5日（SW5）と35日（SW35）のように、1対1のペア関係があるデータ。<br>・各個体の差 $d_i = \text{SW5}_i - \text{SW35}_i$ を計算することで、<strong>株ごとの個体差ノイズを相殺（ノイズキャンセリング）</strong>し、1標本のt検定に帰着させた！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Paired vs Unpaired -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">今回のお題：「対応のない2群（独立2群）」とは？</h2>
+        </div>
+        <span class="slide-subtitle">2つのグループの間で「メンバー（個体）が異なる」比較</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>🔗 対応がある2群（前回）</h3>
+            <p>・薬品投与<strong>前</strong>の個体 A, B, C vs 投与<strong>後</strong>の同じ個体 A, B, C<br>・同一イネ系統の <code>SW5</code> vs <code>SW35</code><br>・<strong>特徴</strong>：上と下でメンバーが同じ。必ず $n_1 = n_2$。</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <h3>⚔️ 対応がない2群 / 独立2群（今回！）</h3>
+            <p>・薬品を添加したグループ（個体 A, B, C）vs 無添加の別グループ（個体 D, E, F, G）<br>・<strong>イネ Genotype A群（24系統）vs Genotype B群（52系統）</strong><br>・<strong>特徴</strong>：メンバーが全く別（赤の他人）。<strong>サンプルサイズ $n_1$ と $n_2$ が異なっていてもOK！</strong></p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">💡</span>
+          <span>「品種A vs 品種B」「野生型 vs 変異体」「斜面上部 vs 斜面下部」など、実験科学の大部分はこの<strong>独立2群比較</strong>です！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Hypotheses for Unpaired 2 Groups -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">独立2群の検定における仮説のイメージ</h2>
+        </div>
+        <span class="slide-subtitle">2つの標本は「同じ母集団」から来たのか、「別々の母集団」から来たのか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>帰無仮説 $H_0$：$\mu_1 = \mu_2$（差がない）</h3>
+            <p>「群1と群2の母平均は同じである（$\mu_1 - \mu_2 = 0$）」<br>
+            手元の標本平均 $\bar{X}_1$ と $\bar{X}_2$ が違って見えるのは、<strong>同じ1つの母集団からたまたま偏って抽出された標本誤差</strong>にすぎない。</p>
+          </div>
+          <div class="card primary">
+            <h3>対立仮説 $H_1$：$\mu_1 \neq \mu_2$（差がある）</h3>
+            <p>「群1と群2の母平均は異なる（$\mu_1 - \mu_2 \neq 0$）」<br>
+            標本平均の違いは偶然の標本誤差ではなく、<strong>平均値が異なる2つの別々の母集団に由来する本物の差</strong>である。</p>
+          </div>
+        </div>
+        <div class="formula-box">
+          知りたいこと：標本1（サイズ $n_1$, 平均 $\bar{X}_1$, 不偏分散 $s_1^2$）と 標本2（サイズ $n_2$, 平均 $\bar{X}_2$, 不偏分散 $s_2^2$）から $\mu_1 = \mu_2$ かを判定したい！
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Distribution of Difference of Two Means -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">2つの平均値の差 $\bar{X}_1 - \bar{X}_2$ の誤差はどう分布する？</h2>
+        </div>
+        <span class="slide-subtitle">独立な2群の差をとると、誤差の分散は「足し算」になる！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>平均の差も $t$分布に従う！</h3>
+            <p>・標本1の平均 $\bar{X}_1$ の誤差（$SE_1^2 = \sigma_1^2 / n_1$）も、標本2の平均 $\bar{X}_2$ の誤差（$SE_2^2 = \sigma_2^2 / n_2$）も正規分布・$t$分布に従う。<br>・したがって、<strong>2つの平均値の差 $\bar{X}_1 - \bar{X}_2$ の誤差も $t$分布に従う！</strong></p>
+          </div>
+          <div class="formula-box">
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 6px;">差の標準誤差（誤差の伝播法則）</div>
+            $$SE_{\bar{X}_1 - \bar{X}_2} = \sqrt{SE_1^2 + SE_2^2} = \sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}$$
+            <div style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+              独立な2群では、群1の不確実性と群2の不確実性が<strong>合算（和）</strong>される！
+            </div>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">🔑</span>
+          <span>未知の母分散 $\sigma_1^2, \sigma_2^2$ を手元の標本不偏分散 $s_1^2, s_2^2$ でどう置き換えるかによって、<strong>2種類のt検定（Student / Welch）</strong>に分かれます！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 10: Flowchart of Choosing Test -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">独立2群の検定方法の選び方（全体マップ）</h2>
+        </div>
+        <span class="slide-subtitle">母分散は未知なので $n > 30$ でも $t$検定を用いる</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card primary">
+            <h3>① 等分散の場合</h3>
+            <p><strong>Studentのt検定</strong><br>（<code>var.equal = TRUE</code>）<br>2群の母分散が等しい（$\sigma_1^2 = \sigma_2^2$）と仮定し、両群の分散をプール（合算）して計算。</p>
+          </div>
+          <div class="card secondary">
+            <h3>② 不等分散・不明の場合</h3>
+            <p><strong>Welchのt検定</strong><br>（<code>var.equal = FALSE</code>）<br>母分散が等しいと仮定せず、各群の分散をそのまま使い自由度を補正。<strong>Rのデフォルト！</strong></p>
+          </div>
+          <div class="card accent">
+            <h3>🔍 等分散性の検定</h3>
+            <p><strong>F検定（<code>var.test</code>）</strong><br>2群の不偏分散の比 $F = s_1^2 / s_2^2$ を計算し、等分散といえるかを検定する。</p>
+          </div>
+        </div>
+        <div style="padding: 10px 16px; background: #f1f5f9; border-radius: 8px; font-size: 0.9rem; color: #475569;">
+          ※ もしデータが正規分布から大きく外れている場合は、<strong>第11回「ノンパラメトリック検定（Wilcoxon順位和検定 / Mann-Whitney U検定）」</strong>へ進みます。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: Student's t-test -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論 ①</span>
+          <h2 class="slide-title">等分散を仮定した独立2群のt検定（Studentのt検定）</h2>
+        </div>
+        <span class="slide-subtitle">2群の母分散に差がない（$\sigma_1^2 = \sigma_2^2$）とみなせる場合</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="formula-box">
+            <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 4px;">① 合同分散（プールされた不偏分散 $s_p^2$）</div>
+            $$s_p^2 = \frac{(n_1 - 1)s_1^2 + (n_2 - 1)s_2^2}{n_1 + n_2 - 2}$$
+            <div style="font-size: 0.82rem; color: #64748b; margin-top: 6px;">
+              2群の不偏分散 $s_1^2, s_2^2$ を自由度で重み付け平均して1つにまとめる
+            </div>
+          </div>
+          <div class="formula-box">
+            <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 4px;">② 検定統計量 $t$ と 自由度 $df$</div>
+            $$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}}, \quad df = n_1 + n_2 - 2$$
+            <div style="font-size: 0.82rem; color: #64748b; margin-top: 6px;">
+              自由度は全サンプル数 $n_1 + n_2$ から $2$ を引いた<strong>整数</strong>になる！
+            </div>
+          </div>
+        </div>
+        <div class="card primary">
+          <h3>ポイント（式を丸暗記する必要はありません！）</h3>
+          <p>Rの <code>t.test(..., var.equal = TRUE)</code> を実行すれば、上記の $t$値、自由度 $df = n_1 + n_2 - 2$、および $p$値が直接出力されます。$p < 0.05$ なら帰無仮説を棄却します。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 12: F-test and F-distribution -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論 ②</span>
+          <h2 class="slide-title">等分散かどうかを検定するには？（F検定とF分布）</h2>
+        </div>
+        <span class="slide-subtitle">R.A. Fisher の $F$分布を用いて「分散の比」を検定する</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>等分散性の検定の仮説と統計量</h3>
+            <ul>
+              <li><strong>帰無仮説 $H_0$</strong>：2標本の母分散に差がない（$\sigma_1^2 = \sigma_2^2$）</li>
+              <li><strong>対立仮説 $H_1$</strong>：2標本の母分散に差がある（$\sigma_1^2 \neq \sigma_2^2$）</li>
+            </ul>
+            <div class="formula-box" style="margin-top: 8px;">
+              $$F = \frac{s_1^2}{s_2^2} \quad \text{（不偏分散の比）}$$
+            </div>
+          </div>
+          <div class="card secondary">
+            <h3>$F$分布とRの <code>var.test()</code></h3>
+            <p>・統計量 $F$ は、<strong>分子の自由度 $df_1 = n_1 - 1$、分母の自由度 $df_2 = n_2 - 1$ の $F$分布</strong>に従う（自由度が2つある非対称な分布）。<br>・2群の分散が等しければ $F \approx 1$ になる。<br>・<strong>判定ルール</strong>：<br>
+            　<strong>$p > 0.05$</strong> $\rightarrow$ 有意ではない（<strong>等分散とみなせる</strong>）<br>
+            　<strong>$p < 0.05$</strong> $\rightarrow$ 有意差あり（<strong>等分散とはいえない</strong>）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 13: Welch's t-test -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論 ③</span>
+          <h2 class="slide-title">Welchの方法（等分散を仮定しないt検定）</h2>
+        </div>
+        <span class="slide-subtitle">母分散が等しいか不明でも、不等分散でも使える万能手法！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="formula-box">
+            <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 4px;">① Welch の検定統計量 $t$</div>
+            $$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$$
+            <div style="font-size: 0.82rem; color: #64748b; margin-top: 6px;">
+              各群の標準誤差の2乗（$s_1^2/n_1$, $s_2^2/n_2$）を個別に足し合わせる
+            </div>
+          </div>
+          <div class="formula-box">
+            <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 4px;">② Welch–Satterthwaite の近似自由度</div>
+            $$df = \frac{\left(\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}\right)^2}{\frac{(s_1^2/n_1)^2}{n_1 - 1} + \frac{(s_2^2/n_2)^2}{n_2 - 1}}$$
+            <div style="font-size: 0.82rem; color: #64748b; margin-top: 6px;">
+              近似式で補正するため、<strong>自由度 $df$ は整数になるとは限らない（小数になる）！</strong>
+            </div>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">⭐</span>
+          <span><strong>Welchの方法は等分散のデータに使っても全く問題ありません！</strong> もともと等分散なら、Studentのt検定とほぼ同じ $p$値 になります（Rの <code>t.test()</code> のデフォルトも Welch です）。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 14: Trap of Multiple Testing (Two-stage testing) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">重要コラム</span>
+          <h2 class="slide-title">【超重要】「多重検定の罠」と本授業の方針</h2>
+        </div>
+        <span class="slide-subtitle">なぜ現代では「F検定＋t検定の二段階検定」が推奨されないのか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card accent">
+            <h3>⚠️ 古い教科書の「二段階検定」の罠</h3>
+            <p>古い教科書では「まず <code>var.test()</code> で等分散性を検定し、次に Student か Welch を行う」と説明されてきました。<br>
+            しかし、<strong>同じデータに2回連続で検定を行うと、間違う確率（第1種の過誤）が単純計算で約2倍に膨らんでしまう（多重検定の罠）</strong>ため、現代の統計学では推奨されていません。</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <h3>✅ 現代の対策と本授業での習慣づけ</h3>
+            <p>・<strong>現代の実践対策</strong>：等分散性の検定は行わず、等分散性を問わず使える <strong>Welchのt検定だけを行う</strong>ことが推奨されています。<br>
+            ・<strong>📘 本授業としてのルール</strong>：各手法の特徴と違いを深く理解するため、<strong>自分のデータ解析では「等分散性の検定（<code>var.test</code>）」も「2種類のt検定（Student / Welch）」も全部試して比較する習慣</strong>をつけましょう！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 15: Example 1 - Equal Variance (Kajika) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">理論例題 1</span>
+          <h2 class="slide-title">例題1：等分散の場合の独立2群の比較（カジカの体重）</h2>
+        </div>
+        <span class="slide-subtitle">流域A（36個体, 平均62.5g, 分散15.3）vs 流域B（43個体, 平均64.5g, 分散16.3）</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>set.seed(314525)
+x1 <- rnorm(36, mean=62.6, sd=sqrt(15.3)) # 流域A (n=36)
+x2 <- rnorm(43, mean=64.5, sd=sqrt(16.2)) # 流域B (n=43)
+boxplot(x1, x2); stripchart(list(x1, x2), vertical=TRUE, method="jitter", add=TRUE)
+var.test(x1, x2)
+t.test(x1, x2, alternative="two.sided", paired=FALSE, var.equal=TRUE)
+t.test(x1, x2, alternative="two.sided", paired=FALSE, var.equal=FALSE)</code></div>
+        <div class="grid-3">
+          <div class="card">
+            <h3>① 等分散性の検定</h3>
+            <p>$F = 0.9428$<br>$df_1 = 35, df_2 = 42$<br><strong>$p = 0.8644 (> 0.05)$</strong><br>$\rightarrow$ 等分散とみなせる</p>
+          </div>
+          <div class="card primary">
+            <h3>② Student (<code>var.equal=T</code>)</h3>
+            <p>$t = -2.2004, df = 77$<br><strong>$p = 0.03077 (< 0.05)$</strong><br>95% CI: $[-3.768, -0.188]$<br>$\rightarrow$ 5%水準で有意差あり</p>
+          </div>
+          <div class="card secondary">
+            <h3>③ Welch (<code>var.equal=F</code>)</h3>
+            <p>$t = -2.2063, df = 75.287$<br><strong>$p = 0.03042 (< 0.05)$</strong><br>95% CI: $[-3.764, -0.192]$<br>$\rightarrow$ <strong>Studentとほぼ同じp値！</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 16: Caution on Extreme Sample Size Imbalance -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">注意点</span>
+          <h2 class="slide-title">注意：2群のサンプルサイズが極端に離れている場合</h2>
+        </div>
+        <span class="slide-subtitle">例：$n_1 = 36$ と $n_2 = 3$ のような極端なアンバランス</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card danger">
+            <h3>⚠️ 極端なサンプルサイズ差の危険性</h3>
+            <p>独立2群のt検定は $n_1 \neq n_2$ でも実行できますが、<strong>片方が極端に少ない（例：$n=36$ vs $n=3$）のは良くない実験デザイン</strong>とされます。<br>
+            ・等分散性の検定（<code>var.test</code>）の検出力が著しく落ち、うまく判定できない可能性が高い。<br>
+            ・Student検定とWelch検定の乖離も激しくなる。</p>
+          </div>
+          <div class="card">
+            <h3>Rで確認してみるコード</h3>
+            <div class="code-box"><code>x1 <- rnorm(36, mean=62.6, sd=sqrt(15.3))
+x2 <- rnorm(3,  mean=74.5, sd=sqrt(16.2))
+var.test(x1, x2)
+t.test(x1, x2, var.equal=TRUE)
+t.test(x1, x2, var.equal=FALSE)</code></div>
+            <p style="font-size: 0.88rem; color: #64748b;">実験計画を立てるときは、可能な限り2群のサンプルサイズを揃える（または大きく離れすぎないようにする）のが鉄則です。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 17: Example 2 - Unequal Variance (Kisasage) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">理論例題 2</span>
+          <h2 class="slide-title">例題2：等分散でない場合の独立2群比較（キササゲ実生）</h2>
+        </div>
+        <span class="slide-subtitle">地域A（42個体, 平均15.2cm, 分散1.1）vs 地域B（63個体, 平均12.7cm, 分散3.2）</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>set.seed(273006)
+x1 <- rnorm(42, mean=15.2, sd=sqrt(1.1)) # 地域A (n=42, 分散小)
+x2 <- rnorm(63, mean=12.7, sd=sqrt(3.2)) # 地域B (n=63, 分散大)
+var.test(x1, x2)
+t.test(x1, x2, alternative="two.sided", paired=FALSE, var.equal=FALSE)</code></div>
+        <div class="grid-2">
+          <div class="card accent">
+            <h3>① 等分散性の検定 (<code>var.test</code>)</h3>
+            <p>・$F = 0.34651, \text{num } df = 41, \text{denom } df = 62$<br>・<strong>$p = 0.000486 (< 0.001)$</strong><br>$\rightarrow$ 0.1%水準で有意となり、<strong>「等分散とはいえない（不等分散）」</strong>ことが示された！</p>
+          </div>
+          <div class="card primary">
+            <h3>② Welchのt検定 (<code>var.equal=FALSE</code>)</h3>
+            <p>・$t = 8.9595, df = 101.67$（自由度が小数！）<br>・<strong>$p = 1.666 \times 10^{-14}$（<code>1.666e-14</code>）</strong><br>・95%信頼区間：$[1.935, 3.035]$（0を含まない）<br>$\rightarrow$ 地域Aと地域Bの地上高は有意に異なる！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 18: Scientific Notation (Exponential Display) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">Rの基礎知識</span>
+          <h2 class="slide-title">コンピュータの「指数表示（<code>e</code> / <code>E</code>）」の読み方</h2>
+        </div>
+        <span class="slide-subtitle">$p$値が極めて小さいときに必ず登場する表記</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🔢</span>
+          <span>RやExcelでは、$0$ がたくさん並ぶ極小値・極大値を <strong><code>aEb</code> または <code>aeb</code>（$= a \times 10^b$）</strong> の形で表示します！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>とても小さな数の例（$p$値など）</h3>
+            <ul>
+              <li><code>1.666e-14</code> ＝ $1.666 \times 10^{-14}$<br>（$= 0.00000000000001666$、有意水準 $0.05$ より圧倒的に小さい！）</li>
+              <li><code>9.193e-06</code> ＝ $9.193 \times 10^{-6}$<br>（$= 0.000009193 < 0.001$）</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>とても大きな数の例</h3>
+            <ul>
+              <li><code>1.23e+05</code>（または <code>1.23E+05</code>）＝ $1.23 \times 10^5 = 123,000$</li>
+              <li><strong>よくあるミス ❌</strong>：<code>9.193e-06</code> の先頭の <code>9.193</code> だけを見て「$0.05$ より大きい！」と勘違いしないこと！ 後ろの <strong><code>e-06</code>（$10^{-6}$）</strong> を必ず確認！</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 19: Data Format - Wide vs Stack -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">データ整形</span>
+          <h2 class="slide-title">実際の解析でのデータ形式：ワイド形式 vs スタック形式</h2>
+        </div>
+        <span class="slide-subtitle">なぜ独立2群では「スタック形式（縦持ち・1データ1行）」を使うのか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card danger">
+            <h3>❌ ワイド形式（横持ち・アンスタック）</h3>
+            <div class="code-box"><code>Ue     Shita
+31.5   15.3
+48.0   17.7
+29.0   10.9</code></div>
+            <p>「対応がない」のに同じ行に並べるのは不自然で紛らわしい（ペアではない！）。さらに $n_1 \neq n_2$ だと行の長さが揃わず空白が出る。</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <h3>⭕ スタック形式（ロング形式・縦持ち）</h3>
+            <div class="code-box"><code>Shamen  Length
+Ue      31.5
+Ue      48.0
+...     ...
+Shita   15.3</code></div>
+            <p><strong>「1行＝1個体（1データ）」</strong>の大原則！<br>「分類ラベルの列（<code>Shamen</code>）」と「測定値の列（<code>Length</code>）」に分けて縦に積む。今後の分散分析（第9・10回）でも必須の形式！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 20: Reading Stack Data & Factor Conversion -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">Rの儀式</span>
+          <h2 class="slide-title">データの読み込みと「因子（Factor）化の儀式」</h2>
+        </div>
+        <span class="slide-subtitle">グループ列を単なる文字列（character）ではなく因子（factor）にする</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># 方法1（推奨）：読み込む際に stringsAsFactors = TRUE を指定する
+kinoko <- read.csv("kinoko.csv", stringsAsFactors = TRUE)
+kadai  <- read.delim("kadai.txt", stringsAsFactors = TRUE)
+
+# 方法2：読み込んだ後に as.factor() で因子型に変換する
+kinoko$Shamen <- as.factor(kinoko$Shamen)</code></div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>なぜ <code>factor</code>（因子）にするのか？</h3>
+            <p>Rに「<code>Ue</code> と <code>Shita</code>（あるいは <code>A</code> と <code>B</code>）は単なる文字ではなく、<strong>データをグループ分けするカテゴリ（実験区・遺伝子型）である</strong>」と正しく認識させるためです。</p>
+          </div>
+          <div class="card">
+            <h3>参考：条件にマッチする行を抜き出す方法</h3>
+            <div class="code-box"><code>kinoko_ue    <- kinoko[kinoko$Shamen == "Ue", ]
+kinoko_shita <- kinoko[kinoko$Shamen == "Shita", ]</code></div>
+            <p style="font-size: 0.85rem; color: #64748b;">※ ただし次のスライドの「チルダ <code>~</code>」を使えば、わざわざ分割しなくても一発でグラフも検定もできます！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 21: The Tilde Operator (~) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">Rの核心文法</span>
+          <h2 class="slide-title">チルダ（<code>~</code>）演算子による層別プロットと検定</h2>
+        </div>
+        <span class="slide-subtitle">スタック形式ありがとう！ <code>目的変数 ~ 説明変数</code> で全てが統一される</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">✨</span>
+          <span><strong><code>数値列 ~ グループ列</code></strong>（例：<code>kinoko$Length ~ kinoko$Shamen</code>）と書くと、「左辺の測定値を、右辺の因子でグループ分けして解析せよ」という命令になります！</span>
+        </div>
+        <div class="grid-2">
+          <div class="code-box"><code># ① 箱ひげ図＋ドットプロット
+boxplot(kinoko$Length ~ kinoko$Shamen)
+stripchart(kinoko$Length ~ kinoko$Shamen,
+           vertical = TRUE, method = "jitter", add = TRUE)
+
+# ② 等分散性の検定 (F検定)
+var.test(kinoko$Length ~ kinoko$Shamen)</code></div>
+          <div class="code-box"><code># ③ 等分散を仮定したt検定 (Student)
+t.test(kinoko$Length ~ kinoko$Shamen,
+       alternative = "two.sided", var.equal = TRUE)
+
+# ④ 等分散を仮定しないt検定 (Welch)
+t.test(kinoko$Length ~ kinoko$Shamen,
+       alternative = "two.sided", var.equal = FALSE)</code></div>
+        </div>
+        <p style="font-size: 0.9rem; color: #dc2626; font-weight: 700;">⚠️ 注意：<code>t.test()</code> でチルダ <code>~</code> を使う場合、<code>paired</code> オプションを指定するとエラーになります（チルダ式は独立2群専用のため）！</p>
+      </div>
+    </div>
+
+    <!-- Slide 22: Kinoko Example Results -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">例題実習</span>
+          <h2 class="slide-title">例題：キノコの柄の長さ（<code>kinoko.csv</code>）の検定結果</h2>
+        </div>
+        <span class="slide-subtitle">斜面上部（<code>Ue</code>, 68本）vs 斜面下部（<code>Shita</code>, 61本）の比較</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card accent">
+            <h3>1. 等分散性の検定</h3>
+            <div class="code-box"><code>var.test(kinoko$Length ~
+         kinoko$Shamen)</code></div>
+            <p>・$F = 1.635, df = (60, 67)$<br>・<strong>$p = 0.05096 (> 0.05)$</strong><br>・ぎりぎり有意ではない（等分散とみなせる）</p>
+          </div>
+          <div class="card primary">
+            <h3>2. Studentのt検定</h3>
+            <div class="code-box"><code>t.test(kinoko$Length ~
+  kinoko$Shamen, var.equal=T)</code></div>
+            <p>・$t = -3.9532, df = 127$<br>・<strong>$p = 0.0001273 (< 0.001)$</strong><br>・95% CI: $[-9.083, -3.023]$</p>
+          </div>
+          <div class="card secondary">
+            <h3>3. Welchのt検定</h3>
+            <div class="code-box"><code>t.test(kinoko$Length ~
+  kinoko$Shamen, var.equal=F)</code></div>
+            <p>・$t = -3.9014, df = 113.35$<br>・<strong>$p = 0.0001626 (< 0.001)$</strong><br>・95% CI: $[-9.126, -2.979]$</p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">🍄</span>
+          <span>平均値は <code>Shita</code> $= 23.67\text{ mm}$、<code>Ue</code> $= 29.73\text{ mm}$。Student・Welch ともに $p < 0.001$ であり、<strong>斜面の上と下でキノコの柄の長さは有意に異なる！</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 23: Today's Assignment Overview (Rice 76 Lines) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">本日の課題</span>
+          <h2 class="slide-title">課題の背景：イネ76系統の遺伝子型間比較（<code>kadai.txt</code>）</h2>
+        </div>
+        <span class="slide-subtitle">第7回で別々に見た Genotype A（24系統）と Genotype B（52系統）を直接対決！</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># タブ区切りファイル kadai.txt を読み込む
+kadai <- read.delim("kadai.txt", stringsAsFactors = TRUE)
+head(kadai)</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>データファイル <code>kadai.txt</code> の構造</h3>
+            <ul>
+              <li><strong><code>Genotype</code></strong>：<code>A</code>（ジャポニカ型, 24系統）vs <code>B</code>（インディカ型, 52系統）</li>
+              <li><strong><code>SW5</code></strong>：出穂後5日の茎葉乾物重 (g/個体)</li>
+              <li><strong><code>SW35</code></strong>：出穂後35日の茎葉乾物重 (g/個体)</li>
+              <li><strong><code>SW5_35</code></strong>：<code>SW5 - SW35</code>（出穂後の茎葉重の<strong>減少量・枯れ上がり量</strong>）</li>
+            </ul>
+          </div>
+          <div class="card primary">
+            <h3>本日の課題リスト</h3>
+            <ul>
+              <li><strong>課題1</strong>：<code>SW5</code> が Genotype ごとに異なるか検定せよ</li>
+              <li><strong>課題2</strong>：<code>SW35</code> が Genotype ごとに異なるか検定せよ</li>
+              <li><strong>課題3</strong>：<code>SW5_35</code> が Genotype ごとに異なるか検定せよ</li>
+              <li><strong>発展4・5</strong>：なぜ単一時点と減少量で結果が一変するのか？ 境界線F検定の考察</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 24: Task 1 Result (SW5) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">課題 1</span>
+          <h2 class="slide-title">課題1：出穂後5日の茎葉重（<code>SW5</code>）の比較</h2>
+        </div>
+        <span class="slide-subtitle">登熟スタート時点で Genotype A と B に差はあるか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>boxplot(kadai$SW5 ~ kadai$Genotype, ylab = "SW5 (g)")
+stripchart(kadai$SW5 ~ kadai$Genotype, vertical = TRUE, method = "jitter", add = TRUE)
+var.test(kadai$SW5 ~ kadai$Genotype)
+t.test(kadai$SW5 ~ kadai$Genotype, alternative = "two.sided", var.equal = TRUE)
+t.test(kadai$SW5 ~ kadai$Genotype, alternative = "two.sided", var.equal = FALSE)</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>検定結果の数値</h3>
+            <p>・標本平均：A群 $= 47.45\text{ g}$, B群 $= 53.13\text{ g}$<br>
+            ・<strong>等分散検定 (<code>var.test</code>)</strong>：$F = 1.0837, df=(23, 51), p = 0.7865 (> 0.05)$ $\rightarrow$ 等分散とみなせる<br>
+            ・<strong>Student (<code>var.equal=T</code>)</strong>：$t = -1.5288, df = 74, p = 0.1306$<br>
+            ・<strong>Welch (<code>var.equal=F</code>)</strong>：$t = -1.5060, df = 43.226, p = 0.1393$</p>
+          </div>
+          <div class="card primary">
+            <h3>判定と生物学的解釈</h3>
+            <p>・Student（$p=0.131$）、Welch（$p=0.139$）ともに <strong>$p > 0.05$ のため有意ではない（帰無仮説は棄却されない）</strong>。<br>
+            ・<strong>結論</strong>：出穂後5日の時点では、遺伝子型AとBの間で茎葉重に統計学的に有意な差があるとはいえない。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 25: Task 2 Result (SW35) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">課題 2</span>
+          <h2 class="slide-title">課題2：出穂後35日の茎葉重（<code>SW35</code>）の比較</h2>
+        </div>
+        <span class="slide-subtitle">35日後の茎葉重「単体」を比べて差は検出できるか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>boxplot(kadai$SW35 ~ kadai$Genotype, ylab = "SW35 (g)")
+stripchart(kadai$SW35 ~ kadai$Genotype, vertical = TRUE, method = "jitter", add = TRUE)
+var.test(kadai$SW35 ~ kadai$Genotype)
+t.test(kadai$SW35 ~ kadai$Genotype, alternative = "two.sided", var.equal = TRUE)
+t.test(kadai$SW35 ~ kadai$Genotype, alternative = "two.sided", var.equal = FALSE)</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>検定結果の数値</h3>
+            <p>・標本平均：A群 $= 45.24\text{ g}$, B群 $= 41.29\text{ g}$<br>
+            ・<strong>等分散検定 (<code>var.test</code>)</strong>：$F = 1.5483, df=(23, 51), p = 0.1947 (> 0.05)$ $\rightarrow$ 等分散とみなせる<br>
+            ・<strong>Student (<code>var.equal=T</code>)</strong>：$t = 1.2455, df = 74, p = 0.2169$<br>
+            ・<strong>Welch (<code>var.equal=F</code>)</strong>：$t = 1.1491, df = 37.263, p = 0.2579$</p>
+          </div>
+          <div class="card accent">
+            <h3>判定と「大いなる謎」！</h3>
+            <p>・Student（$p=0.217$）、Welch（$p=0.258$）ともに <strong>$p > 0.05$ で有意差なし！</strong><br>
+            ・🤔 <strong>疑問</strong>：第7回では「Aは枯れず、Bは猛烈に枯れ上がる（$p = 10^{-14}$）」と分かったのに、<strong>なぜ35日目の重さをAとBで直接比較すると有意差が出ないのか？！</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 26: Task 3 Result (SW5_35) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">課題 3</span>
+          <h2 class="slide-title">課題3：茎葉重の減少量（<code>SW5_35 = SW5 - SW35</code>）の比較</h2>
+        </div>
+        <span class="slide-subtitle">個体ごとの「減少量（枯れ上がり量）」を遺伝子型間で比較すると…！</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>boxplot(kadai$SW5_35 ~ kadai$Genotype, ylab = "SW5 - SW35 (g)")
+stripchart(kadai$SW5_35 ~ kadai$Genotype, vertical = TRUE, method = "jitter", add = TRUE)
+var.test(kadai$SW5_35 ~ kadai$Genotype)
+t.test(kadai$SW5_35 ~ kadai$Genotype, alternative = "two.sided", var.equal = TRUE)
+t.test(kadai$SW5_35 ~ kadai$Genotype, alternative = "two.sided", var.equal = FALSE)</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>検定結果の数値</h3>
+            <p>・標本平均：A群 $= 2.21\text{ g}$, B群 $= 11.84\text{ g}$（差 $-9.63\text{ g}$）<br>
+            ・<strong>等分散検定 (<code>var.test</code>)</strong>：$F = 0.8134, df=(23, 51), p = 0.6000 (> 0.05)$<br>
+            ・<strong>Student (<code>var.equal=T</code>)</strong>：<strong>$t = -4.7593, df = 74, p = 9.394 \times 10^{-6}$</strong><br>
+            ・<strong>Welch (<code>var.equal=F</code>)</strong>：<strong>$t = -4.9457, df = 49.342, p = 9.193 \times 10^{-6}$</strong></p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <h3>判定と生物学的結論</h3>
+            <p>・<strong>$p < 0.001$（約100万分の9！）で極めて高度に有意！</strong><br>
+            ・95%信頼区間も $[-13.54, -5.72]$ で $0$ を全く含まない。<br>
+            ・<strong>結論</strong>：遺伝子型B（インディカ型）は遺伝子型A（ジャポニカ型）よりも出穂後の茎葉重減少量が有意に大きく、顕著に枯れ上がる特性をもつ！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 27: Wow 1 - Why Snapshot Fails & Difference Succeeds -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">Wow体験 ①</span>
+          <h2 class="slide-title">なぜ SW5 も SW35 も差がないのに、<code>SW5_35</code> だと $p = 10^{-6}$ になるのか？</h2>
+        </div>
+        <span class="slide-subtitle">スナップショット比較の罠と、第7回×第8回の統合シナジー！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card accent">
+            <h3>理由①：平均値の「逆転（交差）」現象</h3>
+            <p>・<strong>5日目（SW5）</strong>：A群（$47.45\text{ g}$）$<$ B群（$53.13\text{ g}$）<br>
+            　スタート時点では、たまたま <strong>B群の方が $+5.67\text{ g}$ 大きかった</strong>。<br>
+            ・<strong>35日目（SW35）</strong>：A群（$45.24\text{ g}$）$>$ B群（$41.29\text{ g}$）<br>
+            　B群が $-11.84\text{ g}$ 激減して順位が逆転し、<strong>A群の方が $+3.95\text{ g}$ 大きくなった</strong>。<br>
+            ・各時点の差は $4〜5.7\text{ g}$ しかないが、<strong>減少量の差は $5.67 + 3.95 = 9.63\text{ g}$ に拡大！</strong></p>
+          </div>
+          <div class="card primary">
+            <h3>理由②：個体差ノイズが半減（SD: $15\text{g} \to 8\text{g}$）</h3>
+            <p>・<code>SW5</code> や <code>SW35</code> 単体では、系統ごとの初期サイズのばらつき（<strong>SD $\approx 12〜15\text{ g}$</strong>）が分母に居座り、$4\text{ g}$ 程度の差はノイズに埋もれる。<br>
+            ・しかし個体内で <code>SW5 - SW35</code> をとると初期サイズが相殺され、<strong>標準偏差が約半分（SD $\approx 7.6〜8.4\text{ g}$）に縮小！</strong><br>
+            ・<strong>「分子（差）が2倍になり、分母（ノイズ）が半分になった」</strong>ため、$p$値が $0.258 \to 9.19 \times 10^{-6}$（<strong>約28,000倍明確！</strong>）に跳ね上がった！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 28: Wow 1 Follow-up - One-sided Test & Factor Order -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">Wow体験 ① 発展</span>
+          <h2 class="slide-title">チルダ <code>~</code> での引き算の順序と片側検定（発展課題4）</h2>
+        </div>
+        <span class="slide-subtitle">なぜ課題3の $t$値 はマイナス（$-4.9457$）なのか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># Genotype B の減少量が Genotype A より大きい（すなわち A - B < 0）ことを片側検定
+t.test(kadai$SW5_35 ~ kadai$Genotype, alternative = "less", var.equal = FALSE)</code></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Rの因子（Factor）順ルール</h3>
+            <p>・<code>Genotype</code> の水準はアルファベット順で第1群が <strong><code>A</code>（平均 $2.21\text{ g}$）</strong>、第2群が <strong><code>B</code>（平均 $11.84\text{ g}$）</strong>。<br>
+            ・Rは <strong><code>(第1群 A) - (第2群 B) = 2.21 - 11.84 = -9.63</code></strong> を計算するため、$t$値はマイナスになります。</p>
+          </div>
+          <div class="card secondary">
+            <h3>片側検定の指定と結果</h3>
+            <p>・対立仮説「B群の方が減少量が大きい（$\mu_A < \mu_B$、すなわち $\mu_A - \mu_B < 0$）」を検証するには <strong><code>alternative = "less"</code></strong> を指定！<br>
+            ・Welch片側検定：$t = -4.9457, df = 49.342$, <strong>$p = 4.596 \times 10^{-6}$</strong>（両側 $p$値のちょうど半分！）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 29: Wow 2 - Boundary F-test in Kinoko Data -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">Wow体験 ②</span>
+          <h2 class="slide-title">キノコ例題（$p = 0.05096$）に学ぶ「境界線F検定」とWelchの知恵</h2>
+        </div>
+        <span class="slide-subtitle">もし $p$値が $0.05096$ ではなく $0.049$ だったら？（発展課題5）</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card accent">
+            <h3>境界線 $p = 0.05096$ のジレンマ</h3>
+            <p>・<code>kinoko.csv</code> の等分散性検定（<code>var.test</code>）は $F = 1.635, p = 0.05096$。<br>
+            ・有意水準 $0.05$ との差はわずか <strong>$0.00096$</strong>！<br>
+            ・もしキノコ1本の長さが $0.1\text{ mm}$ 変わって $p = 0.049$ になった途端に「等分散 $\to$ 不等分散」と別世界の手法にジャンプするのは不自然であり、二段階検定は第1種の過誤を増大させる（多重検定の罠）。</p>
+          </div>
+          <div class="card primary">
+            <h3>Welch検定の「連続的な自由度調整」</h3>
+            <p>・Student検定：$df = 68 + 61 - 2 = \mathbf{127}$（分散の違いを無視）<br>
+            ・Welch検定：$df = \mathbf{113.35}$（分散比 $1.635$ に応じて自由度を約 $13.65$ 割り引いてペナルティ調整！）<br>
+            ・<strong>教訓</strong>：Welch検定は白黒を無理に決めつけず、ばらつきの不均衡を自由度で滑らかに吸収する優れた手法である！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 30: Summary Table of All Tasks -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">結果一覧</span>
+          <h2 class="slide-title">本日の課題1〜3・発展課題の検定結果リファレンス</h2>
+        </div>
+        <span class="slide-subtitle">自分のRStudioの出力と一致しているか確認しよう</span>
+      </div>
+      <div class="slide-body">
+        <table>
+          <thead>
+            <tr>
+              <th>課題</th>
+              <th>対象式</th>
+              <th>等分散検定 <code>var.test</code></th>
+              <th>Student (<code>var.equal=T</code>)</th>
+              <th>Welch (<code>var.equal=F</code>)</th>
+              <th>結論 ($\alpha=0.05$)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>課題1</strong></td>
+              <td><code>SW5 ~ Genotype</code></td>
+              <td>$F=1.084, p=0.7865$</td>
+              <td>$t=-1.529, df=74$<br>$p=0.1306$</td>
+              <td>$t=-1.506, df=43.23$<br>$p=0.1393$</td>
+              <td><strong>有意差なし</strong><br>(5日目は差なし)</td>
+            </tr>
+            <tr>
+              <td><strong>課題2</strong></td>
+              <td><code>SW35 ~ Genotype</code></td>
+              <td>$F=1.548, p=0.1947$</td>
+              <td>$t=1.246, df=74$<br>$p=0.2169$</td>
+              <td>$t=1.149, df=37.26$<br>$p=0.2579$</td>
+              <td><strong>有意差なし</strong><br>(35日目単体も差なし)</td>
+            </tr>
+            <tr>
+              <td><strong>課題3</strong></td>
+              <td><code>SW5_35 ~ Genotype</code><br>(両側検定)</td>
+              <td>$F=0.813, p=0.6000$</td>
+              <td>$t=-4.759, df=74$<br>$p=9.39 \times 10^{-6}$</td>
+              <td>$t=-4.946, df=49.34$<br>$p=9.19 \times 10^{-6}$</td>
+              <td><strong>極めて有意 ($p < 0.001$)</strong><br>(減少量に明確な差)</td>
+            </tr>
+            <tr>
+              <td><strong>発展4</strong></td>
+              <td><code>SW5_35 ~ Genotype</code><br>(片側 <code>less</code>)</td>
+              <td>同上</td>
+              <td>$t=-4.759, df=74$<br>$p=4.70 \times 10^{-6}$</td>
+              <td>$t=-4.946, df=49.34$<br>$p=4.60 \times 10^{-6}$</td>
+              <td><strong>極めて有意 ($p < 0.001$)</strong><br>(B群の方が大きく減少)</td>
+            </tr>
+            <tr>
+              <td><strong>発展5</strong></td>
+              <td><code>kinoko</code>:<br><code>Length ~ Shamen</code></td>
+              <td>$F=1.635, p=0.05096$</td>
+              <td>$t=-3.953, df=127$<br>$p=0.0001273$</td>
+              <td>$t=-3.901, df=113.35$<br>$p=0.0001626$</td>
+              <td><strong>極めて有意 ($p < 0.001$)</strong><br>(斜面上下で長さ異なる)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 31: R Markdown & Web Assignment Guide -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出準備</span>
+          <h2 class="slide-title">課題ワークブックと <code>ひな型.Rmd</code> の仕上げ方</h2>
+        </div>
+        <span class="slide-subtitle">Web課題で即時採点＆提出用HTMLを出力しよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>1. インタラクティブWeb課題（<code>kadai8_interactive.html</code>）</h3>
+            <p>・学籍番号と氏名を入力する。<br>
+            ・課題1〜3（<code>SW5</code>, <code>SW35</code>, <code>SW5_35</code>）と発展課題4・5の数値を入力し「検証する」ボタンで即時採点（100点満点）。<br>
+            ・各グラフの印象と考察を記入し、<strong>「📥 提出用レポートHTMLを書き出す」</strong>で保存して提出！</p>
+          </div>
+          <div class="card secondary">
+            <h3>2. R Markdown（<code>ひな型.Rmd</code>）のポイント</h3>
+            <p>・見出し：<code>#</code>, <code>##</code>, <code>###</code>（シャープの後ろに半角スペース）<br>
+            ・太字：<code>**太字**</code>、改行：<code>&lt;br&gt;</code>、色指定：<code>&lt;font color="Red"&gt;...&lt;/font&gt;</code><br>
+            ・Rコードチャンク内の <code>#</code> はコメント行を意味する。<br>
+            ・RStudioの <strong>Knit</strong> ボタンでHTMLレポートが出力できる！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 32: Troubleshooting -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">FAQ</span>
+          <h2 class="slide-title">トラブルシューティング（よくあるエラーと対処法）</h2>
+        </div>
+        <span class="slide-subtitle">エラーが出ても慌てずここをチェック！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card danger">
+            <h3>⚠️ <code>unused argument (paired = FALSE)</code></h3>
+            <p><strong>原因</strong>：<code>t.test(kadai$SW5 ~ kadai$Genotype, paired = FALSE)</code> のように、チルダ <code>~</code> と <code>paired</code> オプションを同時に書いている。<br>
+            <strong>対策</strong>：チルダ <code>~</code> を使う場合は <code>paired</code> オプションを書かない（削除またはコメントアウトする）。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ <code>cannot open file 'kadai.txt'</code></h3>
+            <p><strong>原因</strong>：作業ディレクトリ（Working Directory）がずれている。<br>
+            <strong>対策</strong>：RStudioの <code>Session</code> $\rightarrow$ <code>Set Working Directory</code> $\rightarrow$ <code>Choose Directory...</code> で <code>kadai.txt</code> があるフォルダを選択する。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ タブ区切りファイルを <code>read.csv</code> で読んだ</h3>
+            <p><strong>原因</strong>：<code>kadai.txt</code> はタブ区切りなのにカンマ区切り用の <code>read.csv()</code> を使うと1列に繋がってしまう。<br>
+            <strong>対策</strong>：タブ区切りには <code>read.delim("kadai.txt", stringsAsFactors=TRUE)</code> を使う！</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ 指数表記 <code>9.193e-06</code> の入力方法</h3>
+            <p><strong>対策</strong>：Web課題の入力欄には <code>9.193e-06</code> や <code>9.19e-6</code>、あるいは <code>0.00000919</code> のいずれの形式で入力しても正解と判定されます！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 33: Summary and Next Lecture -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">まとめ</span>
+          <h2 class="slide-title">本日のまとめと次回（第9回）への予告</h2>
+        </div>
+        <span class="slide-subtitle">2群比較を完全制覇し、次回は「3群以上の比較（分散分析）」へ！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>本日の3大マスターポイント</h3>
+            <p>1. <strong>Student vs Welch と F検定</strong>：等分散性の検定（<code>var.test</code>）と2つのt検定の仕組み、そして「多重検定の罠」を避けるWelch検定の優位性。<br>
+            2. <strong>スタック形式とチルダ <code>~</code></strong>：1データ1行の形式と <code>Y ~ X</code> 記法による一貫した解析。<br>
+            3. <strong>変化量（<code>SW5_35</code>）の検出力</strong>：単一時点では個体差に埋もれる遺伝子型間の差も、個体内変化量を比較することで鮮やかに証明できる！</p>
+          </div>
+          <div class="card secondary">
+            <h3>次回（第9回）への予告</h3>
+            <p>第7回・第8回で「2群の比較」は完璧になりました。<br>
+            では、次回<strong>「品種A vs 品種B vs 品種C」のように3群以上ある場合</strong>はどうするでしょうか？<br>
+            3群にt検定を3回繰り返すと、なんと誤判定率が約14%に跳ね上がります！<br>
+            $\rightarrow$ <strong>第9回「検定③：1元配置分散分析（ANOVA）と多重比較」</strong>をお楽しみに！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.slide-viewport -->
+
+  <!-- Bottom Navigation Footer -->
+  <div class="bottom-bar">
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSlide()">◀ 前へ</button>
+      <button class="btn" onclick="nextSlide()">次へ ▶</button>
+      <span style="font-size: 0.8rem; color: #64748b; margin-left: 8px;">[← / → / Spaceキーで操作可能]</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="slideCounter" style="font-weight: 600; color: #f1f5f9;">
+      1 / 33
+    </div>
+  </div>
+
+  <!-- Slide Jump Modal -->
+  <div class="modal" id="slideModal" onclick="if(event.target === this) toggleModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="color: var(--primary);">📋 スライド一覧（クリックでジャンプ）</h3>
+        <button class="btn" style="background: #f1f5f9; color: #334155;" onclick="toggleModal()">✕ 閉じる</button>
+      </div>
+      <div class="modal-list" id="modalList"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    const modalList = document.getElementById('modalList');
+
+    // Build modal item list
+    slides.forEach((s, idx) => {
+      const titleElem = s.querySelector('.slide-title') || s.querySelector('h1') || s.querySelector('h2');
+      const titleText = titleElem ? titleElem.innerText.replace(/\n/g, ' ') : `スライド ${idx + 1}`;
+      const item = document.createElement('div');
+      item.className = 'modal-item';
+      item.innerHTML = `<strong>${idx + 1}.</strong> ${titleText}`;
+      item.onclick = () => {
+        goToSlide(idx);
+        toggleModal();
+      };
+      modalList.appendChild(item);
+    });
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+      progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(idx) {
+      currentSlide = idx;
+      updateSlide();
+    }
+
+    function toggleModal() {
+      document.getElementById('slideModal').classList.toggle('active');
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function copyCode(btn) {
+      const codeBox = btn.closest('.code-box');
+      const clone = codeBox.cloneNode(true);
+      const btnInClone = clone.querySelector('.copy-btn');
+      if (btnInClone) btnInClone.remove();
+      const text = clone.innerText.trim();
+      
+      const copySuccess = () => {
+        btn.innerHTML = '✓ コピー完了！';
+        btn.style.color = '#4ade80';
+        btn.style.background = 'rgba(74, 222, 128, 0.2)';
+        setTimeout(() => {
+          btn.innerHTML = '📋 コピー';
+          btn.style.color = '#94a3b8';
+          btn.style.background = 'rgba(255, 255, 255, 0.15)';
+        }, 1800);
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(copySuccess).catch(() => fallbackCopy(text, copySuccess));
+      } else {
+        fallbackCopy(text, copySuccess);
+      }
+    }
+
+    function fallbackCopy(text, callback) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        callback();
+      } catch (err) {
+        console.error('Copy failed', err);
+      }
+      document.body.removeChild(ta);
+    }
+
+    // すべての .code-box にコピーボタンを自動追加
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.code-box').forEach(box => {
+        if (!box.querySelector('.copy-btn')) {
+          const btn = document.createElement('button');
+          btn.className = 'copy-btn';
+          btn.type = 'button';
+          btn.innerHTML = '📋 コピー';
+          btn.onclick = function() { copyCode(this); };
+          box.appendChild(btn);
+        }
+      });
+    });
+
+    // Keyboard Navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      } else if (e.key === 'Escape') {
+        document.getElementById('slideModal').classList.remove('active');
+      }
+    });
+
+    // KaTeX Math Rendering
+    function initKaTeX() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          ignoredClasses: ['code-box', 'copy-btn', 'no-math'],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+          throwOnError: false
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(initKaTeX, 50);
+    });
+    window.addEventListener('load', () => {
+      setTimeout(initKaTeX, 100);
+      setTimeout(initKaTeX, 500);
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>

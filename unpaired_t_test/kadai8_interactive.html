@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第8回：インタラクティブ演習ワークブック</title>
+
+  <!-- KaTeX CSS & JS for Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]})"></script>
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0d9488;
+      --secondary-light: #14b8a6;
+      --accent: #d97706;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 120px;
+    }
+
+    /* Header & Navigation Bar */
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+    header p { font-size: 1rem; opacity: 0.9; }
+
+    /* Sticky Status Bar */
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .user-inputs {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .user-inputs input {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .user-inputs input:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .score-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.95rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    /* Section Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .badge-primary { background: #dbeafe; color: #1e40af; }
+    .badge-wow { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Code Box */
+    .code-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      position: relative;
+      margin: 8px 0 14px 0;
+      overflow-x: auto;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background: #f8fafc;
+      transition: border 0.2s, background 0.2s;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      background: white;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+    textarea.input-field {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.5;
+      font-family: inherit;
+    }
+
+    /* Check Button & Feedback */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-check {
+      background: var(--secondary);
+      color: white;
+    }
+    .btn-check:hover { background: #0f766e; }
+    .btn-submit {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      font-size: 1.1rem;
+      padding: 14px 28px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    }
+    .btn-submit:hover {
+      box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .feedback-box {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .feedback-success {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .feedback-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+
+    /* Fixed Bottom Submission Bar */
+    .submit-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 2px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
+      z-index: 99;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .progress-info {
+      font-size: 0.95rem;
+      color: #475569;
+    }
+    .progress-bar-wrap {
+      width: 220px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* Callout */
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 0.92rem;
+    }
+    .callout-wow {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div style="max-width: 900px; margin: 0 auto 10px auto; text-align: left;">
+      <a href="index.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 999px;">← 第8回講義トップへ戻る</a>
+    </div>
+    <h1>🌾 生物情報処理演習 第8回：インタラクティブ演習ワークブック</h1>
+    <p>統計学的仮説検定 ② 〜独立2群のt検定（Student vs Welch）と等分散性〜 | イネ76系統の遺伝子型比較</p>
+  </header>
+
+  <!-- Sticky Top Bar for Student Identity & Score -->
+  <div class="sticky-bar">
+    <div class="user-inputs">
+      <label for="student-id" style="font-weight: 700; font-size: 0.9rem;">学籍番号:</label>
+      <input type="text" id="student-id" placeholder="例: 26101234" required oninput="updateProgress()">
+      <label for="student-name" style="font-weight: 700; font-size: 0.9rem;">氏名:</label>
+      <input type="text" id="student-name" placeholder="例: 名大 太郎" required oninput="updateProgress()">
+    </div>
+    <div class="score-badge">
+      <span>客観テスト得点:</span>
+      <span id="score-display" style="font-size: 1.15rem; color: #0284c7;">0</span>
+      <span>/ 100 点</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Overview -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📖 演習の背景と本日のデータセット</h2>
+        <span class="badge badge-primary">背景知識</span>
+      </div>
+      <p style="font-size: 0.95rem; margin-bottom: 12px;">
+        イネ76系統の分離集団において、出穂後の茎葉乾物重（穂以外の地上部重, SW）を測定しました。<br>
+        今回は、1行に1系統が並んだ<strong>スタック形式（縦持ち・タブ区切りテキスト <code>kadai.txt</code>）</strong>を用いて、<strong>Genotype A群（24系統：ジャポニカ型アレル）</strong>と <strong>Genotype B群（52系統：インディカ型アレル）</strong>という独立した2群の間で平均値が異なるかどうかを検定します。
+      </p>
+      <div class="callout">
+        <strong>データセット（クリックでダウンロード）：</strong><br>
+        ・<a href="kadai/kadai.txt" download style="color: #1e40af; font-weight: 700;"><code>kadai.txt</code></a>: イネ76系統データ（タブ区切り：<code>Genotype</code>, <code>SW5</code>, <code>SW20</code>, <code>SW35</code>, <code>SW5_35</code>）<br>
+        ・<a href="kadai/kinoko.csv" download style="color: #1e40af; font-weight: 700;"><code>kinoko.csv</code></a>: キノコ柄長データ（カンマ区切り：斜面上部 <code>Ue</code> 68本 vs 斜面下部 <code>Shita</code> 61本）<br>
+        ・<a href="kadai/kadai_独立2群の検定.xlsx" download style="color: #1e40af; font-weight: 700;"><code>kadai_独立2群の検定.xlsx</code></a>: 課題説明付き元データExcelブック
+      </div>
+    </div>
+
+    <!-- Task 1 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題1：<code>SW5</code>（出穂後5日の茎葉重）の遺伝子型間比較</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        RStudioで以下のコードを実行し、出穂後5日の茎葉重（<code>SW5</code>）が <code>Genotype</code>（A vs B）ごとに異なるかどうかを検定してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>kadai <- read.delim("kadai.txt", stringsAsFactors = TRUE)
+boxplot(kadai$SW5 ~ kadai$Genotype, ylab = "SW5 (g)")
+stripchart(kadai$SW5 ~ kadai$Genotype, vertical = TRUE, method = "jitter", add = TRUE)
+var.test(kadai$SW5 ~ kadai$Genotype)
+t.test(kadai$SW5 ~ kadai$Genotype, alternative = "two.sided", var.equal = TRUE)
+t.test(kadai$SW5 ~ kadai$Genotype, alternative = "two.sided", var.equal = FALSE)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">等分散検定 <code>var.test</code> の $p$ 値:</label>
+          <input type="number" step="0.001" id="q1-varp" class="input-field" placeholder="例: 0.786">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student検定 (<code>var.equal=T</code>) の $p$ 値:</label>
+          <input type="number" step="0.001" id="q1-sp" class="input-field" placeholder="例: 0.131">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定 (<code>var.equal=F</code>) の $t$ 値:</label>
+          <input type="number" step="0.01" id="q1-wt" class="input-field" placeholder="例: -1.51">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定 (<code>var.equal=F</code>) の $p$ 値:</label>
+          <input type="number" step="0.001" id="q1-wp" class="input-field" placeholder="例: 0.139">
+        </div>
+        <div class="form-group">
+          <label class="form-label">統計的判定 ($\alpha=0.05$):</label>
+          <select id="q1-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="sig">有意差あり（帰無仮説を棄却）</option>
+            <option value="nonsig">有意差なし（帰無仮説を保留）</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ1()">🔍 課題1を検証する</button>
+      <div id="q1-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題1のグラフの印象と生物学的解釈・考察:</label>
+        <textarea id="q1-text" class="input-field" placeholder="箱ひげ図＋ドットプロットの重なり具合や、出穂後5日時点でのGenotype AとBの茎葉重に差があるといえるか考察を記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題2：<code>SW35</code>（出穂後35日の茎葉重）の遺伝子型間比較</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        RStudioで以下のコードを実行し、出穂後35日の茎葉重（<code>SW35</code>）が <code>Genotype</code> ごとに異なるかどうかを検定してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>boxplot(kadai$SW35 ~ kadai$Genotype, ylab = "SW35 (g)")
+stripchart(kadai$SW35 ~ kadai$Genotype, vertical = TRUE, method = "jitter", add = TRUE)
+var.test(kadai$SW35 ~ kadai$Genotype)
+t.test(kadai$SW35 ~ kadai$Genotype, alternative = "two.sided", var.equal = TRUE)
+t.test(kadai$SW35 ~ kadai$Genotype, alternative = "two.sided", var.equal = FALSE)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">等分散検定 <code>var.test</code> の $p$ 値:</label>
+          <input type="number" step="0.001" id="q2-varp" class="input-field" placeholder="例: 0.195">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student検定 (<code>var.equal=T</code>) の $p$ 値:</label>
+          <input type="number" step="0.001" id="q2-sp" class="input-field" placeholder="例: 0.217">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定 (<code>var.equal=F</code>) の $t$ 値:</label>
+          <input type="number" step="0.01" id="q2-wt" class="input-field" placeholder="例: 1.15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定 (<code>var.equal=F</code>) の $p$ 値:</label>
+          <input type="number" step="0.001" id="q2-wp" class="input-field" placeholder="例: 0.258">
+        </div>
+        <div class="form-group">
+          <label class="form-label">統計的判定 ($\alpha=0.05$):</label>
+          <select id="q2-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="sig">有意差あり（帰無仮説を棄却）</option>
+            <option value="nonsig">有意差なし（帰無仮説を保留）</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ2()">🔍 課題2を検証する</button>
+      <div id="q2-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題2のグラフの印象と生物学的解釈・考察:</label>
+        <textarea id="q2-text" class="input-field" placeholder="SW35単独のグラフの印象と検定結果（有意差があるといえるか）について記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題3：<code>SW5_35</code>（減少量 <code>SW5 - SW35</code>）の遺伝子型間比較</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        出穂後5日と35日の茎葉重の差（<code>SW5_35 = SW5 - SW35</code>、枯れ上がり度合い）が <code>Genotype</code> ごとに異なるかどうかを両側検定してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>boxplot(kadai$SW5_35 ~ kadai$Genotype, ylab = "SW5 - SW35 (g)")
+stripchart(kadai$SW5_35 ~ kadai$Genotype, vertical = TRUE, method = "jitter", add = TRUE)
+var.test(kadai$SW5_35 ~ kadai$Genotype)
+t.test(kadai$SW5_35 ~ kadai$Genotype, alternative = "two.sided", var.equal = TRUE)
+t.test(kadai$SW5_35 ~ kadai$Genotype, alternative = "two.sided", var.equal = FALSE)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">等分散検定 <code>var.test</code> の $p$ 値:</label>
+          <input type="number" step="0.01" id="q3-varp" class="input-field" placeholder="例: 0.60">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student検定 (<code>var.equal=T</code>) の $p$ 値:</label>
+          <input type="text" id="q3-sp" class="input-field" placeholder="例: 9.39e-06">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定 (<code>var.equal=F</code>) の $t$ 値:</label>
+          <input type="number" step="0.01" id="q3-wt" class="input-field" placeholder="例: -4.95">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定 (<code>var.equal=F</code>) の $p$ 値:</label>
+          <input type="text" id="q3-wp" class="input-field" placeholder="例: 9.19e-06">
+        </div>
+        <div class="form-group">
+          <label class="form-label">統計的判定 ($\alpha=0.05$):</label>
+          <select id="q3-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="sig">有意差あり（帰無仮説を棄却）</option>
+            <option value="nonsig">有意差なし（帰無仮説を保留）</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ3()">🔍 課題3を検証する</button>
+      <div id="q3-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題3のグラフの印象と生物学的解釈・考察:</label>
+        <textarea id="q3-text" class="input-field" placeholder="Genotype A（平均2.21g）とGenotype B（平均11.84g）の減少量の分布の違いと、枯れ上がり特性の結論を記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 4 (Wow 1) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題4【Wow①：なぜ単一時点では差が見えず、変化量（<code>SW5_35</code>）で劇的な差が出たのか？】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> 課題1（<code>SW5</code>: $p=0.139$）も課題2（<code>SW35</code>: $p=0.258$）も有意差がなかったのに、なぜ差をとった課題3（<code>SW5_35</code>: $p=9.19 \times 10^{-6}$）では約28,000倍もシャープな有意差が出たのでしょうか？<br>
+        また、「Genotype B の減少量の方が Genotype A よりも大きい（すなわち $\mu_A - \mu_B < 0$）」ことを片側検定で検証してください。
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># Rの因子順は第1群が A、第2群が B なので A - B < 0 は alternative = "less"
+t.test(kadai$SW5_35 ~ kadai$Genotype, alternative = "less", var.equal = FALSE)
+
+# 各変数の標準偏差 (SD) が引き算によってどう変化したかを確認
+aggregate(cbind(SW5, SW35, SW5_35) ~ Genotype, data = kadai, FUN = sd)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">片側検定の <code>alternative</code> 引数:</label>
+          <select id="q4-alt" class="input-field">
+            <option value="">選択してください</option>
+            <option value="less">less (Aの平均 &lt; Bの平均)</option>
+            <option value="greater">greater (Aの平均 &gt; Bの平均)</option>
+            <option value="two.sided">two.sided</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">片側検定の $p$ 値 (指数表記可):</label>
+          <input type="text" id="q4-p" class="input-field" placeholder="例: 4.60e-06">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>SW5_35</code> をとったときの標準偏差 (SD) の変化:</label>
+          <select id="q4-sd" class="input-field">
+            <option value="">選択してください</option>
+            <option value="halved">約15gから約8gへと半分近くに縮小した（個体差相殺）</option>
+            <option value="doubled">約15gから約30gへと2倍に増大した</option>
+            <option value="same">全く変化しなかった</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ4()">🔍 発展課題4を検証する</button>
+      <div id="q4-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">なぜ <code>SW5</code> 単体や <code>SW35</code> 単体では有意差が出ず、差（<code>SW5_35</code>）をとると劇的な有意差が出たのか？（考察）:</label>
+        <textarea id="q4-text" class="input-field" placeholder="①5日目と35日目の平均値の逆転（交差）、②系統ごとの初期サイズ（個体差ノイズ）の引き算による相殺の2つの観点から説明してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 5 (Wow 2) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題5【Wow②：キノコ例題 <code>kinoko.csv</code> の境界線F検定と Student vs Welch】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> 講義例題の <code>kinoko.csv</code>（斜面上部 <code>Ue</code> 68本 vs 斜面下部 <code>Shita</code> 61本のキノコの柄の長さ）を解析し、等分散性の検定（<code>var.test</code>）の $p$値 と Welch のt検定の結果を確認しましょう。
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>kinoko <- read.csv("kinoko.csv", stringsAsFactors = TRUE)
+var.test(kinoko$Length ~ kinoko$Shamen)
+t.test(kinoko$Length ~ kinoko$Shamen, alternative = "two.sided", var.equal = TRUE)
+t.test(kinoko$Length ~ kinoko$Shamen, alternative = "two.sided", var.equal = FALSE)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><code>var.test</code> の $F$ 値:</label>
+          <input type="number" step="0.01" id="q5-f" class="input-field" placeholder="例: 1.635">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>var.test</code> の $p$ 値:</label>
+          <input type="number" step="0.001" id="q5-varp" class="input-field" placeholder="例: 0.051">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定の自由度 ($df$):</label>
+          <input type="number" step="0.1" id="q5-df" class="input-field" placeholder="例: 113.35">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Welch検定の $p$ 値:</label>
+          <input type="text" id="q5-wp" class="input-field" placeholder="例: 0.000163">
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ5()">🔍 発展課題5を検証する</button>
+      <div id="q5-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">「F検定をしてからStudentかWelchを選ぶ二段階検定」の問題点（多重検定の罠）と、Welch検定の利点についての考察:</label>
+        <textarea id="q5-text" class="input-field" placeholder="var.testのp値が0.05096という境界線にあることや、同じデータに2回検定を行うリスク（多重検定の罠）、Welch検定の自由度補正について考察してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Overall Discussion -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">総合考察：第7回（対応あり）と第8回（対応なし）の統合理解</h2>
+        <span class="badge badge-primary">総合まとめ</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">総合考察（対応のあるt検定と独立2群のt検定の使い分け、およびイネのStay-green/枯れ上がり遺伝子座に関する結論）:</label>
+        <textarea id="overall-text" class="input-field" style="min-height: 120px;" placeholder="第7回と第8回を通じて明らかになったGenotype A（ジャポニカ型）とGenotype B（インディカ型）の登熟期茎葉重動態の違いと、適切な検定手法の選択についてまとめてください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Submission Controller -->
+  <div class="submit-bar">
+    <div>
+      <div class="progress-info">
+        <strong>課題入力進捗:</strong> <span id="progress-percent">0%</span>
+        （必須入力項目をすべて入力すると提出可能になります）
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar-fill"></div>
+      </div>
+    </div>
+    <button class="btn btn-submit" id="btn-download" onclick="generateReportHTML()">
+      📥 提出用レポートHTMLを書き出す
+    </button>
+  </div>
+
+  <script>
+    // Copy Code Helper
+    function copyCode(btn) {
+      const box = btn.closest('.code-box');
+      const clone = box.cloneNode(true);
+      const b = clone.querySelector('.copy-btn');
+      if (b) b.remove();
+      navigator.clipboard.writeText(clone.innerText.trim()).then(() => {
+        btn.innerText = '✓ コピー完了！';
+        setTimeout(() => { btn.innerText = '📋 コピー'; }, 1500);
+      });
+    }
+
+    // Scores
+    let scores = { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 };
+
+    function updateTotalScore() {
+      const total = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      document.getElementById('score-display').innerText = total;
+      updateProgress();
+    }
+
+    // Validation Functions
+    function checkQ1() {
+      const varp = parseFloat(document.getElementById('q1-varp').value);
+      const sp = parseFloat(document.getElementById('q1-sp').value);
+      const wt = parseFloat(document.getElementById('q1-wt').value);
+      const wp = parseFloat(document.getElementById('q1-wp').value);
+      const judge = document.getElementById('q1-judge').value;
+      const fb = document.getElementById('q1-feedback');
+
+      if (isNaN(varp) || isNaN(sp) || isNaN(wt) || isNaN(wp) || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力してください。');
+        return;
+      }
+
+      const varpOk = Math.abs(varp - 0.7865) <= 0.02;
+      const spOk = Math.abs(sp - 0.1306) <= 0.015;
+      const wtOk = Math.abs(Math.abs(wt) - 1.506) <= 0.05 || Math.abs(Math.abs(wt) - 1.529) <= 0.05;
+      const wpOk = Math.abs(wp - 0.1393) <= 0.015;
+      const judgeOk = (judge === 'nonsig');
+
+      if (varpOk && spOk && wtOk && wpOk && judgeOk) {
+        scores.q1 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 等分散検定 p=0.786 (>0.05)、Student p=0.131、Welch t=-1.506, p=0.139 となり、出穂後5日時点では有意差なしと正しく判定できました。');
+      } else {
+        scores.q1 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。var.testのp値(約0.786)、Studentのp値(約0.131)、Welchのt値(約-1.506)・p値(約0.139)、および判定（有意差なし）を再確認してください。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ2() {
+      const varp = parseFloat(document.getElementById('q2-varp').value);
+      const sp = parseFloat(document.getElementById('q2-sp').value);
+      const wt = parseFloat(document.getElementById('q2-wt').value);
+      const wp = parseFloat(document.getElementById('q2-wp').value);
+      const judge = document.getElementById('q2-judge').value;
+      const fb = document.getElementById('q2-feedback');
+
+      if (isNaN(varp) || isNaN(sp) || isNaN(wt) || isNaN(wp) || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力してください。');
+        return;
+      }
+
+      const varpOk = Math.abs(varp - 0.1947) <= 0.02;
+      const spOk = Math.abs(sp - 0.2169) <= 0.015;
+      const wtOk = Math.abs(Math.abs(wt) - 1.149) <= 0.05 || Math.abs(Math.abs(wt) - 1.246) <= 0.05;
+      const wpOk = Math.abs(wp - 0.2579) <= 0.015;
+      const judgeOk = (judge === 'nonsig');
+
+      if (varpOk && spOk && wtOk && wpOk && judgeOk) {
+        scores.q2 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 等分散検定 p=0.195 (>0.05)、Student p=0.217、Welch t=1.149, p=0.258 となり、SW35単体でも有意差なしと正しく判定できました。');
+      } else {
+        scores.q2 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。var.testのp値(約0.195)、Studentのp値(約0.217)、Welchのt値(約1.149)・p値(約0.258)、および判定（有意差なし）を再確認してください。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ3() {
+      const varp = parseFloat(document.getElementById('q3-varp').value);
+      const spStr = document.getElementById('q3-sp').value.trim().toLowerCase();
+      const sp = parseFloat(spStr);
+      const wt = parseFloat(document.getElementById('q3-wt').value);
+      const wpStr = document.getElementById('q3-wp').value.trim().toLowerCase();
+      const wp = parseFloat(wpStr);
+      const judge = document.getElementById('q3-judge').value;
+      const fb = document.getElementById('q3-feedback');
+
+      if (isNaN(varp) || isNaN(sp) || isNaN(wt) || isNaN(wp) || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力してください。');
+        return;
+      }
+
+      const varpOk = Math.abs(varp - 0.600) <= 0.03;
+      const spOk = (sp > 0 && sp < 0.0001) || spStr.includes('e-06') || spStr.includes('e-6') || spStr.includes('9.39');
+      const wtOk = Math.abs(Math.abs(wt) - 4.946) <= 0.06 || Math.abs(Math.abs(wt) - 4.759) <= 0.06;
+      const wpOk = (wp > 0 && wp < 0.0001) || wpStr.includes('e-06') || wpStr.includes('e-6') || wpStr.includes('9.19');
+      const judgeOk = (judge === 'sig');
+
+      if (varpOk && spOk && wtOk && wpOk && judgeOk) {
+        scores.q3 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 等分散検定 p=0.600、Student p=9.394e-06、Welch t=-4.946, p=9.193e-06 で極めて高度に有意差ありと判定できました！');
+      } else {
+        scores.q3 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。var.testのp値(0.600)、Studentのp値(9.394e-06)、Welchのt値(-4.946)・p値(9.193e-06)、判定（有意差あり）を確認してください。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ4() {
+      const alt = document.getElementById('q4-alt').value;
+      const pStr = document.getElementById('q4-p').value.trim().toLowerCase();
+      const p = parseFloat(pStr);
+      const sd = document.getElementById('q4-sd').value;
+      const fb = document.getElementById('q4-feedback');
+
+      if (!alt || isNaN(p) || !sd) {
+        showFeedback(fb, false, 'すべての項目を選択・入力してください。');
+        return;
+      }
+
+      const altOk = (alt === 'less');
+      const pOk = (p > 0 && p < 0.00005) || pStr.includes('e-06') || pStr.includes('e-6') || pStr.includes('4.59') || pStr.includes('4.60') || pStr.includes('4.70');
+      const sdOk = (sd === 'halved');
+
+      if (altOk && pOk && sdOk) {
+        scores.q4 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) alternative="less" で片側 p=4.596e-06 となり、個体内引き算によりSDが約15g→約8gに半減したことで劇的な検出力が得られたことを確認できました！');
+      } else {
+        scores.q4 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。Rの因子順は A が先、B が後なので A < B は alternative="less"、片側p値は両側(9.193e-06)の半分の 4.596e-06、SDは約半分に縮小します。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ5() {
+      const fval = parseFloat(document.getElementById('q5-f').value);
+      const varp = parseFloat(document.getElementById('q5-varp').value);
+      const df = parseFloat(document.getElementById('q5-df').value);
+      const wpStr = document.getElementById('q5-wp').value.trim().toLowerCase();
+      const wp = parseFloat(wpStr);
+      const fb = document.getElementById('q5-feedback');
+
+      if (isNaN(fval) || isNaN(varp) || isNaN(df) || isNaN(wp)) {
+        showFeedback(fb, false, 'すべての数値を入力してください。');
+        return;
+      }
+
+      const fOk = Math.abs(fval - 1.635) <= 0.05 || Math.abs(fval - (1/1.635)) <= 0.05;
+      const varpOk = Math.abs(varp - 0.05096) <= 0.005;
+      const dfOk = Math.abs(df - 113.35) <= 0.5 || df === 127;
+      const wpOk = (wp > 0 && wp < 0.001);
+
+      if (fOk && varpOk && dfOk && wpOk) {
+        scores.q5 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) F=1.635, p=0.05096 という5%境界線データにおいて、Welch検定が自由度を 113.35 に自動補正して p=0.0001626 を導くことを確認できました！');
+      } else {
+        scores.q5 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。kinoko.csv の var.test 出力（F=1.635, p=0.05096）と Welch 出力（df=113.35, p=0.0001626）を確認してください。');
+      }
+      updateTotalScore();
+    }
+
+    function showFeedback(elem, isSuccess, msg) {
+      elem.style.display = 'block';
+      elem.className = 'feedback-box ' + (isSuccess ? 'feedback-success' : 'feedback-error');
+      elem.innerText = msg;
+    }
+
+    // Progress Calculation
+    function updateProgress() {
+      const studentId = document.getElementById('student-id').value.trim();
+      const studentName = document.getElementById('student-name').value.trim();
+      const q1Text = document.getElementById('q1-text').value.trim();
+      const q2Text = document.getElementById('q2-text').value.trim();
+      const q3Text = document.getElementById('q3-text').value.trim();
+      const q4Text = document.getElementById('q4-text').value.trim();
+      const q5Text = document.getElementById('q5-text').value.trim();
+      const overallText = document.getElementById('overall-text').value.trim();
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+
+      let filledCount = 0;
+      if (studentId) filledCount++;
+      if (studentName) filledCount++;
+      if (totalScore >= 60) filledCount += 2;
+      if (totalScore >= 100) filledCount += 1;
+      if (q1Text.length >= 10) filledCount++;
+      if (q2Text.length >= 10) filledCount++;
+      if (q3Text.length >= 10) filledCount++;
+      if (q4Text.length >= 15) filledCount++;
+      if (q5Text.length >= 15) filledCount++;
+      if (overallText.length >= 20) filledCount++;
+
+      const pct = Math.min(100, Math.round((filledCount / 11) * 100));
+      document.getElementById('progress-percent').innerText = pct + '%';
+      document.getElementById('progress-bar-fill').style.width = pct + '%';
+    }
+
+    // Generate Submission HTML
+    function generateReportHTML() {
+      const sid = document.getElementById('student-id').value.trim();
+      const sname = document.getElementById('student-name').value.trim();
+
+      if (!sid || !sname) {
+        alert('学籍番号と氏名を入力してください。');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      const now = new Date().toLocaleString('ja-JP');
+
+      const reportData = {
+        lecture: 8,
+        studentId: sid,
+        studentName: sname,
+        submissionDate: now,
+        score: totalScore,
+        scoresDetail: scores,
+        q1: {
+          varp: document.getElementById('q1-varp').value,
+          sp: document.getElementById('q1-sp').value,
+          wt: document.getElementById('q1-wt').value,
+          wp: document.getElementById('q1-wp').value,
+          judge: document.getElementById('q1-judge').value,
+          text: document.getElementById('q1-text').value
+        },
+        q2: {
+          varp: document.getElementById('q2-varp').value,
+          sp: document.getElementById('q2-sp').value,
+          wt: document.getElementById('q2-wt').value,
+          wp: document.getElementById('q2-wp').value,
+          judge: document.getElementById('q2-judge').value,
+          text: document.getElementById('q2-text').value
+        },
+        q3: {
+          varp: document.getElementById('q3-varp').value,
+          sp: document.getElementById('q3-sp').value,
+          wt: document.getElementById('q3-wt').value,
+          wp: document.getElementById('q3-wp').value,
+          judge: document.getElementById('q3-judge').value,
+          text: document.getElementById('q3-text').value
+        },
+        q4: {
+          alt: document.getElementById('q4-alt').value,
+          p: document.getElementById('q4-p').value,
+          sd: document.getElementById('q4-sd').value,
+          text: document.getElementById('q4-text').value
+        },
+        q5: {
+          f: document.getElementById('q5-f').value,
+          varp: document.getElementById('q5-varp').value,
+          df: document.getElementById('q5-df').value,
+          wp: document.getElementById('q5-wp').value,
+          text: document.getElementById('q5-text').value
+        },
+        overallText: document.getElementById('overall-text').value
+      };
+
+      const metaJSON = JSON.stringify(reportData);
+
+      let hash = 0;
+      for (let i = 0; i < metaJSON.length; i++) {
+        hash = ((hash << 5) - hash) + metaJSON.charCodeAt(i);
+        hash |= 0;
+      }
+
+      const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>${sid}_${sname}_第8回課題レポート</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #1e293b; background: #fff; }
+    h1 { color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; font-size: 1.6rem; }
+    h2 { color: #0d9488; margin-top: 24px; font-size: 1.2rem; border-left: 4px solid #0d9488; padding-left: 8px; }
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+    .score-badge { font-size: 1.3rem; font-weight: 800; color: #0284c7; }
+    .item-box { background: #f1f5f9; padding: 12px; border-radius: 6px; margin: 8px 0; }
+    .text-box { background: #fff; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-top: 6px; white-space: pre-wrap; font-size: 0.95rem; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-size: 0.9rem; }
+    th { background: #f8fafc; }
+    @media print { body { margin: 0; padding: 0; } }
+  </style>
+  <!-- Embedded Grading Metadata for Automated Evaluation -->
+  <script id="submission-metadata" type="application/json" data-checksum="${hash}">
+  ${metaJSON}
+  <\/script>
+  <script id="grading-data" type="application/json" data-checksum="${hash}">
+  ${metaJSON}
+  <\/script>
+</head>
+<body>
+  <h1>生物情報処理演習 第8回 課題レポート</h1>
+  <div class="meta-box">
+    <div>
+      <p><strong>学籍番号：</strong> ${sid}</p>
+      <p><strong>氏名：</strong> ${sname}</p>
+      <p style="font-size: 0.85rem; color: #64748b;">提出生成日時: ${now}</p>
+    </div>
+    <div style="text-align: right;">
+      <p>客観テスト得点</p>
+      <div class="score-badge">${totalScore} / 100 点</div>
+    </div>
+  </div>
+
+  <h2>1. 課題1（SW5 の遺伝子型間比較: 20点）</h2>
+  <table>
+    <tr><th>var.test p値</th><th>Student p値</th><th>Welch t値</th><th>Welch p値</th><th>統計的判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q1.varp || '-'}</td><td>${reportData.q1.sp || '-'}</td><td>${reportData.q1.wt || '-'}</td><td>${reportData.q1.wp || '-'}</td><td>${reportData.q1.judge || '-'}</td><td>${scores.q1} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>グラフの印象と生物学的考察:</strong>
+    <div class="text-box">${reportData.q1.text || '（未記入）'}</div>
+  </div>
+
+  <h2>2. 課題2（SW35 の遺伝子型間比較: 20点）</h2>
+  <table>
+    <tr><th>var.test p値</th><th>Student p値</th><th>Welch t値</th><th>Welch p値</th><th>統計的判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q2.varp || '-'}</td><td>${reportData.q2.sp || '-'}</td><td>${reportData.q2.wt || '-'}</td><td>${reportData.q2.wp || '-'}</td><td>${reportData.q2.judge || '-'}</td><td>${scores.q2} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>グラフの印象と生物学的考察:</strong>
+    <div class="text-box">${reportData.q2.text || '（未記入）'}</div>
+  </div>
+
+  <h2>3. 課題3（SW5_35 減少量の遺伝子型間比較: 20点）</h2>
+  <table>
+    <tr><th>var.test p値</th><th>Student p値</th><th>Welch t値</th><th>Welch p値</th><th>統計的判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q3.varp || '-'}</td><td>${reportData.q3.sp || '-'}</td><td>${reportData.q3.wt || '-'}</td><td>${reportData.q3.wp || '-'}</td><td>${reportData.q3.judge || '-'}</td><td>${scores.q3} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>グラフの印象と生物学的考察:</strong>
+    <div class="text-box">${reportData.q3.text || '（未記入）'}</div>
+  </div>
+
+  <h2>4. 発展課題4【Wow①：単一時点 vs 変化量の検出力と片側検定】(20点)</h2>
+  <table>
+    <tr><th>alternative 引数</th><th>片側 p値</th><th>SDの変化</th><th>得点</th></tr>
+    <tr><td>${reportData.q4.alt || '-'}</td><td>${reportData.q4.p || '-'}</td><td>${reportData.q4.sd || '-'}</td><td>${scores.q4} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>なぜ単一時点では差が見えず変化量で劇的な差が出たのかの考察:</strong>
+    <div class="text-box">${reportData.q4.text || '（未記入）'}</div>
+  </div>
+
+  <h2>5. 発展課題5【Wow②：キノコ例題の境界線F検定とWelch検定】(20点)</h2>
+  <table>
+    <tr><th>var.test F値</th><th>var.test p値</th><th>Welch df</th><th>Welch p値</th><th>得点</th></tr>
+    <tr><td>${reportData.q5.f || '-'}</td><td>${reportData.q5.varp || '-'}</td><td>${reportData.q5.df || '-'}</td><td>${reportData.q5.wp || '-'}</td><td>${scores.q5} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>多重検定の罠とWelch検定の利点に関する考察:</strong>
+    <div class="text-box">${reportData.q5.text || '（未記入）'}</div>
+  </div>
+
+  <h2>6. 総合考察</h2>
+  <div class="item-box">
+    <div class="text-box">${reportData.overallText || '（未記入）'}</div>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sid}_${sname}_第8回課題レポート.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert(`✅ レポートHTMLを生成・保存しました！\n\nファイル名: ${sid}_${sname}_第8回課題レポート.html\n\nこのファイルを大学の提出システム（小テスト・TACT）に提出してください。`);
+    }
+  </script>
+</body>
+</html>

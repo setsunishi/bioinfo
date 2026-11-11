@@ -196,8 +196,29 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      padding-right: 6px;
+      padding-bottom: 12px;
       font-size: 1.04rem;
       line-height: 1.6;
+    }
+
+    .slide-body > * {
+      flex-shrink: 0;
+    }
+
+    .slide-body::-webkit-scrollbar {
+      width: 7px;
+    }
+    .slide-body::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .slide-body::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 4px;
+    }
+    .slide-body::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
     }
 
     /* Grid & Columns */

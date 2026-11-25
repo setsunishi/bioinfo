@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第9回：インタラクティブ演習ワークブック</title>
+
+  <!-- KaTeX CSS & JS for Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]})"></script>
+
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0d9488;
+      --secondary-light: #14b8a6;
+      --accent: #d97706;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 120px;
+    }
+
+    /* Header & Navigation Bar */
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+    header p { font-size: 1rem; opacity: 0.9; }
+
+    /* Sticky Status Bar */
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .user-inputs {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .user-inputs input {
+      padding: 6px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .user-inputs input:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .score-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.95rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    /* Section Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .badge-primary { background: #dbeafe; color: #1e40af; }
+    .badge-wow { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Code Box */
+    .code-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      position: relative;
+      margin: 8px 0 14px 0;
+      overflow-x: auto;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background: #f8fafc;
+      transition: border 0.2s, background 0.2s;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      background: white;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+    textarea.input-field {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.5;
+      font-family: inherit;
+    }
+
+    /* Check Button & Feedback */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-check {
+      background: var(--secondary);
+      color: white;
+    }
+    .btn-check:hover { background: #0f766e; }
+    .btn-submit {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      font-size: 1.1rem;
+      padding: 14px 28px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    }
+    .btn-submit:hover {
+      box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .feedback-box {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .feedback-success {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .feedback-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+
+    /* Fixed Bottom Submission Bar */
+    .submit-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 2px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
+      z-index: 99;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .progress-info {
+      font-size: 0.95rem;
+      color: #475569;
+    }
+    .progress-bar-wrap {
+      width: 220px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* Callout */
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 0.92rem;
+    }
+    .callout-wow {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div style="max-width: 900px; margin: 0 auto 10px auto; text-align: left;">
+      <a href="index.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 999px;">← 第9回講義トップへ戻る</a>
+    </div>
+    <h1>🌾 生物情報処理演習 第9回：インタラクティブ演習ワークブック</h1>
+    <p>統計学的仮説検定 ③ 〜1元配置分散分析（One-way ANOVA）と多重比較〜 | ニワトリ6種飼料の体重比較 ＆ $t^2 = F$ の検証</p>
+  </header>
+
+  <!-- Sticky Top Bar for Student Identity & Score -->
+  <div class="sticky-bar">
+    <div class="user-inputs">
+      <label for="student-id" style="font-weight: 700; font-size: 0.9rem;">学籍番号:</label>
+      <input type="text" id="student-id" placeholder="例: 26101234" required oninput="updateProgress()">
+      <label for="student-name" style="font-weight: 700; font-size: 0.9rem;">氏名:</label>
+      <input type="text" id="student-name" placeholder="例: 名大 太郎" required oninput="updateProgress()">
+    </div>
+    <div class="score-badge">
+      <span>客観テスト得点:</span>
+      <span id="score-display" style="font-size: 1.15rem; color: #0284c7;">0</span>
+      <span>/ 100 点</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Overview -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📖 本日の提出課題の範囲・提出方法とデータセット</h2>
+        <span class="badge badge-primary">必読ガイド</span>
+      </div>
+      <p style="font-size: 0.95rem; margin-bottom: 12px;">
+        本日は、6種類のタンパク源飼料（<code>casein</code>, <code>horsebean</code>, <code>linseed</code>, <code>meatmeal</code>, <code>soybean</code>, <code>sun_ower</code>）を6週間与えたニワトリ71羽の体重データ（<strong><code>niwatori.csv</code></strong>）を用いて<strong>1元配置分散分析（One-way ANOVA）と多重比較（Tukey-Kramer / Bonferroni / Holm）</strong>を行います。<br>
+        さらに、前回のイネ茎葉重減少量データ（<strong><code>kadai2_t_vs_ANOVA.csv</code></strong>）を用いて、<strong>2群の比較における独立t検定と1元配置分散分析の数学的関係（$t^2 = F$）</strong>を検証します。
+      </p>
+      <div class="callout">
+        <strong>📥 課題用データセット（クリックでダウンロードし、RStudioの作業ディレクトリに配置してください）：</strong><br>
+        ・<a href="kadai/niwatori.csv" download style="color: #1e40af; font-weight: 700;"><code>niwatori.csv</code></a>: ニワトリ6種飼料・体重データ（課題1〜3・発展課題4で使用）<br>
+        ・<a href="kadai/kadai2_t_vs_ANOVA.csv" download style="color: #1e40af; font-weight: 700;"><code>kadai2_t_vs_ANOVA.csv</code></a>: イネ76系統 茎葉重減少量データ（発展課題5で使用）<br>
+        ・<strong>提出方法</strong>：以下の<strong>課題1〜3・発展課題4〜5（各20点×5＝100点満点）および総合考察</strong>を入力し、最下部の<strong>「📥 提出用レポートHTMLを書き出す」</strong>ボタンでダウンロードされたHTMLファイルを提出してください。
+      </div>
+    </div>
+
+    <!-- Task 1 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題1：ニワトリ飼料データの可視化・正規性・等分散性の検定</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        RStudioで以下のコードを実行し、箱ひげ図＋ドットプロットを描画した上で、各飼料グループの正規性検定（<code>shapiro.test</code>）と6群の等分散性検定（<code>bartlett.test</code>）の結果を入力してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>niwatori &lt;- read.csv("niwatori.csv", stringsAsFactors = TRUE)
+summary(niwatori)
+
+# (1)(2) 箱ひげ図＋ドットプロット
+boxplot(niwatori$Taiju ~ niwatori$Esa, ylab = "Weight (g)", xlab = "Feed (Esa)")
+stripchart(niwatori$Taiju ~ niwatori$Esa, vertical = TRUE, method = "jitter", add = TRUE)
+
+# (3) 各群の正規性の検定（Shapiro-Wilk検定）
+tapply(niwatori$Taiju, niwatori$Esa, shapiro.test)
+
+# (4) 6群の等分散性の検定（Bartlett検定）
+tapply(niwatori$Taiju, niwatori$Esa, var)
+bartlett.test(Taiju ~ Esa, data = niwatori)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Shapiro-Wilk検定（全6群）の判定:</label>
+          <select id="q1-norm" class="input-field">
+            <option value="">選択してください</option>
+            <option value="all_normal">全6群とも p &gt; 0.05 であり正規分布とみなせる</option>
+            <option value="not_normal">一部の群で p &lt; 0.05 となり正規分布とはいえない</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bartlett検定の <code>K-squared</code> 値:</label>
+          <input type="number" step="0.01" id="q1-ksq" class="input-field" placeholder="例: 3.26">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bartlett検定の $p$ 値:</label>
+          <input type="number" step="0.01" id="q1-bp" class="input-field" placeholder="例: 0.66">
+        </div>
+        <div class="form-group">
+          <label class="form-label">6群の等分散性の判定 ($\alpha=0.05$):</label>
+          <select id="q1-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="homoscedastic">等分散性は否定されない（等分散とみなせる）</option>
+            <option value="heteroscedastic">有意差があり等分散とはいえない（不等分散）</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ1()">🔍 課題1を検証する</button>
+      <div id="q1-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題1のグラフからの予想と前提条件（正規性・等分散性）の確認結果の考察:</label>
+        <textarea id="q1-text" class="input-field" placeholder="箱ひげ図＋ドットプロットからどの飼料で体重が大きく/小さく見えるか、またShapiro-Wilk検定・Bartlett検定から分散分析の前提条件が満たされたといえるか記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題2：飼料によるニワトリ体重の1元配置分散分析（ANOVA）</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        RStudioで以下のコードを実行し、分散分析表（<code>summary(anova_result)</code>）の自由度・$F$値・$p$値と結論を入力してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># グループごとの平均体重を表示
+tapply(niwatori$Taiju, niwatori$Esa, mean)
+
+# 等分散を仮定した1元配置分散分析（aov）
+anova_result &lt;- aov(Taiju ~ Esa, data = niwatori)
+summary(anova_result)
+
+# （参考）等分散を仮定しないWelchのANOVA
+oneway.test(Taiju ~ Esa, data = niwatori, var.equal = FALSE)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">群間（<code>Esa</code>）の自由度 <code>Df</code>:</label>
+          <input type="number" step="1" id="q2-df1" class="input-field" placeholder="例: 5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">群内残差（<code>Residuals</code>）の自由度 <code>Df</code>:</label>
+          <input type="number" step="1" id="q2-df2" class="input-field" placeholder="例: 65">
+        </div>
+        <div class="form-group">
+          <label class="form-label">分散比 <code>F value</code> ($F$値):</label>
+          <input type="number" step="0.01" id="q2-f" class="input-field" placeholder="例: 15.37">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ANOVAの $p$ 値 (<code>Pr(&gt;F)</code>):</label>
+          <input type="text" id="q2-p" class="input-field" placeholder="例: 5.94e-10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">統計的判定 ($\alpha=0.05$):</label>
+          <select id="q2-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="sig">有意差あり（飼料間で体重に差があるといえる）</option>
+            <option value="nonsig">有意差なし（飼料間で体重に差があるとはいえない）</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ2()">🔍 課題2を検証する</button>
+      <div id="q2-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題2の分散分析（ANOVA）の結果の解釈:</label>
+        <textarea id="q2-text" class="input-field" placeholder="各飼料の平均体重の違い（horsebean 約160.2g 〜 sun_ower 約328.9g）と、ANOVAのF値・p値から言える結論（帰無仮説の棄却）を記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題3：Tukey-Kramer法による多重比較と Compact Letter Display (CLD)</h2>
+        <span class="badge badge-primary">多重比較（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        <code>TukeyHSD()</code> および <code>multcomp</code> パッケージの <code>glht()</code>・<code>cld()</code> を実行し、総当たり比較ペア数、有意（$p &lt; 0.05$）となった組み合わせの数、およびCLD文字を入力してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># R標準のTukeyHSDで全ペアの調整済みp値 (p adj) を確認
+TukeyHSD(aov(Taiju ~ Esa, data = niwatori), "Esa", ordered = TRUE)
+
+# multcompパッケージでCLD (a, b, c...) を出力し箱ひげ図に描画
+library(multcomp)
+anova_result &lt;- aov(Taiju ~ Esa, data = niwatori)
+tukey_result &lt;- glht(anova_result, linfct = mcp(Esa = "Tukey"))
+summary(tukey_result)
+cld(tukey_result)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(tukey_result))</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">6種類の飼料の総当たり比較ペア数:</label>
+          <input type="number" step="1" id="q3-pairs" class="input-field" placeholder="例: 15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">うち有意（<code>p adj &lt; 0.05</code>）な組合せの数:</label>
+          <input type="number" step="1" id="q3-sig" class="input-field" placeholder="例: 8">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>cld(tukey_result)</code> で <code>linseed</code> の文字:</label>
+          <select id="q3-cld-lin" class="input-field">
+            <option value="">選択してください</option>
+            <option value="a">"a"</option>
+            <option value="b">"b"</option>
+            <option value="c">"c"</option>
+            <option value="bc">"bc"</option>
+            <option value="ac">"ac"</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>cld(tukey_result)</code> で <code>meatmeal</code> の文字:</label>
+          <select id="q3-cld-meat" class="input-field">
+            <option value="">選択してください</option>
+            <option value="a">"a"</option>
+            <option value="b">"b"</option>
+            <option value="c">"c"</option>
+            <option value="bc">"bc"</option>
+            <option value="ac">"ac"</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ3()">🔍 課題3を検証する</button>
+      <div id="q3-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題3のTukey-Kramer多重比較とCLD付きグラフの解釈・考察:</label>
+        <textarea id="q3-text" class="input-field" placeholder="CLD（casein='a', sun_ower='a', meatmeal='ac', soybean='c', linseed='bc', horsebean='b'）から、どの飼料群が高くどの飼料群と有意に異なるのか具体的に説明してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 4 (Wow 1) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題4【Wow①：Bonferroni法とHolm法の比較と検出力の違い】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> ニワトリ飼料データに対して <strong>Bonferroni法</strong> と <strong>Holm法</strong> で多重比較を行い、Tukey-Kramer法や両手法間の調整済み $p$値（例：<code>soybean - casein</code> のペア）および CLD を比較してください。
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># ① Bonferroni法による多重比較とCLD
+pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "bonferroni")
+bonf_summary &lt;- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("bonferroni"))
+bonf_summary
+cld(bonf_summary)
+
+# ② Holm法による多重比較とCLD
+pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "holm")
+holm_summary &lt;- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("holm"))
+holm_summary
+cld(holm_summary)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Bonferroni法の <code>soybean - casein</code> の $p$ 値:</label>
+          <input type="number" step="0.0001" id="q4-bonfp" class="input-field" placeholder="例: 0.0100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Holm法の <code>soybean - casein</code> の $p$ 値:</label>
+          <input type="number" step="0.0001" id="q4-holmp" class="input-field" placeholder="例: 0.0053">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bonferroni法とHolm法の $p$ 値・検出力の関係:</label>
+          <select id="q4-rel" class="input-field">
+            <option value="">選択してください</option>
+            <option value="holm_smaller">Holm法の方が段階的補正によりp値が小さく（または等しく）、検出力が高い</option>
+            <option value="bonf_smaller">Bonferroni法の方が常にp値が小さく、検出力が高い</option>
+            <option value="identical">すべてのペアでp値は完全に一致する</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ4()">🔍 発展課題4を検証する</button>
+      <div id="q4-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">Tukey-Kramer法・Bonferroni法・Holm法の比較とそれぞれの特徴についての考察:</label>
+        <textarea id="q4-text" class="input-field" placeholder="今回のデータでのCLDの一致と、各ペアのp値を比較したときにBonferroni法（一律15倍補正）とHolm法（段階的補正）でどのような違いが見られたかを考察してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 5 (Wow 2) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題5【Wow②：2群比較における独立t検定と1-way ANOVAの同値性（$t^2 = F$）】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> 前回のイネ茎葉重減少量データ（<code>kadai2_t_vs_ANOVA.csv</code>：Genotype A vs B の2群）に対して、<br>
+        (1) 等分散仮定のt検定 と (2) 等分散仮定の1-way ANOVA（<code>aov</code>）、および<br>
+        (3) Welchのt検定 と (4) WelchのANOVA（<code>oneway.test</code>）を実行し、<strong>$t$値の2乗（$t^2$）と $F$値、および $p$値の関係</strong>を検証してください。
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>dataset &lt;- read.csv("kadai2_t_vs_ANOVA.csv", stringsAsFactors = TRUE)
+
+# (1) 等分散仮定のt検定 と t^2  vs  (2) 等分散仮定の1-way ANOVA (aov)
+x_eq &lt;- t.test(SW5_35 ~ Genotype, data = dataset, alternative = "two.sided", var.equal = TRUE)
+x_eq
+as.numeric(x_eq$statistic^2) # t^2
+summary(aov(SW5_35 ~ Genotype, data = dataset))
+
+# (3) Welchのt検定 と t^2  vs  (4) Welchの1-way ANOVA (oneway.test)
+x_welch &lt;- t.test(SW5_35 ~ Genotype, data = dataset, alternative = "two.sided", var.equal = FALSE)
+x_welch
+as.numeric(x_welch$statistic^2) # t^2
+oneway.test(SW5_35 ~ Genotype, data = dataset, var.equal = FALSE)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">(1)(2) 等分散仮定の $t^2$ 値 ＝ <code>aov</code> の $F$ 値:</label>
+          <input type="number" step="0.01" id="q5-feq" class="input-field" placeholder="例: 22.65">
+        </div>
+        <div class="form-group">
+          <label class="form-label">(1)(2) 等分散仮定の共通 $p$ 値:</label>
+          <input type="text" id="q5-peq" class="input-field" placeholder="例: 9.39e-06">
+        </div>
+        <div class="form-group">
+          <label class="form-label">(3)(4) Welchの $t^2$ 値 ＝ <code>oneway.test</code> の $F$ 値:</label>
+          <input type="number" step="0.01" id="q5-fwelch" class="input-field" placeholder="例: 24.46">
+        </div>
+        <div class="form-group">
+          <label class="form-label">2群における t統計量と F統計量の数学的関係:</label>
+          <select id="q5-rel" class="input-field">
+            <option value="">選択してください</option>
+            <option value="t2_eq_f">t^2 = F が恒等的に成り立ち、p値も完全に一致する</option>
+            <option value="t_eq_f">t = F が成り立ち、p値は2倍異なる</option>
+            <option value="coincidence">たまたま今回のデータで近い値になっただけで無関係である</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ5()">🔍 発展課題5を検証する</button>
+      <div id="q5-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">(5) なぜ(1)と(2)、および(3)と(4)はまったく同じ $p$値を与えたのか？ $t$値と $F$値の関係から「独立2群のt検定」と「1-way ANOVA」の関係を説明しなさい:</label>
+        <textarea id="q5-text" class="input-field" placeholder="2群のとき t^2 = F が成り立つ理由（t分布の2乗が第1自由度1のF分布に従うこと、1-way ANOVAは2標本t検定を3群以上に一般化した手法であること）を説明してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Overall Discussion -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">総合考察：3群以上の比較における分散分析と多重比較の統合理解</h2>
+        <span class="badge badge-primary">総合まとめ</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">総合考察（なぜ多群比較でt検定を繰り返してはいけないのか、変動の分割の意義、および総当たり比較と対照群比較の使い分けについて）:</label>
+        <textarea id="overall-text" class="input-field" style="min-height: 120px;" placeholder="第9回全体を通して学んだ「多重検定の罠」「ANOVAにおける群間分散と群内分散の比較」「Tukey-Kramer / Holm / Dunnett法とCLDの活用」について総合的にまとめてください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Submission Controller -->
+  <div class="submit-bar">
+    <div>
+      <div class="progress-info">
+        <strong>課題入力進捗:</strong> <span id="progress-percent">0%</span>
+        （必須入力項目をすべて入力すると100%になります）
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar-fill"></div>
+      </div>
+    </div>
+    <button class="btn btn-submit" id="btn-download" onclick="generateReportHTML()">
+      📥 提出用レポートHTMLを書き出す
+    </button>
+  </div>
+
+  <script>
+    // Copy Code Helper
+    function copyCode(btn) {
+      const box = btn.closest('.code-box');
+      const clone = box.cloneNode(true);
+      const b = clone.querySelector('.copy-btn');
+      if (b) b.remove();
+      navigator.clipboard.writeText(clone.innerText.trim()).then(() => {
+        btn.innerText = '✓ コピー完了！';
+        setTimeout(() => { btn.innerText = '📋 コピー'; }, 1500);
+      });
+    }
+
+    // Scores
+    let scores = { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 };
+
+    function updateTotalScore() {
+      const total = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      document.getElementById('score-display').innerText = total;
+      updateProgress();
+    }
+
+    // Validation Functions
+    function checkQ1() {
+      const norm = document.getElementById('q1-norm').value;
+      const ksq = parseFloat(document.getElementById('q1-ksq').value);
+      const bp = parseFloat(document.getElementById('q1-bp').value);
+      const judge = document.getElementById('q1-judge').value;
+      const fb = document.getElementById('q1-feedback');
+
+      if (!norm || isNaN(ksq) || isNaN(bp) || !judge) {
+        showFeedback(fb, false, 'すべての項目を選択・入力してください。');
+        return;
+      }
+
+      const normOk = (norm === 'all_normal');
+      const ksqOk = Math.abs(ksq - 3.2597) <= 0.08;
+      const bpOk = Math.abs(bp - 0.66) <= 0.03;
+      const judgeOk = (judge === 'homoscedastic');
+
+      if (normOk && ksqOk && bpOk && judgeOk) {
+        scores.q1 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 全6群でShapiro-Wilk検定 p > 0.05（正規性OK）、Bartlett検定 K-squared = 3.2597, p = 0.66（等分散性OK）となり、分散分析の前提条件を満たすことを確認できました。');
+      } else {
+        scores.q1 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。Shapiro-Wilk検定は全群 p > 0.05、Bartlett検定は K-squared = 3.2597, p-value = 0.66 (> 0.05) で等分散性は否定されません。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ2() {
+      const df1 = parseInt(document.getElementById('q2-df1').value);
+      const df2 = parseInt(document.getElementById('q2-df2').value);
+      const fval = parseFloat(document.getElementById('q2-f').value);
+      const pStr = document.getElementById('q2-p').value.trim().toLowerCase();
+      const pval = parseFloat(pStr);
+      const judge = document.getElementById('q2-judge').value;
+      const fb = document.getElementById('q2-feedback');
+
+      if (isNaN(df1) || isNaN(df2) || isNaN(fval) || isNaN(pval) || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力してください。');
+        return;
+      }
+
+      const df1Ok = (df1 === 5);
+      const df2Ok = (df2 === 65);
+      const fOk = Math.abs(fval - 15.365) <= 0.1 || Math.abs(fval - 20.021) <= 0.1;
+      const pOk = (pval >= 0 && pval < 0.0001) || pStr.includes('e-10') || pStr.includes('e-09') || pStr.includes('5.94');
+      const judgeOk = (judge === 'sig');
+
+      if (df1Ok && df2Ok && fOk && pOk && judgeOk) {
+        scores.q2 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 群間自由度 Df=5、残差自由度 Df=65、F=15.37、p=5.94e-10 (<0.001) となり、飼料間で体重に極めて有意な差があると判定できました！');
+      } else {
+        scores.q2 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。summary(aov(Taiju ~ Esa, data = niwatori)) の出力（Esa Df=5, Residuals Df=65, F value=15.37, Pr(>F)=5.94e-10）を確認してください。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ3() {
+      const pairs = parseInt(document.getElementById('q3-pairs').value);
+      const sig = parseInt(document.getElementById('q3-sig').value);
+      const cldLin = document.getElementById('q3-cld-lin').value;
+      const cldMeat = document.getElementById('q3-cld-meat').value;
+      const fb = document.getElementById('q3-feedback');
+
+      if (isNaN(pairs) || isNaN(sig) || !cldLin || !cldMeat) {
+        showFeedback(fb, false, 'すべての項目を入力・選択してください。');
+        return;
+      }
+
+      const pairsOk = (pairs === 15);
+      const sigOk = (sig === 8);
+      const linOk = (cldLin === 'bc');
+      const meatOk = (cldMeat === 'ac');
+
+      if (pairsOk && sigOk && linOk && meatOk) {
+        scores.q3 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 6群の総当たりは 6×5÷2 = 15通り、うち有意(p<0.05)は 8通り、CLDは linseed="bc"、meatmeal="ac" と正しく読み解けました！');
+      } else {
+        scores.q3 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。6種類の総当たりは15通り、TukeyHSDで p adj < 0.05 となるのは8通り、cld(tukey_result) では linseed="bc", meatmeal="ac" になります。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ4() {
+      const bonfp = parseFloat(document.getElementById('q4-bonfp').value);
+      const holmp = parseFloat(document.getElementById('q4-holmp').value);
+      const rel = document.getElementById('q4-rel').value;
+      const fb = document.getElementById('q4-feedback');
+
+      if (isNaN(bonfp) || isNaN(holmp) || !rel) {
+        showFeedback(fb, false, 'すべての項目を入力・選択してください。');
+        return;
+      }
+
+      const bonfOk = Math.abs(bonfp - 0.00998) <= 0.002;
+      const holmOk = Math.abs(holmp - 0.00532) <= 0.0015;
+      const relOk = (rel === 'holm_smaller');
+
+      if (bonfOk && holmOk && relOk) {
+        scores.q4 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) soybean - casein の調整p値は Bonferroni (0.00998) に対し Holm (0.00532) と小さくなり、段階的補正を行うHolm法の方が検出力が高いことを確認できました！');
+      } else {
+        scores.q4 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。soybean と casein の比較では Bonferroni p ≈ 0.00998 (約0.010)、Holm p ≈ 0.00532 となり、Holm法の方がp値が小さく検出力が高くなります。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ5() {
+      const feq = parseFloat(document.getElementById('q5-feq').value);
+      const peqStr = document.getElementById('q5-peq').value.trim().toLowerCase();
+      const peq = parseFloat(peqStr);
+      const fwelch = parseFloat(document.getElementById('q5-fwelch').value);
+      const rel = document.getElementById('q5-rel').value;
+      const fb = document.getElementById('q5-feedback');
+
+      if (isNaN(feq) || isNaN(peq) || isNaN(fwelch) || !rel) {
+        showFeedback(fb, false, 'すべての項目を入力・選択してください。');
+        return;
+      }
+
+      const feqOk = Math.abs(feq - 22.65086) <= 0.1;
+      const peqOk = (peq > 0 && peq < 0.0001) || peqStr.includes('e-06') || peqStr.includes('e-6') || peqStr.includes('9.39');
+      const fwelchOk = Math.abs(fwelch - 24.4602) <= 0.1;
+      const relOk = (rel === 't2_eq_f');
+
+      if (feqOk && peqOk && fwelchOk && relOk) {
+        scores.q5 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 等分散仮定では t^2 = F = 22.65 (p = 9.394e-06)、Welchでは t^2 = F = 24.46 (p = 9.193e-06) で完全一致し、2群のANOVAと両側t検定の数学的同値性を証明できました！');
+      } else {
+        scores.q5 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。等分散仮定では (-4.7593)^2 = F = 22.65 (p = 9.394e-06)、Welchでは (-4.9457)^2 = F = 24.46 (p = 9.193e-06) となり、t^2 = F が成り立ちます。');
+      }
+      updateTotalScore();
+    }
+
+    function showFeedback(elem, isSuccess, msg) {
+      elem.style.display = 'block';
+      elem.className = 'feedback-box ' + (isSuccess ? 'feedback-success' : 'feedback-error');
+      elem.innerText = msg;
+    }
+
+    // Progress Calculation
+    function updateProgress() {
+      const studentId = document.getElementById('student-id').value.trim();
+      const studentName = document.getElementById('student-name').value.trim();
+      const q1Text = document.getElementById('q1-text').value.trim();
+      const q2Text = document.getElementById('q2-text').value.trim();
+      const q3Text = document.getElementById('q3-text').value.trim();
+      const q4Text = document.getElementById('q4-text').value.trim();
+      const q5Text = document.getElementById('q5-text').value.trim();
+      const overallText = document.getElementById('overall-text').value.trim();
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+
+      let filledCount = 0;
+      if (studentId) filledCount++;
+      if (studentName) filledCount++;
+      if (totalScore >= 60) filledCount += 2;
+      if (totalScore >= 100) filledCount += 1;
+      if (q1Text.length >= 10) filledCount++;
+      if (q2Text.length >= 10) filledCount++;
+      if (q3Text.length >= 10) filledCount++;
+      if (q4Text.length >= 15) filledCount++;
+      if (q5Text.length >= 15) filledCount++;
+      if (overallText.length >= 20) filledCount++;
+
+      const pct = Math.min(100, Math.round((filledCount / 11) * 100));
+      document.getElementById('progress-percent').innerText = pct + '%';
+      document.getElementById('progress-bar-fill').style.width = pct + '%';
+    }
+
+    // Generate Submission HTML
+    function generateReportHTML() {
+      const sid = document.getElementById('student-id').value.trim();
+      const sname = document.getElementById('student-name').value.trim();
+
+      if (!sid || !sname) {
+        alert('学籍番号と氏名を入力してください。');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      const now = new Date().toLocaleString('ja-JP');
+
+      const reportData = {
+        lecture: 9,
+        studentId: sid,
+        studentName: sname,
+        submissionDate: now,
+        score: totalScore,
+        scoresDetail: scores,
+        q1: {
+          norm: document.getElementById('q1-norm').value,
+          ksq: document.getElementById('q1-ksq').value,
+          bp: document.getElementById('q1-bp').value,
+          judge: document.getElementById('q1-judge').value,
+          text: document.getElementById('q1-text').value
+        },
+        q2: {
+          df1: document.getElementById('q2-df1').value,
+          df2: document.getElementById('q2-df2').value,
+          f: document.getElementById('q2-f').value,
+          p: document.getElementById('q2-p').value,
+          judge: document.getElementById('q2-judge').value,
+          text: document.getElementById('q2-text').value
+        },
+        q3: {
+          pairs: document.getElementById('q3-pairs').value,
+          sig: document.getElementById('q3-sig').value,
+          cldLin: document.getElementById('q3-cld-lin').value,
+          cldMeat: document.getElementById('q3-cld-meat').value,
+          text: document.getElementById('q3-text').value
+        },
+        q4: {
+          bonfp: document.getElementById('q4-bonfp').value,
+          holmp: document.getElementById('q4-holmp').value,
+          rel: document.getElementById('q4-rel').value,
+          text: document.getElementById('q4-text').value
+        },
+        q5: {
+          feq: document.getElementById('q5-feq').value,
+          peq: document.getElementById('q5-peq').value,
+          fwelch: document.getElementById('q5-fwelch').value,
+          rel: document.getElementById('q5-rel').value,
+          text: document.getElementById('q5-text').value
+        },
+        overallText: document.getElementById('overall-text').value
+      };
+
+      const metaJSON = JSON.stringify(reportData);
+
+      let hash = 0;
+      for (let i = 0; i < metaJSON.length; i++) {
+        hash = ((hash << 5) - hash) + metaJSON.charCodeAt(i);
+        hash |= 0;
+      }
+
+      const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>${sid}_${sname}_第9回課題レポート</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #1e293b; background: #fff; }
+    h1 { color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; font-size: 1.6rem; }
+    h2 { color: #0d9488; margin-top: 24px; font-size: 1.2rem; border-left: 4px solid #0d9488; padding-left: 8px; }
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+    .score-badge { font-size: 1.3rem; font-weight: 800; color: #0284c7; }
+    .item-box { background: #f1f5f9; padding: 12px; border-radius: 6px; margin: 8px 0; }
+    .text-box { background: #fff; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-top: 6px; white-space: pre-wrap; font-size: 0.95rem; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-size: 0.9rem; }
+    th { background: #f8fafc; }
+    @media print { body { margin: 0; padding: 0; } }
+  </style>
+  <!-- Embedded Grading Metadata for Automated Evaluation -->
+  <script id="submission-metadata" type="application/json" data-checksum="${hash}">
+  ${metaJSON}
+  <\/script>
+  <script id="grading-data" type="application/json" data-checksum="${hash}">
+  ${metaJSON}
+  <\/script>
+</head>
+<body>
+  <h1>生物情報処理演習 第9回 課題レポート</h1>
+  <div class="meta-box">
+    <div>
+      <p><strong>学籍番号：</strong> ${sid}</p>
+      <p><strong>氏名：</strong> ${sname}</p>
+      <p style="font-size: 0.85rem; color: #64748b;">提出生成日時: ${now}</p>
+    </div>
+    <div style="text-align: right;">
+      <p>客観テスト得点</p>
+      <div class="score-badge">${totalScore} / 100 点</div>
+    </div>
+  </div>
+
+  <h2>1. 課題1（ニワトリ6種飼料の正規性・Bartlett等分散性検定: 20点）</h2>
+  <table>
+    <tr><th>Shapiro-Wilk判定</th><th>Bartlett K-squared</th><th>Bartlett p値</th><th>等分散性判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q1.norm || '-'}</td><td>${reportData.q1.ksq || '-'}</td><td>${reportData.q1.bp || '-'}</td><td>${reportData.q1.judge || '-'}</td><td>${scores.q1} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>グラフからの予想と前提条件の考察:</strong>
+    <div class="text-box">${reportData.q1.text || '（未記入）'}</div>
+  </div>
+
+  <h2>2. 課題2（1元配置分散分析 One-way ANOVA: 20点）</h2>
+  <table>
+    <tr><th>群間自由度 Df</th><th>残差自由度 Df</th><th>F値</th><th>p値</th><th>統計的判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q2.df1 || '-'}</td><td>${reportData.q2.df2 || '-'}</td><td>${reportData.q2.f || '-'}</td><td>${reportData.q2.p || '-'}</td><td>${reportData.q2.judge || '-'}</td><td>${scores.q2} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>ANOVAの結果の解釈:</strong>
+    <div class="text-box">${reportData.q2.text || '（未記入）'}</div>
+  </div>
+
+  <h2>3. 課題3（Tukey-Kramer多重比較とCLD: 20点）</h2>
+  <table>
+    <tr><th>総当たりペア数</th><th>有意ペア数 (p&lt;0.05)</th><th>linseed のCLD</th><th>meatmeal のCLD</th><th>得点</th></tr>
+    <tr><td>${reportData.q3.pairs || '-'}</td><td>${reportData.q3.sig || '-'}</td><td>${reportData.q3.cldLin || '-'}</td><td>${reportData.q3.cldMeat || '-'}</td><td>${scores.q3} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>Tukey-Kramer多重比較とCLDグラフの考察:</strong>
+    <div class="text-box">${reportData.q3.text || '（未記入）'}</div>
+  </div>
+
+  <h2>4. 発展課題4【Wow①：Bonferroni法とHolm法の比較】(20点)</h2>
+  <table>
+    <tr><th>Bonferroni p値 (soybean-casein)</th><th>Holm p値 (soybean-casein)</th><th>両手法の関係</th><th>得点</th></tr>
+    <tr><td>${reportData.q4.bonfp || '-'}</td><td>${reportData.q4.holmp || '-'}</td><td>${reportData.q4.rel || '-'}</td><td>${scores.q4} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>Tukey-Kramer / Bonferroni / Holm法の比較考察:</strong>
+    <div class="text-box">${reportData.q4.text || '（未記入）'}</div>
+  </div>
+
+  <h2>5. 発展課題5【Wow②：t検定と1-way ANOVAの同値性 (t^2 = F)】(20点)</h2>
+  <table>
+    <tr><th>等分散 t^2 = F</th><th>等分散 p値</th><th>Welch t^2 = F</th><th>数学的関係</th><th>得点</th></tr>
+    <tr><td>${reportData.q5.feq || '-'}</td><td>${reportData.q5.peq || '-'}</td><td>${reportData.q5.fwelch || '-'}</td><td>${reportData.q5.rel || '-'}</td><td>${scores.q5} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>独立2群のt検定と1-way ANOVAの関係に関する説明:</strong>
+    <div class="text-box">${reportData.q5.text || '（未記入）'}</div>
+  </div>
+
+  <h2>6. 総合考察</h2>
+  <div class="item-box">
+    <div class="text-box">${reportData.overallText || '（未記入）'}</div>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sid}_${sname}_第9回課題レポート.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert(`✅ レポートHTMLを生成・保存しました！\n\nファイル名: ${sid}_${sname}_第9回課題レポート.html\n\nこのファイルを大学の提出システム（小テスト・TACT）に提出してください。`);
+    }
+  </script>
+</body>
+</html>

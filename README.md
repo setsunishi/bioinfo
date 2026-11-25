@@ -38,15 +38,30 @@ bioinfo/
 │       ├── kadai_独立2群の検定.xlsx   # Excel版課題データブック
 │       ├── kinoko.csv                # 斜面（Shita vs Ue）のキノコ傘長データ（計129本）
 │       └── kinoko_reidai.xlsx        # キノコ例題Excelブック
+├── one_way_anova/                    # 【第9回】検定③：1元配置分散分析と多重比較（完成版）
+│   ├── index.html                    # 第9回 学生向けポータル（表紙・提出範囲完全統一ガイド付）
+│   ├── slieds.html / slides.html     # Web講義スライド（全29枚、SVG図解・解答アコーディオン・コピーボタン付）
+│   ├── slides.md                     # スライド原稿 Markdown
+│   ├── 生物情報処理演習_検定3_改善版スライド.pptx # PowerPoint版スライド
+│   ├── ひな型.Rmd                    # R Markdown 演習ひな型（コピーボタン付）
+│   ├── kadai9_interactive.html       # 学生用インタラクティブ課題ワークブック（提出用HTML出力機能付）
+│   ├── grader_dashboard.html         # 【教員用・非公開リンク】ドラッグ＆ドロップ一括採点ダッシュボード
+│   ├── grade_submissions.R           # 【教員用・非公開リンク】Rによる提出HTML一括採点スクリプト
+│   ├── niwatori.csv / kadai2_t_vs_ANOVA.csv # Rmd直接実行用データ（kadai/内と同内容）
+│   └── kadai/                        # 演習用データセット一式
+│       ├── niwatori.csv              # ニワトリ6種飼料・体重データ（全71羽）
+│       ├── kadai2_t_vs_ANOVA.csv     # イネ76系統 茎葉重減少量（t検定 vs 1-way ANOVA 同値性検証用）
+│       ├── トマト糖度スタック形式.xlsx # 授業内練習用：トマト4種肥料の糖度データ（スタック形式）
+│       └── トマト糖度.xlsx           # 授業内練習用：トマト4種肥料の糖度データ（ワイド形式）
 ├── 2025lecture7/                     # 【過去資料】第7回（対応のあるt検定）元資料一式
 ├── 2025lecture8/                     # 【過去資料】第8回（独立2群のt検定）元資料 & 試作HTML一式
-├── 2025lecture9/                     # 【次回作成用】第9回（1元配置分散分析・多重比較）元資料一式
+├── 2025lecture9/                     # 【過去資料】第9回（1元配置分散分析・多重比較）元資料一式
 ├── 2025lecture10/                    # 【次回作成用】第10回（2元配置分散分析・交互作用）元資料一式
 └── 2025lecture11/                    # 【次回作成用】第11回（ノンパラメトリック検定）元資料一式
 ```
 
 > **重要（教員用採点ファイルについて）**  
-> `grader_dashboard.html` および `grade_submissions.R` は管理・継続開発のため同じフォルダ（`paired_t_test/`、`unpaired_t_test/`）内に配置していますが、**学生向けの表紙（`index.html`）からは一切リンクしていません**。
+> `grader_dashboard.html` および `grade_submissions.R` は管理・継続開発のため同じフォルダ（`paired_t_test/`、`unpaired_t_test/`、`one_way_anova/`）内に配置していますが、**学生向けの表紙（`index.html`）からは一切リンクしていません**。
 
 ---
 
@@ -54,7 +69,7 @@ bioinfo/
 
 1. **第7回（`paired_t_test/`）**：1標本t検定・対応のあるt検定（同一株の前後比較、個体差ノイズ相殺）
 2. **第8回（`unpaired_t_test/`）**：対応のない2標本t検定（独立2群比較、Student vs Welch）
-3. **第9回（`one_way_anova/` 予定）**：1元配置分散分析（One-way ANOVA）と多重比較（Tukey / Dunnett）
+3. **第9回（`one_way_anova/`）**：1元配置分散分析（One-way ANOVA）と多重比較（Tukey / Bonferroni / Holm / Dunnett）
 4. **第10回（`two_way_anova/` 予定）**：2元配置分散分析（Two-way ANOVA）と交互作用
 5. **第11回（`non_parametric/` 予定）**：ノンパラメトリック検定（Wilcoxon / Mann-Whitney / Kruskal-Wallis）
 
@@ -108,7 +123,33 @@ Remote Agent で本リポジトリの作業を継続する際は、以下の設�
   - Student (`var.equal = TRUE`)：$t = -3.9532$, $df = 127$, $p = 0.0001273$
   - Welch (`var.equal = FALSE`)：$t = -3.9014$, $df = 113.35$, $p = 0.0001626$
 
-### 5. UI / コードブロック規約
+### 5. 教育的デザインの柱（第9回 `one_way_anova` の実装仕様）
+- **第7回フィードバック（Q5）の改善反映**：
+  - 「授業内練習（提出不要：トマト4種肥料糖度データ `トマト糖度スタック形式.xlsx`）」と「提出課題の範囲（課題1〜3＋発展課題4〜5＋総合考察）」および「提出方法（`kadai9_interactive.html` から書き出したHTMLレポートを提出）」をポータル・スライド・Webワークブック・Rmdひな型のすべてで完全統一。
+  - スライド単体で見返したときにも迷わないよう、HandsOn開始直前に「Step 0：データDL・RStudio作業ディレクトリ設定・必須パッケージ（`multcomp`, `nortest`）のインストール手順」スライドを配置。
+- **2大「Wow!（納得・発見）」体験の組み込み**：
+  1. **6群15ペア総当たりでの多重比較手法（Tukey / Bonferroni / Holm / Dunnett）の検出力比較（発展4）**：`niwatori.csv`（6群15ペア）において一律補正のBonferroni法と段階的補正のHolm法の調整済み $p$値を比較させ（例：`soybean - casein` で Bonferroni $p = 0.00998$ vs Holm $p = 0.00532$）、Holm法が常に検出力で勝ることを体験させる（さらにトマト練習ではTukeyで $p=0.071$ の `BonePowder vs NoFertilizer` がDunnett法では $p=0.041$ で有意になることを実演）。
+  2. **2群における独立t検定と1-way ANOVAの数学的同値性 $t^2 = F$（発展5）**：`kadai2_t_vs_ANOVA.csv`（イネ2群データ）に両側t検定と1-way ANOVAの両方を適用させ、等分散仮定で $t = -4.7593 \implies t^2 = F = 22.651$（$p = 9.394 \times 10^{-6}$）、Welchで $t = -4.9457 \implies t^2 = F = 24.460$（$p = 9.193 \times 10^{-6}$）と完全一致することから、ANOVAが2標本t検定の3群以上への一般化であることを数理と実感で理解させる。
+
+### 6. 第9回データの正解値リファレンス（`niwatori.csv`: 6群 $N = 71$、`kadai2_t_vs_ANOVA.csv`: 2群 $N = 76$）
+- **課題1（`niwatori.csv` 正規性・等分散性）**：
+  - Shapiro-Wilk検定：全6群で $p \ge 0.2592 (> 0.05)$ $\rightarrow$ 全群で正規分布とみなせる
+  - Bartlett検定（`bartlett.test(Taiju ~ Esa)`）：$K^2 = 3.2597$, $df = 5$, $p = 0.6600 (> 0.05)$ $\rightarrow$ 等分散とみなせる
+- **課題2（`niwatori.csv` 1元配置分散分析）**：
+  - 群別平均：`casein` $323.58\text{ g}$, `horsebean` $160.20\text{ g}$, `linseed` $218.75\text{ g}$, `meatmeal` $276.91\text{ g}$, `soybean` $246.43\text{ g}$, `sun_ower` $328.92\text{ g}$
+  - `aov(Taiju ~ Esa)`：群間 $df = 5$, $S_A = 231129$, $V_A = 46226$ ／ 残差 $df = 65$, $S_R = 195556$, $V_R = 3009$ $\rightarrow$ $F = 15.365$（表示 `15.37`）, $p = 5.94 \times 10^{-10}$
+  - Welch ANOVA（`oneway.test`）：$F = 20.021$, $df = (5, 29.991)$, $p = 9.13 \times 10^{-9}$
+- **課題3（`niwatori.csv` Tukey-Kramer多重比較 & CLD）**：
+  - 総当たり比較ペア数：$\binom{6}{2} = 15$ 通り、うち有意（`p adj < 0.05`）なペア数：**8 通り**
+  - Compact Letter Display（`cld`）：`casein = "a"`, `horsebean = "b"`, `linseed = "bc"`, `meatmeal = "ac"`, `soybean = "c"`, `sun_ower = "a"`
+- **発展4（`niwatori.csv` Bonferroni法 vs Holm法）**：
+  - 有意ペア数はともに8通り、CLDも一致。
+  - `soybean - casein` 調整済み $p$値：Bonferroni $p = 0.00998$ vs Holm $p = 0.00532$（Tukey $p = 0.00837$）
+- **発展5（`kadai2_t_vs_ANOVA.csv` t検定 vs 1-way ANOVA）**：
+  - (1)(2) 等分散仮定：Student $t = -4.759292 \implies t^2 = 22.65086 = F$, $df = (1, 74)$, $p = 9.394 \times 10^{-6}$
+  - (3)(4) 等分散仮定しない（Welch）：Welch $t = -4.945726 \implies t^2 = 24.46020 = F$, $df = (1, 49.342)$, $p = 9.193 \times 10^{-6}$
+
+### 7. UI / コードブロック規約
 - すべてのRコードブロックにはワンクリック「📋 コピー」ボタンを付与する。
 - コードブロック（`.code-box`）は上下に余計な空白が入らないよう、`<code>` 内の先頭・末尾の改行を除去し、コンパクトなパディング（`padding: 8px 14px;`）を維持する。
-- 学生用課題ページ（`kadai7_interactive.html` / `kadai8_interactive.html`）から出力される提出用HTMLには `<script id="grading-data" type="application/json">` として解答JSONが埋め込まれ、`grader_dashboard.html`（ブラウザ上でのドラッグ＆ドロップ）または `grade_submissions.R` で即座に一括採点・CSV出力ができる仕組みになっている。
+- 学生用課題ページ（`kadai7_interactive.html` / `kadai8_interactive.html` / `kadai9_interactive.html`）から出力される提出用HTMLには `<script id="grading-data" type="application/json">` として解答JSONが埋め込まれ、`grader_dashboard.html`（ブラウザ上でのドラッグ＆ドロップ）または `grade_submissions.R` で即座に一括採点・CSV出力ができる仕組みになっている。

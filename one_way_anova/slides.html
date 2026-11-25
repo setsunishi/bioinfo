@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第9回：統計学的仮説検定 ③（1元配置分散分析と多重比較）</title>
+
+  <!-- KaTeX CSS & JS for Math Rendering (Primary: jsdelivr, Fallback: cdnjs) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css';">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"
+          onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js';"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"
+          onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/contrib/auto-render.min.js';"
+          onload="initKaTeX()"></script>
+  
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0d9488;
+      --secondary-light: #14b8a6;
+      --accent: #d97706;
+      --bg: #0f172a;
+      --slide-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --border: #e2e8f0;
+      --highlight: #fef3c7;
+      --highlight-border: #f59e0b;
+      --badge-theory: #e0f2fe;
+      --badge-theory-text: #0369a1;
+      --badge-practice: #dcfce7;
+      --badge-practice-text: #15803d;
+      --badge-intro: #f3e8ff;
+      --badge-intro-text: #7e22ce;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      user-select: none;
+    }
+
+    /* Top Header Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 46px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+    }
+
+    .top-bar .title {
+      font-weight: 600;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-bar .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f1f5f9;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    /* Slide Container */
+    .slide-viewport {
+      position: fixed;
+      top: 46px;
+      bottom: 46px;
+      left: 0;
+      right: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 20px;
+    }
+
+    .slide {
+      background: var(--slide-bg);
+      width: 100%;
+      max-width: 1200px;
+      height: 100%;
+      max-height: 675px;
+      min-height: 0;
+      border-radius: 14px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      display: none;
+      flex-direction: column;
+      padding: 26px 40px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.985); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Slide Header */
+    .slide-header {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+    }
+
+    .slide-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-intro { background: var(--badge-intro); color: var(--badge-intro-text); }
+    .badge-theory { background: var(--badge-theory); color: var(--badge-theory-text); }
+    .badge-practice { background: var(--badge-practice); color: var(--badge-practice-text); }
+
+    .slide-title {
+      font-size: 1.72rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.25;
+    }
+
+    .slide-subtitle {
+      font-size: 0.96rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      padding-right: 6px;
+      padding-bottom: 12px;
+      font-size: 1.0rem;
+      line-height: 1.56;
+    }
+
+    .slide-body > * {
+      flex-shrink: 0;
+    }
+
+    .slide-body::-webkit-scrollbar {
+      width: 7px;
+    }
+    .slide-body::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .slide-body::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 4px;
+    }
+    .slide-body::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    /* Grid & Columns */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Cards */
+    .card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 15px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card.primary {
+      border-left: 4px solid var(--primary-light);
+    }
+
+    .card.secondary {
+      border-left: 4px solid var(--secondary);
+    }
+
+    .card.accent {
+      border-left: 4px solid var(--accent);
+      background: #fffbeb;
+    }
+
+    .card.danger {
+      border-left: 4px solid #ef4444;
+      background: #fef2f2;
+    }
+
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Code Block */
+    .code-box {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.87rem;
+      line-height: 1.48;
+      overflow-x: auto;
+      position: relative;
+      border: 1px solid #334155;
+      user-select: text;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+
+    .code-box .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #94a3b8;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .code-box .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+
+    /* Key takeaway box */
+    .takeaway {
+      background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 13px 18px;
+      font-weight: 600;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .takeaway-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    /* Math Formula Display */
+    .formula-box {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 1.12rem;
+      color: #0f172a;
+      border: 1px dashed #cbd5e1;
+    }
+
+    /* KaTeX Styles */
+    .katex {
+      font-size: 1.06em !important;
+    }
+    .formula-box .katex {
+      font-size: 1.18em !important;
+    }
+    .formula-box .katex-display {
+      margin: 0.2em 0 !important;
+    }
+
+    /* Lists */
+    ul, ol {
+      padding-left: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    li {
+      line-height: 1.52;
+    }
+
+    li strong {
+      color: var(--primary);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text-main);
+      text-align: left;
+      padding: 7px 11px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 7px 11px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 46px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      z-index: 20;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-wrap {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 20px;
+      background: rgba(255, 255, 255, 0.1);
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--primary-light));
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    /* Modal for Slide Jump */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 90%;
+      max-width: 820px;
+      max-height: 80vh;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .modal-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .modal-item {
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .modal-item:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e3a8a;
+    }
+
+    /* Print Style */
+    @media print {
+      html, body {
+        background: transparent;
+        overflow: visible;
+        height: auto;
+      }
+      .top-bar, .bottom-bar, .modal { display: none !important; }
+      .slide-viewport { position: static; padding: 0; display: block; overflow: visible; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 40px;
+      }
+      .spoiler-box[open] .spoiler-body,
+      .spoiler-box .spoiler-body {
+        display: block !important;
+      }
+    }
+
+    /* Clickable Spoiler / Accordion for Task Answers */
+    details.spoiler-box {
+      border: 2px dashed #3b82f6;
+      border-radius: 10px;
+      background: #f8fafc;
+      overflow: visible;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    details.spoiler-box[open] {
+      border-style: solid;
+      border-color: #2563eb;
+      background: #ffffff;
+    }
+    details.spoiler-box summary {
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #1e3a8a;
+      background: linear-gradient(90deg, #eff6ff 0%, #e0f2fe 100%);
+      border-radius: 8px;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    details.spoiler-box[open] summary {
+      border-radius: 8px 8px 0 0;
+    }
+    details.spoiler-box summary::-webkit-details-marker {
+      display: none;
+    }
+    details.spoiler-box summary::after {
+      content: "▼ クリックして開く";
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #2563eb;
+      background: #ffffff;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+    }
+    details.spoiler-box[open] summary::after {
+      content: "▲ 閉じる";
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    details.spoiler-box .spoiler-body {
+      padding: 12px 16px;
+      border-top: 1px solid #dbeafe;
+    }
+
+    /* SVG Diagram Container */
+    .svg-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .svg-box svg {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <div class="top-bar">
+    <div class="title">
+      <span>🌾 生物情報処理演習 第9回</span>
+      <span style="color: #64748b;">|</span>
+      <span style="font-weight: 400; color: #cbd5e1;">統計学的仮説検定 ③（1元配置分散分析と多重比較）</span>
+    </div>
+    <div class="controls">
+      <a href="index.html" class="btn">🏠 演習ポータルへ</a>
+      <button class="btn" id="toggleSpoilersBtn" onclick="toggleAllSpoilers()">👁️ 課題解答をすべて開く</button>
+      <button class="btn" onclick="toggleModal()">📋 スライド目次</button>
+      <button class="btn" onclick="toggleFullScreen()">⛶ 全画面</button>
+    </div>
+  </div>
+
+  <!-- Main Slide Viewport -->
+  <div class="slide-viewport">
+
+    <!-- Slide 1: Title -->
+    <div class="slide active">
+      <div class="slide-header" style="border: none; margin-bottom: 10px;">
+        <span class="badge badge-intro">第9回 講義・演習</span>
+      </div>
+      <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; gap: 24px;">
+        <div style="font-size: 1.1rem; color: var(--secondary); font-weight: 700; letter-spacing: 0.1em;">
+          BIOLOGICAL DATA ANALYSIS & INFERENCE
+        </div>
+        <h1 style="font-size: 2.55rem; font-weight: 900; color: var(--primary); line-height: 1.25;">
+          統計学的仮説検定 ③
+        </h1>
+        <div style="font-size: 1.32rem; color: var(--text-muted); font-weight: 500;">
+          〜1元配置分散分析（One-way ANOVA）と多重比較（Tukey / Bonferroni / Holm / Dunnett）〜
+        </div>
+        <div style="margin-top: 18px; padding: 12px 28px; background: #f8fafc; border-radius: 9999px; border: 1px solid var(--border); font-size: 0.95rem; color: #475569;">
+          生物情報処理演習 | 実習課題：ニワトリ6種飼料の体重比較（<code>niwatori.csv</code>）＆ $t^2 = F$ の検証
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Goals -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">イントロダクション</span>
+          <h2 class="slide-title">本日のゴール（What & Why）</h2>
+        </div>
+        <span class="slide-subtitle">「3群以上の平均値」を科学的に正しく比較するための武器を手に入れる</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🎯</span>
+          <span>「品種A vs B vs C」「無肥料 vs 油粕 vs 骨粉 vs 化学肥料」── 3群以上のデータでどこに差があるかを証明する！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>1. なぜ「t検定の繰り返し」はNGなのか？</h3>
+            <p>3群以上にt検定を繰り返すと、本当は差がなくても偽陽性（第1種の過誤）が急増する<strong>「多重検定の罠」</strong>を確率計算で理解する。</p>
+          </div>
+          <div class="card secondary">
+            <h3>2. 分散分析の核心「変動の分割」</h3>
+            <p>なぜ平均の比較なのに「分散分析（ANOVA）」と呼ぶのか？ 全体のばらつきを<strong>「群間分散（シグナル）」と「群内誤差分散（ノイズ）」に分割</strong>する論理を掴む。</p>
+          </div>
+          <div class="card accent">
+            <h3>3. 多重比較4手法とCLD（<code>a, b, bc</code>）</h3>
+            <p><strong>Tukey-Kramer法・Bonferroni法・Holm法・Dunnett法</strong>を使い分け、論文標準のアルファベット表記（Compact Letter Display）を描画する。</p>
+          </div>
+          <div class="card">
+            <h3>4. 2大「Wow!」体験</h3>
+            <p>【Wow①】6群15ペア比較での補正法による検出力の違い<br>【Wow②】2群のときt検定と1-way ANOVAで <strong>$t^2 = F$・$p$値が完全一致する</strong>数学的感動！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: 5-Lecture Roadmap -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">全体像</span>
+          <h2 class="slide-title">生物統計・仮説検定ロードマップ（全5回）</h2>
+        </div>
+        <span class="slide-subtitle">2群比較から3群以上の「多群比較」へのステップアップ</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🗺️</span>
+          <span>第8回で学んだ「スタック形式（1データ1行）」と「チルダ（<code>Y ~ X</code>）記法」が、第9回・第10回でもそのまま主役になります！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第7回：1標本 & 対応のあるt検定</div>
+            <p><strong>同一サンプルの前後比較</strong>（イネ登熟前後の茎葉重）。引き算で個体差ノイズを相殺。</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第8回（前回）：独立2群の検定（対応なし）</div>
+            <p><strong>異なる2群同士の比較</strong>（Genotype A vs B）。等分散検定（F検定）と Student vs Welch。</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <div style="font-weight: 800; color: var(--primary); margin-bottom: 4px;">👉 第9回（本日）：1元配置分散分析と多重比較</div>
+            <p><strong>1つの要因で分けられた3群以上の比較</strong>（肥料4種、飼料6種）。変動の分割、Bartlett検定、Tukey / Holm / Dunnett、CLD表記。</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第10回・第11回：2元配置分散分析 / ノンパラメトリック</div>
+            <p>2つの要因（品種×環境）の主効果と<strong>交互作用</strong>（第10回）、正規性が仮定できない場合の<strong>順位和検定</strong>（第11回）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Timeline & Scope Clarification -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">進行予定・課題範囲</span>
+          <h2 class="slide-title">本日のタイムラインと「練習／提出課題」の明確な区分</h2>
+        </div>
+        <span class="slide-subtitle">どこまでが練習で、どこからが提出課題かを最初に確認！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>Part 1：理論 ＆ 授業内練習（約40分・提出不要）</h3>
+            <ol>
+              <li>なぜ3群以上でt検定を繰り返してはいけないのか？</li>
+              <li>1元配置分散分析の原理：<strong>「変動の分割」</strong>と分散分析表</li>
+              <li>前提条件（Shapiro-Wilk正規性・Bartlett等分散性検定）</li>
+              <li>多重比較4手法（Tukey / Bonferroni / Holm / Dunnett）とCLD</li>
+              <li><strong>【授業内練習（提出不要）】</strong>：トマト4種肥料の糖度データ（<code>トマト糖度スタック形式.xlsx</code>）で一連のRコードとDunnett法を体験</li>
+            </ol>
+          </div>
+          <div class="card secondary" style="border-width: 2px;">
+            <h3>Part 2：本日の提出課題（全5問・100点満点）</h3>
+            <ul>
+              <li><strong>課題1（20点）</strong>：<code>niwatori.csv</code>（6種飼料）の可視化・正規性・Bartlett等分散性検定</li>
+              <li><strong>課題2（20点）</strong>：ニワトリ体重の1元配置分散分析（<code>aov</code> & <code>oneway.test</code>）</li>
+              <li><strong>課題3（20点）</strong>：Tukey-Kramer法（全15ペア）とCLD（<code>a, b, c</code>）</li>
+              <li><strong>発展4（20点）</strong>：Bonferroni法とHolm法の検出力比較【Wow①】</li>
+              <li><strong>発展5（20点）</strong>：2群データ（<code>kadai2_t_vs_ANOVA.csv</code>）で検証する <strong>$t^2 = F$ の完全一致</strong>【Wow②】</li>
+            </ul>
+          </div>
+        </div>
+        <div class="takeaway" style="background: #f0fdf4; border-color: #86efac; color: #166534;">
+          <span class="takeaway-icon">📥</span>
+          <span><strong>【提出方法（スライド・Web共通）】</strong> インタラクティブWeb課題（<code>kadai9_interactive.html</code>）に課題1〜3・発展4〜5と総合考察を入力し、<strong>「提出用レポートHTMLを書き出す」</strong>ボタンで保存したHTMLファイルを提出してください！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: AI Guide -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">学習のコツ</span>
+          <h2 class="slide-title">生成AI活用ガイド（第9回編）</h2>
+        </div>
+        <span class="slide-subtitle">分散分析表や多重比較（CLD）の解釈にAIを賢く活用しよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card secondary">
+            <h3>⭕ 理解が深まる良い質問例</h3>
+            <div class="code-box" style="margin: 4px 0;"><code>この分散分析表（summary(aov)）の各列（Df, Sum Sq, Mean Sq, F value, Pr(>F)）の意味と計算関係を教えて下さい。
+            Df Sum Sq Mean Sq F value   Pr(>F)    
+Esa          5 231129   46226   15.37 5.94e-10 ***
+Residuals   65 195556    3009</code></div>
+            <ul>
+              <li>「CLDで <code>linseed="bc"</code>、<code>meatmeal="ac"</code> のとき、どの群とどの群に有意差があるの？」</li>
+              <li>「<code>glht()</code> で <code>not a factor</code> エラーが出たときの直し方を教えて」</li>
+            </ul>
+          </div>
+          <div class="card accent">
+            <h3>△ もったいない使い方</h3>
+            <p><strong>「課題1〜5の答えと考察を全部書いて」</strong><br>
+            AIに丸投げしてしまうと、本日の最大の発見である<strong>「なぜ6群の比較でt検定を15回繰り返すと53.7%も誤報が出るのか？」「なぜ2群データにANOVAをかけると $t$値の2乗が小数点以下までピタリと $F$値に一致するのか？」</strong>という統計学の感動を味わえません。必ず自分のRStudioで数値を確かめましょう！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Review & Transition to 3+ Groups -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">復習と導入</span>
+          <h2 class="slide-title">実験はいつも「2群」とは限らない！</h2>
+        </div>
+        <span class="slide-subtitle">第7回・第8回の「2群のt検定」から、第9回「3群以上（多群）の比較」へ</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>第7回・第8回のおさらい（1群・2群のt検定）</h3>
+            <div class="code-box"><code># 1標本 t検定
+t.test(x, mu = 8)
+# 対応のある2群（同一株の前後）
+t.test(x, y, paired = TRUE)
+# 対応のない独立2群（Welch / Student）
+t.test(Y ~ X, var.equal = FALSE)</code></div>
+            <p style="font-size: 0.9rem;">2群までの平均値の比較なら <code>t.test()</code> で完璧に解決できた！</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <h3>3群以上（多群）の実験デザイン</h3>
+            <ul>
+              <li><strong>要因（Factor）</strong>：群を分ける分類条件（例：肥料の種類、飼料の種類、薬剤濃度）</li>
+              <li><strong>水準（Level）</strong>：要因の中の各グループ（例：無肥料・油粕・骨粉・化学肥料の<strong>4水準＝4群</strong>）</li>
+              <li><strong>1元配置（One-way）</strong>：注目する要因が<strong>1つだけ</strong>で、その中に3群以上の独立したグループがある実験配置！</li>
+            </ul>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">🤔</span>
+          <span>疑問：「3群（A, B, C）や 6群（A〜F）あるとき、2群ずつの <code>t.test()</code> を総当たりで何回も繰り返せばいいのでは？」 $\rightarrow$ <strong>実はそれが最大のタブーです！</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Why Repeated t-tests Fail (Multiple Testing Trap) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論最重要</span>
+          <h2 class="slide-title">多群の比較に「単純なt検定の繰り返し」を使えない理由</h2>
+        </div>
+        <span class="slide-subtitle">検定を繰り返すたびに「少なくとも1回は誤って有意になる確率（偽陽性率）」が膨れ上がる！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card danger">
+            <h3>3群（A, B, C）で t検定を3回繰り返すと…</h3>
+            <p>・総当たりペアは <strong>A vs B、B vs C、A vs C の3通り</strong>。<br>
+            ・もし<strong>本当は3群すべて母平均が同じ（差がゼロ）</strong>だとしても、1回の検定（有意水準 $\alpha = 0.05$）で「正しく差がない」と判定される確率は $0.95$（95%）。<br>
+            ・3回とも間違えない確率は $(0.95)^3 = 0.857$（85.7%）。<br>
+            ・すると、<strong>少なくとも1ペアで誤って「有意差あり！」と誤報が出る確率（FWER）</strong>は：</p>
+            <div class="formula-box" style="background: #ffffff; margin-top: 4px;">
+              $$1 - (1 - 0.05)^3 = 1 - 0.95^3 = \mathbf{14.3\%}$$
+            </div>
+            <p style="font-size: 0.86rem; color: #b91c1c;">5%のつもりが<strong>約3倍（20回に3回も間違える危険な検定）</strong>になってしまう！</p>
+          </div>
+          <div class="card">
+            <h3>群数 $a$ と偽陽性率 $1 - (0.95)^m$ の爆発</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>群数 $a$</th>
+                  <th>総当たり数 $m = \binom{a}{2}$</th>
+                  <th>全問正解率 $0.95^m$</th>
+                  <th>誤って有意が出る確率</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>2群</strong></td>
+                  <td>1 通り</td>
+                  <td>95.0%</td>
+                  <td><strong>5.0%</strong>（本来の基準）</td>
+                </tr>
+                <tr>
+                  <td><strong>3群</strong></td>
+                  <td>3 通り</td>
+                  <td>85.7%</td>
+                  <td><strong>14.3%</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>4群</strong>（トマト練習）</td>
+                  <td>6 通り</td>
+                  <td>73.5%</td>
+                  <td><strong>26.5%</strong>（4回に1回誤報）</td>
+                </tr>
+                <tr>
+                  <td><strong>5群</strong></td>
+                  <td>10 通り</td>
+                  <td>59.9%</td>
+                  <td><strong>40.1%</strong></td>
+                </tr>
+                <tr style="background: #fef2f2;">
+                  <td><strong>6群</strong>（ニワトリ課題）</td>
+                  <td><strong>15 通り</strong></td>
+                  <td>46.3%</td>
+                  <td><strong style="color: #dc2626;">53.7%（半分以上が誤報！）</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Two Approaches - ANOVA vs Multiple Comparisons -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">多群比較の2つのアプローチ：分散分析（ANOVA）と多重比較</h2>
+        </div>
+        <span class="slide-subtitle">「全体として差があるか」を見るANOVAと、「どのペアに差があるか」を特定する多重比較</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>① 1元配置分散分析（One-way ANOVA）</h3>
+            <ul>
+              <li><strong>問い</strong>：「多群データの<strong>全体のどこかに</strong>平均値の差（要因の効果）があるか？」</li>
+              <li><strong>帰無仮説 $H_0$</strong>：$\mu_1 = \mu_2 = \dots = \mu_a$（全群の母平均が等しい）</li>
+              <li><strong>対立仮説 $H_1$</strong>：少なくとも1つの群の母平均が異なる</li>
+              <li><strong>特徴</strong>：<strong>1回の $F$検定</strong>で全体の差の有無を判定できるが、<strong>具体的にどの群とどの群が違うかは分からない</strong>。</li>
+            </ul>
+          </div>
+          <div class="card secondary">
+            <h3>② 多重比較（Multiple Comparisons）</h3>
+            <ul>
+              <li><strong>問い</strong>：「多群データの<strong>どのグループとどのグループの間</strong>に有意な差があるのか？」</li>
+              <li><strong>仕組み</strong>：検定を繰り返すことで上がる危険率（FWER）を、<strong>先回りして厳しい側に補正</strong>してペアごとに検定する。</li>
+              <li><strong>代表手法</strong>：<strong>Tukey-Kramer法</strong>、<strong>Bonferroni法</strong>、<strong>Holm法</strong>（以上は総当たり）、<strong>Dunnett法</strong>（対照群との比較）。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card accent" style="padding: 11px 16px;">
+          <p style="font-size: 0.9rem; margin: 0;"><strong>💡 多重比較の現代的な立ち位置と本授業の方針</strong><br>
+          古い教科書では「まずANOVAを行い、有意なら多重比較へ進む」とされましたが、現在は<strong>「群間のペア比較が目的なら、ANOVAの結果にかかわらず最初から多重比較を行ってよい」</strong>とされています。ただし、ANOVAの根幹である<strong>「変動（分散）の分割」は統計学で最も重要な概念</strong>なので、本授業ではANOVAと多重比較の両方をマスターします！</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Why "Analysis of Variance" for Comparing Means? -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論の核心</span>
+          <h2 class="slide-title">なぜ「平均」の比較なのに「分散分析（ANOVA）」なのか？</h2>
+        </div>
+        <span class="slide-subtitle">全体のばらつきを「群間のばらつき（平均の分散）」と「群内のばらつき（分散の平均）」に分割する！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>群間変動 $\rightarrow$ 「平均の分散 $V_A$」（シグナル）</h3>
+            <p>・各群の平均値 $\bar{X}_1, \bar{X}_2, \dots, \bar{X}_a$ が全体平均 $\bar{X}$ からどれくらい離れているか。<br>
+            ・<strong>要因（飼料や肥料の違い）によって生じたばらつき</strong>を表す！</p>
+          </div>
+          <div class="card secondary">
+            <h3>群内変動 $\rightarrow$ 「分散の平均 $V_R$」（誤差ノイズ）</h3>
+            <p>・同じグループ内での個体ごとのばらつき（群A内の分散、群B内の分散…の平均）。<br>
+            ・同じ条件でも生じる<strong>純粋な実験誤差（個体差ノイズ）</strong>を表す！</p>
+          </div>
+        </div>
+        <div class="svg-box">
+          <svg viewBox="0 0 780 165" width="100%" height="158" aria-label="分散分析における群間変動と群内変動の比較図">
+            <!-- Left: Small Between-group variance (H0 true) -->
+            <rect x="8" y="6" width="368" height="152" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+            <text x="192" y="25" text-anchor="middle" font-size="12" font-weight="bold" fill="#475569">ケース①：群間差がないとき（群間分散 ≒ 群内誤差分散 ➔ F ≒ 1）</text>
+            <line x1="30" y1="90" x2="355" y2="90" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <text x="350" y="83" text-anchor="end" font-size="10" fill="#64748b">全体平均 X̄</text>
+            <!-- Group A -->
+            <circle cx="80" cy="65" r="4" fill="#3b82f6"/><circle cx="85" cy="95" r="4" fill="#3b82f6"/><circle cx="75" cy="115" r="4" fill="#3b82f6"/>
+            <line x1="62" y1="92" x2="98" y2="92" stroke="#1d4ed8" stroke-width="3"/>
+            <text x="80" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">群A</text>
+            <!-- Group B -->
+            <circle cx="190" cy="58" r="4" fill="#0d9488"/><circle cx="195" cy="85" r="4" fill="#0d9488"/><circle cx="185" cy="112" r="4" fill="#0d9488"/>
+            <line x1="172" y1="85" x2="208" y2="85" stroke="#0f766e" stroke-width="3"/>
+            <text x="190" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f766e">群B</text>
+            <!-- Group C -->
+            <circle cx="300" cy="70" r="4" fill="#d97706"/><circle cx="305" cy="96" r="4" fill="#d97706"/><circle cx="295" cy="122" r="4" fill="#d97706"/>
+            <line x1="282" y1="96" x2="318" y2="96" stroke="#b45309" stroke-width="3"/>
+            <text x="300" y="145" text-anchor="middle" font-size="11" font-weight="bold" fill="#b45309">群C</text>
+
+            <!-- Right: Large Between-group variance (H1 true) -->
+            <rect x="404" y="6" width="368" height="152" rx="8" fill="#fffbeb" stroke="#fde68a"/>
+            <text x="588" y="25" text-anchor="middle" font-size="12" font-weight="bold" fill="#b45309">ケース②：群間差が大きいとき（群間分散 ≫ 群内誤差分散 ➔ F ≫ 1 で有意！）</text>
+            <line x1="426" y1="90" x2="752" y2="90" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <!-- Group A (low) -->
+            <circle cx="475" cy="110" r="4" fill="#3b82f6"/><circle cx="480" cy="122" r="4" fill="#3b82f6"/><circle cx="470" cy="132" r="4" fill="#3b82f6"/>
+            <line x1="457" y1="121" x2="493" y2="121" stroke="#1d4ed8" stroke-width="3"/>
+            <text x="475" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#1e3a8a">群A (低)</text>
+            <!-- Group B (mid) -->
+            <circle cx="585" cy="78" r="4" fill="#0d9488"/><circle cx="590" cy="90" r="4" fill="#0d9488"/><circle cx="580" cy="102" r="4" fill="#0d9488"/>
+            <line x1="567" y1="90" x2="603" y2="90" stroke="#0f766e" stroke-width="3"/>
+            <text x="585" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#0f766e">群B (中)</text>
+            <!-- Group C (high) -->
+            <circle cx="695" cy="42" r="4" fill="#dc2626"/><circle cx="700" cy="54" r="4" fill="#dc2626"/><circle cx="690" cy="66" r="4" fill="#dc2626"/>
+            <line x1="677" y1="54" x2="713" y2="54" stroke="#dc2626" stroke-width="3"/>
+            <text x="695" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">群C (高)</text>
+            <!-- Arrow showing large between-group spread -->
+            <line x1="525" y1="54" x2="525" y2="121" stroke="#dc2626" stroke-width="2"/>
+            <text x="532" y="75" text-anchor="start" font-size="10.5" font-weight="bold" fill="#dc2626">群間分散 VA が大！</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 10: Partitioning of Sum of Squares & Degrees of Freedom -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">変動（平方和）と自由度の分割イメージ</h2>
+        </div>
+        <span class="slide-subtitle">総平方和 $S_T$ ＝ 群間平方和 $S_A$ ＋ 群内（残差）平方和 $S_R$</span>
+      </div>
+      <div class="slide-body">
+        <div class="svg-box">
+          <svg viewBox="0 0 780 155" width="100%" height="148" aria-label="平方和と自由度の分割ツリー図">
+            <!-- Top Box: Total Variation -->
+            <rect x="230" y="6" width="320" height="44" rx="8" fill="#1e3a8a"/>
+            <text x="390" y="25" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">総変動（総平方和 ST） | 総自由度 dfT = N - 1</text>
+            <text x="390" y="42" text-anchor="middle" font-size="10.5" fill="#bfdbfe">全データ Xij と全体平均 X̄ の差の2乗和</text>
+
+            <!-- Arrows -->
+            <line x1="310" y1="50" x2="185" y2="74" stroke="#2563eb" stroke-width="2.5"/>
+            <line x1="470" y1="50" x2="595" y2="74" stroke="#0d9488" stroke-width="2.5"/>
+
+            <!-- Left Box: Between-group -->
+            <rect x="20" y="74" width="330" height="72" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+            <text x="185" y="95" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e3a8a">① 群間変動（要因平方和 SA）</text>
+            <text x="185" y="113" text-anchor="middle" font-size="11" fill="#1e40af">群間自由度 dfA = a - 1 （群数 - 1）</text>
+            <text x="185" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#dc2626">平均の分散 VA = SA / (a - 1) 【分子】</text>
+
+            <!-- Plus Sign -->
+            <text x="390" y="116" text-anchor="middle" font-size="22" font-weight="bold" fill="#64748b">＋</text>
+
+            <!-- Right Box: Within-group (Residual) -->
+            <rect x="430" y="74" width="330" height="72" rx="8" fill="#f0fdfa" stroke="#0d9488" stroke-width="2"/>
+            <text x="595" y="95" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#0f766e">② 群内変動（残差平方和 SR / Residuals）</text>
+            <text x="595" y="113" text-anchor="middle" font-size="11" fill="#115e59">群内自由度 dfR = N - a （全データ数 - 群数）</text>
+            <text x="595" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f766e">分散の平均（誤差分散） VR = SR / (N - a) 【分母】</text>
+          </svg>
+        </div>
+        <div class="grid-2">
+          <div class="formula-box">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">平方和（Sum of Squares）の恒等式</div>
+            $$S_T = S_A + S_R$$
+          </div>
+          <div class="formula-box">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">分散比 $F$（シグナル $\div$ ノイズ）</div>
+            $$F = \frac{V_A\text{（平均の分散）}}{V_R\text{（誤差分散）}} = \frac{S_A / (a - 1)}{S_R / (N - a)}$$
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: ANOVA Table & F-distribution -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論</span>
+          <h2 class="slide-title">分散分析表（ANOVA Table）と2つのF検定の違い</h2>
+        </div>
+        <span class="slide-subtitle">Rの <code>summary(aov(Y ~ X))</code> の出力表と、第8回・第9回の $F$分布の役割</span>
+      </div>
+      <div class="slide-body">
+        <table>
+          <thead>
+            <tr>
+              <th>要因（R出力の行名）</th>
+              <th>自由度 <code>Df</code></th>
+              <th>平方和 <code>Sum Sq</code></th>
+              <th>平均平方（不偏分散）<code>Mean Sq</code></th>
+              <th>分散比 <code>F value</code></th>
+              <th>$p$値 <code>Pr(&gt;F)</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>群間変動（要因列 <code>Esa</code> 等）</strong></td>
+              <td>$df_A = a - 1$</td>
+              <td>$S_A$</td>
+              <td>$V_A = S_A / (a - 1)$</td>
+              <td><strong>$F = V_A / V_R$</strong></td>
+              <td>$F(a-1, N-a)$ の上側確率</td>
+            </tr>
+            <tr>
+              <td><strong>群内変動（残差 <code>Residuals</code>）</strong></td>
+              <td>$df_R = N - a$</td>
+              <td>$S_R$</td>
+              <td>$V_R = S_R / (N - a)$</td>
+              <td>—</td>
+              <td>—</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="grid-2">
+          <div class="card">
+            <h3>第8回の $F$検定（<code>var.test</code>：等分散性検定）</h3>
+            <p>・2群の<strong>「分散が等しいか」</strong>を検定（$F = s_1^2 / s_2^2$）。<br>
+            ・どちらの分散が大きくても不等分散なので<strong>両側検定</strong>。<br>
+            ・$p > 0.05$ なら「等分散とみなせる」。</p>
+          </div>
+          <div class="card primary">
+            <h3>第9回の $F$検定（<code>aov</code>：1元配置分散分析）</h3>
+            <p>・多群の<strong>「平均が等しいか」</strong>を分散比 $F = V_A / V_R$ で検定！<br>
+            ・群間分散 $V_A$ が誤差分散 $V_R$ より<strong>大きい側（右裾）だけを見る片側検定</strong>。<br>
+            ・$p < 0.05$ なら「群間の平均値に有意な差がある」！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 12: Prerequisites & Decision Tree for Multi-group Tests -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論整理</span>
+          <h2 class="slide-title">3群以上の検定フローチャートと前提条件の検定</h2>
+        </div>
+        <span class="slide-subtitle">正規性の検定（Shapiro-Wilk / KS）と、3群以上の等分散性の検定（Bartlett検定）</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card primary">
+            <h3>① 正規性の検定</h3>
+            <p>・<strong><code>shapiro.test()</code></strong>（シャピロ・ウィルク検定）または <code>lillie.test()</code>（KS検定）。<br>
+            ・$H_0$：「正規分布に従う」<br>
+            ・<strong>全群で $p > 0.05$ なら正規分布とみなせる！</strong></p>
+          </div>
+          <div class="card secondary">
+            <h3>② 等分散性の検定（3群以上）</h3>
+            <p>・<strong><code>bartlett.test(Y ~ X)</code></strong>（バートレット検定）。※2群の <code>var.test</code> の多群版！<br>
+            ・$H_0$：「各群の母分散は等しい」<br>
+            ・<strong>$p > 0.05$ なら等分散とみなせる！</strong></p>
+          </div>
+          <div class="card accent">
+            <h3>③ 分散分析の選択</h3>
+            <p>・正規＆等分散 $\rightarrow$ <strong><code>aov(Y ~ X)</code></strong><br>
+            ・正規だが不等分散 $\rightarrow$ <strong>WelchのANOVA <code>oneway.test(Y ~ X)</code></strong><br>
+            ・非正規 $\rightarrow$ ノンパラメトリック（Kruskal-Wallis検定：第11回）</p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">💻</span>
+          <span>Rの便利技：<code>tapply(データ列, グループ列, 関数名)</code>（例：<code>tapply(niwatori$Taiju, niwatori$Esa, shapiro.test)</code>）を使えば、6群すべての検定や平均・分散を1行で一括計算できます！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 13: 4 Multiple Comparison Methods -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論：多重比較 ①</span>
+          <h2 class="slide-title">多重比較の4大手法（どのペアに差があるかを特定する）</h2>
+        </div>
+        <span class="slide-subtitle">「総当たり比較（All-pairs）」の3手法と、「対照群との比較（Many-to-one）」のDunnett法</span>
+      </div>
+      <div class="slide-body">
+        <table>
+          <thead>
+            <tr>
+              <th>手法名</th>
+              <th>比較形式</th>
+              <th>特徴・推奨される場面</th>
+              <th>Rでの主な関数</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background: #eff6ff;">
+              <td><strong>1. Tukey-Kramer法</strong><br>(Tukey's HSD検定)</td>
+              <td><strong>総当たり</strong><br>($\binom{a}{2}$ ペア)</td>
+              <td><strong>総当たり比較の第一選択（王道）！</strong> 期待される標準誤差からスチューデント化された範囲分布で補正。5群以上でも検出力が落ちにくい。</td>
+              <td><code>TukeyHSD(aov_obj)</code><br><code>glht(..., mcp(X="Tukey"))</code></td>
+            </tr>
+            <tr>
+              <td><strong>2. Bonferroni法</strong></td>
+              <td><strong>総当たり</strong><br>(任意ペア可)</td>
+              <td>有意水準を比較総数 $m$ で割る（または $p$値を $m$ 倍する）。シンプルだが<strong>5群以上（$m \ge 10$）では厳しすぎて検出力が激減（非常に保守的）</strong>。</td>
+              <td><code>pairwise.t.test(..., p.adjust.method="bonferroni")</code></td>
+            </tr>
+            <tr style="background: #f0fdfa;">
+              <td><strong>3. Holm法</strong></td>
+              <td><strong>総当たり</strong><br>(段階的補正)</td>
+              <td>Bonferroni法の改良版！ $p$値が小さい順に「$\times m, \times (m-1), \dots$」と段階的に補正を緩めるため、<strong>常に Bonferroni法より $p$値が小さく検出力が高い</strong>。</td>
+              <td><code>pairwise.t.test(..., p.adjust.method="holm")</code></td>
+            </tr>
+            <tr style="background: #fffbeb;">
+              <td><strong>4. Dunnett法</strong></td>
+              <td><strong>対照群 vs 他群</strong><br>($a-1$ ペア)</td>
+              <td><strong>1つの対照区（Control / 無肥料など）と他の試験区だけ</strong>を比較する（1対多）。比較回数が少ないため、総当たりより有意差を検出しやすい！</td>
+              <td><code>glht(..., mcp(X="Dunnett"))</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 14: Bonferroni vs Holm & Compact Letter Display (CLD) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論：多重比較 ②</span>
+          <h2 class="slide-title">Bonferroni vs Holm の仕組み ＆ アルファベット表記（CLD）</h2>
+        </div>
+        <span class="slide-subtitle">なぜHolm法はBonferroni法より優れているのか？ そしてグラフ上の <code>a, b, bc</code> の読み方</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>Bonferroni法 vs Holm法の補正イメージ（6群15ペア）</h3>
+            <ul>
+              <li><strong>Bonferroni法</strong>：全15ペアすべてで、元の $p$値を一律に <strong>$\times 15$ 倍</strong>する（有意水準 $5\% \div 15 \approx 0.33\%$）。</li>
+              <li><strong>Holm法</strong>：15ペアを $p$値が小さい順に並べ、1番目は <strong>$\times 15$</strong>、2番目は <strong>$\times 14$</strong>、3番目は <strong>$\times 13$</strong>…、8番目は <strong>$\times 8$</strong> と段階的に緩める！</li>
+              <li>$\rightarrow$ だから<strong>2番目以降のすべてのペアで「Holmの調整 $p$値 $\le$ Bonferroniの調整 $p$値」</strong>となる！</li>
+            </ul>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <h3>Compact Letter Display (CLD: <code>a, b, c</code>) の鉄則</h3>
+            <p>群数が増えると15ペアの表を見るのは大変！ そこで箱ひげ図の上に文字（<code>a, b, c</code>）を振ります：</p>
+            <ul>
+              <li><strong>鉄則①：共通の文字が1つもない群間 ＝ 有意差あり（$p &lt; 0.05$）！</strong>（例：<code>"a"</code> と <code>"b"</code>、<code>"a"</code> と <code>"bc"</code>）</li>
+              <li><strong>鉄則②：同じ文字を1つでも共有する群間 ＝ 有意差なし！</strong>（例：<code>"a"</code> と <code>"ac"</code> は <code>a</code> を共有するので差なし！）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="svg-box">
+          <svg viewBox="0 0 760 110" width="100%" height="104" aria-label="Compact Letter Display (CLD) の読み方図解">
+            <rect x="10" y="6" width="740" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+            <text x="380" y="24" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">CLD（アルファベット表記）の読み方：同じ文字を持っていれば「仲間（有意差なし）」！</text>
+            <!-- Group boxes -->
+            <rect x="35" y="38" width="105" height="52" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+            <text x="87" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e3a8a">"a"</text>
+            <text x="87" y="78" text-anchor="middle" font-size="10.5" fill="#1e40af">sun_ower / casein</text>
+
+            <rect x="165" y="38" width="105" height="52" rx="6" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="217" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#0369a1">"ac"</text>
+            <text x="217" y="78" text-anchor="middle" font-size="10.5" fill="#0369a1">meatmeal (aとc両方と差なし)</text>
+
+            <rect x="295" y="38" width="105" height="52" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+            <text x="347" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f766e">"c"</text>
+            <text x="347" y="78" text-anchor="middle" font-size="10.5" fill="#0f766e">soybean (aやbと有意差あり)</text>
+
+            <rect x="425" y="38" width="105" height="52" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+            <text x="477" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b45309">"bc"</text>
+            <text x="477" y="78" text-anchor="middle" font-size="10.5" fill="#b45309">linseed (bとc両方と差なし)</text>
+
+            <rect x="555" y="38" width="105" height="52" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+            <text x="607" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b91c1c">"b"</text>
+            <text x="607" y="78" text-anchor="middle" font-size="10.5" fill="#b91c1c">horsebean (aやcと有意差あり)</text>
+
+            <text x="705" y="60" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">課題3で実際に</text>
+            <text x="705" y="76" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">この6群が出る！</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 15: Step 0 - HandsOn Setup (DL, Working Directory, Packages) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">実践 Step 0（必読）</span>
+          <h2 class="slide-title">RStudioの準備：ファイル保存・作業ディレクトリ・パッケージ</h2>
+        </div>
+        <span class="slide-subtitle">スライド単体で見返しても迷わない！ 解析を始める前の3ステップ</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>Step 0-1：データDLと作業ディレクトリの設定</h3>
+            <ol>
+              <li>第9回ページのダウンロード欄から以下のファイルをパソコンの同じフォルダに保存する：<br>
+              ・練習用：<code>トマト糖度スタック形式.xlsx</code><br>
+              ・提出課題用：<strong><code>niwatori.csv</code></strong>、<strong><code>kadai2_t_vs_ANOVA.csv</code></strong></li>
+              <li>RStudioの上部メニューから<br>
+              <strong><code>Session</code> $\rightarrow$ <code>Set Working Directory</code> $\rightarrow$ <code>Choose Directory...</code></strong><br>
+              を選び、ファイルを保存したフォルダを選択する。</li>
+            </ol>
+          </div>
+          <div class="card secondary">
+            <h3>Step 0-2：必須パッケージのインストール（初回のみ）</h3>
+            <p>多重比較とCLD描画に使う <code>multcomp</code> と、正規性検定の <code>nortest</code> をインストールします（RStudioのConsoleで1回だけ実行）：</p>
+            <div class="code-box"><code>install.packages(c("multcomp", "nortest", "readxl"))</code></div>
+            <p style="font-size: 0.88rem; color: #475569;">※ すでにインストール済みの場合は、毎回 <code>library(multcomp)</code> を実行するだけでOKです！</p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">💡</span>
+          <span>もし <code>cannot open file 'niwatori.csv'</code> というエラーが出たら、Step 0-1 の作業ディレクトリ設定がずれているサインです！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 16: Practice 1 - Tomato Sugar Content (Stack Format & Boxplot) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 1（提出不要）</span>
+          <h2 class="slide-title">練習：トマト4種肥料の糖度データ（スタック形式と因子化）</h2>
+        </div>
+        <span class="slide-subtitle">無肥料（<code>NoFertilizer</code>）・油粕（<code>OilCake</code>）・骨粉（<code>BonePowder</code>）・化学肥料（<code>Chemical</code>）で糖度は違うか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="code-box"><code>library(readxl)
+# スタック形式（1行1データ）のExcelを読み込む
+renshu <- read_xlsx("トマト糖度スタック形式.xlsx")
+
+# 【重要儀式】文字型(character)を因子型(factor)に変換！
+renshu$Fertilizer <- as.factor(renshu$Fertilizer)
+summary(renshu)
+
+# 箱ひげ図＋ドットプロット
+boxplot(renshu$BRIX ~ renshu$Fertilizer, ylab = "BRIX")
+stripchart(renshu$BRIX ~ renshu$Fertilizer,
+           vertical = TRUE, method = "jitter", add = TRUE)</code></div>
+          <div class="card">
+            <h3>なぜスタック形式＋因子（Factor）化なのか？</h3>
+            <ul>
+              <li>独立した4群（$n = 16, 14, 16, 16$、計 $N=62$）なので、<strong>1列目に分類因子 <code>Fertilizer</code>、2列目に測定値 <code>BRIX</code> を縦に並べたスタック形式</strong>を使う。</li>
+              <li><code>read_xlsx()</code> で読み込むと文字列列が <code>character</code> になるため、<strong>必ず <code>as.factor()</code> で因子に変換する</strong>（これを忘れると後の <code>glht()</code> でエラーになる！）。</li>
+              <li>列名や因子名には日本語やスペースを使わず、半角英数字（ローマ字・英語）を使うのがRの鉄則！</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 17: Practice 2 - Tomato Normality, Bartlett, and ANOVA -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 2（提出不要）</span>
+          <h2 class="slide-title">練習：トマト糖度の前提条件チェックと1元配置分散分析</h2>
+        </div>
+        <span class="slide-subtitle">正規性（Shapiro-Wilk）$\rightarrow$ 等分散性（Bartlett）$\rightarrow$ 分散分析（<code>aov</code> / <code>oneway.test</code>）</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># ① 各群の正規性検定（Shapiro-Wilk）：すべて p > 0.05 なら正規分布とみなせる
+tapply(renshu$BRIX, renshu$Fertilizer, shapiro.test)
+
+# ② 4群の等分散性検定（Bartlett検定）：p > 0.05 なら等分散とみなせる
+bartlett.test(BRIX ~ Fertilizer, data = renshu)
+
+# ③ 等分散を仮定したANOVA (aov) と 等分散を仮定しないWelchのANOVA (oneway.test)
+anova_result <- aov(BRIX ~ Fertilizer, data = renshu)
+summary(anova_result)
+oneway.test(BRIX ~ Fertilizer, data = renshu, var.equal = FALSE)</code></div>
+        <div class="grid-3">
+          <div class="card">
+            <h3>① 正規性・② 等分散性</h3>
+            <p>・<strong>Shapiro-Wilk</strong>：4群とも $p \ge 0.185 (>0.05)$ で正規分布OK。<br>
+            ・<strong>Bartlett検定</strong>：$K^2 = 4.434, df=3$, <strong>$p = 0.2183 (>0.05)$</strong> で等分散OK！</p>
+          </div>
+          <div class="card primary">
+            <h3>③ 通常のANOVA (<code>aov</code>)</h3>
+            <p>・<code>Fertilizer</code>: $df=3, V_A=6.082$<br>
+            ・<code>Residuals</code>: $df=58, V_R=1.317$<br>
+            ・<strong>$F = 4.619, p = 0.00577$ (\*\*)</strong><br>
+            $\rightarrow$ 1%水準で有意差あり！</p>
+          </div>
+          <div class="card secondary">
+            <h3>参考：アスタリスク記号</h3>
+            <p>・<code>ns</code> / 空白：$p > 0.05$（有意差なし）<br>
+            ・<code>*</code>：$p < 0.05$（5%水準有意）<br>
+            ・<code>**</code>：$p < 0.01$（1%水準有意）<br>
+            ・<code>***</code>：$p < 0.001$（0.1%水準有意）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 18: Practice 3 - Tomato Multiple Comparison (Tukey vs Dunnett) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 3（提出不要）</span>
+          <h2 class="slide-title">練習：トマト糖度の多重比較（総当たりTukey vs 対照比較Dunnett）</h2>
+        </div>
+        <span class="slide-subtitle">総当たり（6ペア）と対照群比較（3ペア）で <code>BonePowder</code>（骨粉）の判定が変わることに注目！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>① Tukey-Kramer法（全6ペア総当たり）</h3>
+            <div class="code-box"><code>library(multcomp)
+TukeyHSD(anova_result, "Fertilizer")
+tukey_result <- glht(anova_result,
+                linfct = mcp(Fertilizer = "Tukey"))
+cld(tukey_result)
+plot(cld(tukey_result))</code></div>
+            <p style="font-size: 0.88rem;">・<code>Chemical - NoFertilizer</code>（差 $+1.44$, <strong>$p = 0.00596$ \*\*</strong>）の<strong>1ペアのみ有意</strong>。<br>
+            ・<code>BonePowder - NoFertilizer</code>（差 $+1.01$）は <strong>$p = 0.0712$</strong> で5%水準に届かず。<br>
+            ・CLD：<code>Chemical="a"</code>, <code>NoFertilizer="b"</code>, <code>BonePowder="ab"</code>, <code>OilCake="ab"</code>。</p>
+          </div>
+          <div class="card accent">
+            <h3>② Dunnett法（<code>NoFertilizer</code> を対照区に指定）</h3>
+            <div class="code-box"><code># NoFertilizer を基準（対照区 ref）に設定
+renshu$Fertilizer <- relevel(renshu$Fertilizer,
+                             ref = "NoFertilizer")
+anova_ref <- aov(BRIX ~ Fertilizer, data = renshu)
+dunnett_res <- glht(anova_ref,
+               linfct = mcp(Fertilizer = "Dunnett"))
+summary(dunnett_res)</code></div>
+            <p style="font-size: 0.88rem;">・比較数を3ペア（無肥料 vs 各肥料）に絞った結果：<br>
+            　1. <code>Chemical - NoFertilizer</code>：<strong>$p = 0.0031$ (\*\*)</strong><br>
+            　2. <code>BonePowder - NoFertilizer</code>：<strong>$p = 0.0410$ (\*) $\leftarrow$ 有意になった！</strong><br>
+            　3. <code>OilCake - NoFertilizer</code>：$p = 0.5864$ (ns)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 19: Today's Assignment Overview (Chicken Feed & t vs ANOVA) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">本日の提出課題（全体像）</span>
+          <h2 class="slide-title">ここからは提出課題！ 課題1〜3・発展課題4〜5の概要</h2>
+        </div>
+        <span class="slide-subtitle">Web課題（<code>kadai9_interactive.html</code>）と完全一致した5つのステップ</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>データ①：<code>niwatori.csv</code>（課題1〜3・発展4）</h3>
+            <p>ニワトリ（全71羽）に<strong>6種類のタンパク源飼料（<code>Esa</code>）</strong>を6週間与え、体重（<code>Taiju</code>, g）を測定したデータ：</p>
+            <ul>
+              <li><code>casein</code>（カゼイン, $n=12$）、<code>horsebean</code>（ソラマメ, $n=10$）</li>
+              <li><code>linseed</code>（アマニ, $n=12$）、<code>meatmeal</code>（肉骨粉, $n=11$）</li>
+              <li><code>soybean</code>（大豆, $n=14$）、<code>sun_ower</code>（ヒマワリ, $n=12$）</li>
+            </ul>
+          </div>
+          <div class="card secondary">
+            <h3>データ②：<code>kadai2_t_vs_ANOVA.csv</code>（発展5）</h3>
+            <p>第8回で解析したイネ76系統（<code>Genotype A</code> 24系統 vs <code>Genotype B</code> 52系統）の茎葉重減少量（<code>SW5_35</code>）データ。</p>
+            <p><strong>検証テーマ</strong>：2群のデータに対して「独立2群のt検定」と「1元配置分散分析」の両方を実行し、<strong>$t$値の2乗（$t^2$）と $F$値、および $p$値がどうなるか</strong>を突き止める！</p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">📝</span>
+          <span>まずはRStudioで各課題のコードを実行し、手元で出力を確認してからスライドの「解答例ボックス」やWeb課題の「検証する」ボタンで答え合わせしましょう！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 20: Task 1 - Chicken Boxplot, Normality & Bartlett Test -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出課題 1（20点）</span>
+          <h2 class="slide-title">課題1：ニワトリ6種飼料の可視化・正規性・等分散性の検定</h2>
+        </div>
+        <span class="slide-subtitle">箱ひげ図＋ドットプロットを描き、Shapiro-Wilk検定とBartlett検定で前提条件を確認せよ</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>niwatori <- read.csv("niwatori.csv", stringsAsFactors = TRUE)
+summary(niwatori)
+
+# (1)(2) 箱ひげ図＋ドットプロットを重ねて描く
+boxplot(niwatori$Taiju ~ niwatori$Esa, ylab = "Weight (g)", xlab = "Feed (Esa)")
+stripchart(niwatori$Taiju ~ niwatori$Esa, vertical = TRUE, method = "jitter", add = TRUE)
+
+# (3) 各飼料グループの正規性の検定（Shapiro-Wilk検定）
+tapply(niwatori$Taiju, niwatori$Esa, shapiro.test)
+
+# (4) 6群の等分散性の検定（Bartlett検定）
+tapply(niwatori$Taiju, niwatori$Esa, var)
+bartlett.test(Taiju ~ Esa, data = niwatori)</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 課題1のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>(3) Shapiro-Wilk正規性検定の結果</h3>
+                <p>・<code>casein</code>: $W = 0.9166, p = 0.2592$<br>
+                ・<code>horsebean</code>: $W = 0.9376, p = 0.5264$<br>
+                ・<code>linseed</code>: $W = 0.9693, p = 0.9035$<br>
+                ・<code>meatmeal</code>: $W = 0.9791, p = 0.9612$<br>
+                ・<code>soybean</code>: $W = 0.9464, p = 0.5064$<br>
+                ・<code>sun_ower</code>: $W = 0.9281, p = 0.3603$<br>
+                $\rightarrow$ <strong>全6群とも $p > 0.05$ で正規分布とみなせる！</strong></p>
+              </div>
+              <div class="card primary">
+                <h3>(4) Bartlett等分散性検定の結果</h3>
+                <p>・<code>Bartlett's K-squared = 3.2597, df = 5</code><br>
+                ・<strong><code>p-value = 0.66</code>（$p = 0.6600 > 0.05$）</strong><br>
+                ・<strong>結論</strong>：帰無仮説は棄却されず、<strong>6群の等分散性は否定されない（等分散とみなせる）</strong>。これで分散分析（ANOVA）の前提条件がすべて満たされた！</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 21: Task 2 - Chicken One-way ANOVA -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出課題 2（20点）</span>
+          <h2 class="slide-title">課題2：飼料によってニワトリの体重に違いがあるか？（ANOVA）</h2>
+        </div>
+        <span class="slide-subtitle"><code>aov()</code> と <code>summary()</code> で分散分析表を出力し、自由度・$F$値・$p$値を読み解こう</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># 各飼料グループの平均体重を表示
+tapply(niwatori$Taiju, niwatori$Esa, mean)
+
+# 等分散を仮定した1元配置分散分析（aov）
+anova_result <- aov(Taiju ~ Esa, data = niwatori)
+summary(anova_result)
+
+# （参考）等分散を仮定しないWelchの1元配置分散分析
+oneway.test(Taiju ~ Esa, data = niwatori, var.equal = FALSE)</code></div>
+        <div class="card accent" style="padding: 10px 16px;">
+          <p style="font-size: 0.9rem; margin: 0;"><strong>💡 チェックポイント</strong>：全71羽（$N=71$）、飼料6種類（$a=6$）のとき、群間（<code>Esa</code>）の自由度 $df_A = a - 1$ と、残差（<code>Residuals</code>）の自由度 $df_R = N - a$ はいくつになるか確認しよう！</p>
+        </div>
+        <details class="spoiler-box">
+          <summary>🔍 課題2のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>分散分析表の数値</h3>
+                <div class="code-box"><code>            Df Sum Sq Mean Sq F value   Pr(>F)    
+Esa          5 231129   46226   15.37 5.94e-10 ***
+Residuals   65 195556    3009</code></div>
+                <p style="font-size: 0.88rem;">・群間自由度 <code>Df = 5</code>、残差自由度 <code>Df = 65</code><br>
+                ・<strong>$F\text{値} = \mathbf{15.37}$</strong>（厳密値 $15.365$）<br>
+                ・<strong>$p\text{値} = \mathbf{5.94 \times 10^{-10}}$（<code>5.94e-10</code>）</strong></p>
+              </div>
+              <div class="card primary">
+                <h3>群別平均と統計的結論</h3>
+                <p>・平均体重：<code>horsebean</code> $160.2\text{ g}$, <code>linseed</code> $218.8\text{ g}$, <code>soybean</code> $246.4\text{ g}$, <code>meatmeal</code> $276.9\text{ g}$, <code>casein</code> $323.6\text{ g}$, <code>sun_ower</code> $328.9\text{ g}$。<br>
+                ・<strong>結論</strong>：$p = 5.94 \times 10^{-10} < 0.001$ より帰無仮説は棄却され、<strong>飼料によってニワトリの体重には極めて有意な差がある！</strong></p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 22: Task 3 - Tukey-Kramer & Compact Letter Display (CLD) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出課題 3（20点）</span>
+          <h2 class="slide-title">課題3：Tukey-Kramer法による多重比較とCLD付きグラフ</h2>
+        </div>
+        <span class="slide-subtitle">全15通りのペアのうち有意なペアは何通りか？ そして各飼料に振られるCLD文字は？</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># ① R標準の TukeyHSD で総当たり15ペアの比較を実行
+TukeyHSD(aov(Taiju ~ Esa, data = niwatori), "Esa", ordered = TRUE)
+
+# ② multcomp パッケージで CLD (a, b, c) を抽出し、箱ひげ図に重ねて描画
+library(multcomp)
+anova_result <- aov(Taiju ~ Esa, data = niwatori)
+tukey_result <- glht(anova_result, linfct = mcp(Esa = "Tukey"))
+summary(tukey_result)
+cld(tukey_result)
+par(mar = c(5.1, 4.1, 6, 2.1)) # 上のマージンを広げて文字切れを防ぐ
+plot(cld(tukey_result))</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 課題3のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>15ペア中、有意（$p &lt; 0.05$）な8ペア</h3>
+                <p style="font-size: 0.85rem;">餌は<strong>6種類</strong>なので総当たりは $\binom{6}{2} = \mathbf{15\text{通り}}$。うち <code>p adj &lt; 0.05</code> の<strong>有意な組合せは <code>8通り</code></strong>：<br>
+                ① <code>sun_ower - horsebean</code> ($p &lt; 10^{-7}$)<br>
+                ② <code>casein - horsebean</code> ($p &lt; 10^{-7}$)<br>
+                ③ <code> sun_ower - linseed</code> ($p = 0.000088$)<br>
+                ④ <code>meatmeal - horsebean</code> ($p = 0.000106$)<br>
+                ⑤ <code>casein - linseed</code> ($p = 0.000210$)<br>
+                ⑥ <code>sun_ower - soybean</code> ($p = 0.00388$)<br>
+                ⑦ <code>soybean - horsebean</code> ($p = 0.00422$)<br>
+                ⑧ <code>casein - soybean</code> ($p = 0.00837$)</p>
+              </div>
+              <div class="card primary">
+                <h3><code>cld(tukey_result)</code> の結果と解釈</h3>
+                <div class="code-box"><code>  casein horsebean   linseed  meatmeal   soybean  sun_ower 
+     "a"       "b"      "bc"      "ac"       "c"       "a"</code></div>
+                <p style="font-size: 0.86rem;">・<code>sun_ower ("a")</code> と <code>casein ("a")</code> が最高体重グループで、<code>horsebean ("b")</code>・<code>linseed ("bc")</code>・<code>soybean ("c")</code> より有意に重い。<br>
+                ・<code>meatmeal ("ac")</code> は <code>"a"</code> とも <code>"c"</code> とも有意差がない中間的な成績であり、<code>horsebean ("b")</code> より有意に重い。</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 23: Task 4 (Wow 1) - Bonferroni vs Holm Comparison -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">発展課題 4・Wow体験 ①（20点）</span>
+          <h2 class="slide-title">発展課題4：Bonferroni法とHolm法による多重比較と検出力の比較</h2>
+        </div>
+        <span class="slide-subtitle">同じ15ペア総当たりで、Bonferroni法とHolm法の調整済み $p$値 と CLD を比較せよ！</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># ① Bonferroni法（p.adjust.method = "bonferroni" ※小文字に注意！）
+pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "bonferroni")
+bonf_summary <- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("bonferroni"))
+bonf_summary; cld(bonf_summary)
+
+# ② Holm法（p.adjust.method = "holm"）
+pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "holm")
+holm_summary <- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("holm"))
+holm_summary; cld(holm_summary)</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 発展課題4のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>Bonferroni法 vs Holm法の $p$値比較</h3>
+                <ul>
+                  <li><strong><code>soybean - casein</code></strong>：<br>
+                  ・Tukey-Kramer：$p = 0.00837$<br>
+                  ・Bonferroni法：<strong>$p = 0.00998$</strong><br>
+                  ・Holm法：<strong>$p = 0.00532$</strong></li>
+                  <li><strong><code>meatmeal - horsebean</code></strong>：<br>
+                  ・Bonferroni：$p = 0.000112$ vs Holm：<strong>$p = 0.0000897$</strong></li>
+                  <li><strong><code>linseed - horsebean</code>（非有意ペア）</strong>：<br>
+                  ・Bonferroni：$p = 0.2283$ vs Holm：<strong>$p = 0.0944$</strong></li>
+                </ul>
+              </div>
+              <div class="card primary">
+                <h3>考察のポイント</h3>
+                <p>・今回のデータでは3手法（Tukey / Bonferroni / Holm）すべてで有意ペアは<strong>8通り</strong>、CLDも <code>a, b, bc, ac, c, a</code> で一致した。<br>
+                ・しかし個々の調整済み $p$値を比較すると、<strong>ほぼ全てのペアで「Holm法の $p$値 &lt; Bonferroni法の $p$値」</strong>となっており、段階的に補正を緩めるHolm法の方が検出力が高い（有意になりやすい）ことが実証された！</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 24: Task 5 (Wow 2) - Equivalence of t-test and 1-way ANOVA -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">発展課題 5・Wow体験 ②（20点）</span>
+          <h2 class="slide-title">発展課題5：独立2群のt検定と1-way ANOVAの関係（$t^2 = F$）</h2>
+        </div>
+        <span class="slide-subtitle">前回のイネ減少量データ（<code>kadai2_t_vs_ANOVA.csv</code>）で $t$値の2乗と $F$値・$p$値を比較せよ！</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>dataset <- read.csv("kadai2_t_vs_ANOVA.csv", stringsAsFactors = TRUE)
+
+# (1) 等分散仮定のStudentのt検定と t^2 vs (2) 等分散仮定の1-way ANOVA (aov)
+x_eq <- t.test(SW5_35 ~ Genotype, data = dataset, alternative = "two.sided", var.equal = TRUE)
+x_eq; cat("Student t^2 =", as.numeric(x_eq$statistic^2), "\n")
+summary(aov(SW5_35 ~ Genotype, data = dataset))
+
+# (3) 等分散を仮定しないWelchのt検定と t^2 vs (4) WelchのANOVA (oneway.test)
+x_welch <- t.test(SW5_35 ~ Genotype, data = dataset, alternative = "two.sided", var.equal = FALSE)
+x_welch; cat("Welch t^2 =", as.numeric(x_welch$statistic^2), "\n")
+oneway.test(SW5_35 ~ Genotype, data = dataset, var.equal = FALSE)</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 発展課題5のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>(1) vs (2)：等分散を仮定した場合</h3>
+                <p>・(1) Studentのt検定：$t = -4.759292, df = 74$<br>
+                　$\implies$ <strong>$t^2 = (-4.759292)^2 = \mathbf{22.65086}$</strong><br>
+                　$\implies$ <strong>$p = 9.394 \times 10^{-6}$</strong><br>
+                ・(2) 1-way ANOVA (<code>aov</code>)：<br>
+                　$\implies$ <strong>$F = \mathbf{22.65}$（$22.65086$）</strong>, $df = (1, 74)$<br>
+                　$\implies$ <strong>$p = 9.39 \times 10^{-6}$</strong>（完全一致！）</p>
+              </div>
+              <div class="card primary">
+                <h3>(3) vs (4)：等分散を仮定しない場合（Welch）</h3>
+                <p>・(3) Welchのt検定：$t = -4.945726, df = 49.342$<br>
+                　$\implies$ <strong>$t^2 = (-4.945726)^2 = \mathbf{24.4602}$</strong><br>
+                　$\implies$ <strong>$p = 9.193 \times 10^{-6}$</strong><br>
+                ・(4) WelchのANOVA (<code>oneway.test</code>)：<br>
+                　$\implies$ <strong>$F = \mathbf{24.46}$（$24.4602$）</strong>, $df = (1, 49.342)$<br>
+                　$\implies$ <strong>$p = 9.193 \times 10^{-6}$</strong>（完全一致！）</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 25: Mathematical Proof of t^2 = F -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">Wow体験 ② の数理</span>
+          <h2 class="slide-title">なぜ2群のとき「$t^2 = F$」が厳密に成り立つのか？</h2>
+        </div>
+        <span class="slide-subtitle">偶然ではない！ 1元配置分散分析が「2標本t検定の自然な3群以上への拡張」である証明</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="formula-box">
+            <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 4px;">① 独立2群の Student $t$ 統計量を2乗すると</div>
+            $$t^2 = \left(\frac{\bar{X}_1 - \bar{X}_2}{\sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}}\right)^2 = \frac{\dfrac{n_1 n_2}{n_1 + n_2}(\bar{X}_1 - \bar{X}_2)^2}{s_p^2}$$
+          </div>
+          <div class="formula-box">
+            <div style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 4px;">② 2群（$a=2, df_A=1$）の ANOVA の $F$ 統計量</div>
+            $$F = \frac{V_A}{V_R} = \frac{S_A / 1}{S_R / (n_1 + n_2 - 2)} = \frac{\dfrac{n_1 n_2}{n_1 + n_2}(\bar{X}_1 - \bar{X}_2)^2}{s_p^2}$$
+          </div>
+        </div>
+        <div class="card primary">
+          <h3>発展課題5 (5) の考察のまとめ方</h3>
+          <ul>
+            <li>2群（$a = 2$）のとき、ANOVAの群間平均平方 $V_A$（自由度 $df_A = 1$）は2群の平均差の2乗に比例し、群内誤差分散 $V_R$（自由度 $df_R = n_1 + n_2 - 2$）はStudentのt検定の合同分散（プール分散 $s_p^2$）と完全に一致する。</li>
+            <li>したがって代数的に <strong>$F = t^2$</strong> が恒等的に成り立ち、自由度 $df$ の $t$分布の両側棄却域を2乗したものは自由度 $(1, df)$ の $F$分布の上側棄却域と一致するため、<strong>$p$値も100%同じ値になる</strong>（Welch法同士でも同様）。</li>
+            <li>すなわち、<strong>1元配置分散分析（1-way ANOVA）とは、独立2群のt検定（両側検定）を $a \ge 3$ 群へと一般化した手法そのものである！</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 26: Summary Reference Table for All 5 Tasks -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">結果リファレンス</span>
+          <h2 class="slide-title">本日の提出課題（課題1〜3・発展4〜5）数値リファレンス一覧</h2>
+        </div>
+        <span class="slide-subtitle">自力でRStudioを実行したあと、下のボックスを開いてWeb課題の入力値を確認しよう</span>
+      </div>
+      <div class="slide-body">
+        <details class="spoiler-box">
+          <summary>🔍 全課題（課題1〜3・発展課題4〜5）の正解数値一覧表を開く</summary>
+          <div class="spoiler-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>課題</th>
+                  <th>データ・検定手法</th>
+                  <th>主要な統計量・自由度</th>
+                  <th>$p$値 / 有意ペア数</th>
+                  <th>結論・CLD</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>課題1</strong></td>
+                  <td><code>niwatori.csv</code><br>Shapiro-Wilk & Bartlett</td>
+                  <td>全6群 Shapiro $p \ge 0.259$<br>Bartlett $K^2 = 3.2597, df = 5$</td>
+                  <td>Bartlett<br><strong>$p = 0.6600$</strong></td>
+                  <td><strong>正規性・等分散性ともOK</strong><br>($p > 0.05$ で等分散)</td>
+                </tr>
+                <tr>
+                  <td><strong>課題2</strong></td>
+                  <td>1-way ANOVA (<code>aov</code>)<br>Welch (<code>oneway.test</code>)</td>
+                  <td><code>aov</code>: $df = (5, 65)$, <strong>$F = 15.37$</strong><br>Welch: $df = (5, 29.99)$, $F = 20.02$</td>
+                  <td><strong><code>5.94e-10</code></strong><br>(<code>9.13e-09</code>)</td>
+                  <td><strong>極めて有意 ($p &lt; 0.001$)</strong><br>飼料間で体重に差あり</td>
+                </tr>
+                <tr>
+                  <td><strong>課題3</strong></td>
+                  <td>Tukey-Kramer法<br>(<code>TukeyHSD</code> & <code>cld</code>)</td>
+                  <td>6群 $\implies$ 総当たり <strong>15通り</strong></td>
+                  <td>有意ペア：<br><strong>8通り</strong> ($p &lt; 0.05$)</td>
+                  <td><code>casein="a", horsebean="b", linseed="bc", meatmeal="ac", soybean="c", sun_ower="a"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>発展4</strong></td>
+                  <td>Bonferroni法 vs Holm法<br>(<code>pairwise.t.test</code>)</td>
+                  <td><code>soybean - casein</code> の調整 $p$値:<br>Bonf <strong>$0.00998$</strong> vs Holm <strong>$0.00532$</strong></td>
+                  <td>有意ペア：ともに<strong>8通り</strong><br>常に Holm $p \le$ Bonf $p$</td>
+                  <td><strong>Holm法は段階的補正によりBonferroni法より検出力が高い</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>発展5</strong></td>
+                  <td><code>kadai2_t_vs_ANOVA.csv</code><br>t検定 vs ANOVA</td>
+                  <td>等分散: $t = -4.7593 \implies \mathbf{t^2 = F = 22.651}$<br>Welch: $t = -4.9457 \implies \mathbf{t^2 = F = 24.460}$</td>
+                  <td>等分散: <strong><code>9.394e-06</code></strong><br>Welch: <strong><code>9.193e-06</code></strong></td>
+                  <td><strong>2群では両側t検定と1-way ANOVAは数学的に完全同値！</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 27: Submission Guide -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出ガイド</span>
+          <h2 class="slide-title">Web課題ワークブックの提出手順と <code>ひな型.Rmd</code> の活用</h2>
+        </div>
+        <span class="slide-subtitle">スライドとWebで完全統一！ 迷わず提出まで完了しよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary" style="border-width: 2px;">
+            <h3>📌 提出方法（Web課題からHTMLを書き出して提出！）</h3>
+            <ol>
+              <li>第9回ページの<strong>「📝 インタラクティブWeb課題（<code>kadai9_interactive.html</code>）」</strong>を開く。</li>
+              <li>上部バーに<strong>学籍番号・氏名</strong>を入力する。</li>
+              <li><strong>課題1〜3・発展課題4〜5</strong>の数値を入力し、「🔍 検証する」ボタンで即時採点（100点満点）を行う。</li>
+              <li>各課題の考察欄と最後の<strong>総合考察</strong>を記入する。</li>
+              <li>画面下部の<strong>「📥 提出用レポートHTMLを書き出す」</strong>ボタンを押し、保存された <code>学籍番号_氏名_第9回課題レポート.html</code> を提出する！</li>
+            </ol>
+          </div>
+          <div class="card secondary">
+            <h3>💻 R Markdown（<code>ひな型.Rmd</code>）の位置づけ</h3>
+            <p>・ダウンロード欄の <code>ひな型.Rmd</code> には、本日の課題1〜3・発展課題4〜5のすべてのRコードが収録されています。<br>
+            ・RStudioで開いてチャンクを上から順に実行したり、<strong>Knit</strong> ボタンを押してCLD付き箱ひげ図入りのHTMLレポートを手元で出力・保存するための学習補助ファイルとして活用してください。<br>
+            ・※ 提出ファイルは左記の<strong>Web課題から書き出したHTMLレポート</strong>に統一しています。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 28: Troubleshooting -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">FAQ</span>
+          <h2 class="slide-title">トラブルシューティング（第9回でよくあるエラーと対処法）</h2>
+        </div>
+        <span class="slide-subtitle">RStudioでエラーが出たらここをチェック！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card danger">
+            <h3>⚠️ <code>there is no package called 'multcomp'</code></h3>
+            <p><strong>原因</strong>：多重比較パッケージ <code>multcomp</code> が未インストール。<br>
+            <strong>対策</strong>：Consoleで <code>install.packages("multcomp")</code> を1回実行してから <code>library(multcomp)</code> を実行する。</p>
+          </div>
+          <div class="card danger">
+            <h3>⚠️ <code>glht()</code> で <code>not a factor</code> エラーが出る</h3>
+            <p><strong>原因</strong>：グループ列（<code>Esa</code>）が文字列（<code>character</code>）のままになっている。<br>
+            <strong>対策</strong>：<code>niwatori$Esa &lt;- as.factor(niwatori$Esa)</code> を実行して因子に変換してから <code>aov()</code> と <code>glht()</code> を実行する。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ <code>plot(cld(...))</code> で上の <code>a, b, c</code> が切れる</h3>
+            <p><strong>原因</strong>：グラフ上部の余白（マージン）が足りない。<br>
+            <strong>対策</strong>：<code>plot()</code> の直前に <code>par(mar = c(5.1, 4.1, 6, 2.1))</code> を実行して上マージンを <code>6</code> に広げる。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ 大文字・小文字の違いによるエラー</h3>
+            <p><strong>対策</strong>：<code>pairwise.t.test</code> の引数は小文字で <code>"bonferroni"</code> / <code>"holm"</code>。一方、<code>mcp(Esa = "Tukey")</code> や <code>"Dunnett"</code> は先頭が大文字なので注意！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 29: Summary & Preview of Lecture 10 -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">まとめ</span>
+          <h2 class="slide-title">本日のまとめと次回（第10回）への予告</h2>
+        </div>
+        <span class="slide-subtitle">1元配置分散分析と多重比較を制覇し、次回は「2つの要因と交互作用」へ！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>本日の3大マスターポイント</h3>
+            <p>1. <strong>変動の分割と $F = t^2$</strong>：ANOVAは全体のばらつきを「群間分散（シグナル）」と「群内誤差分散（ノイズ）」に分割して検定し、2群のときは独立t検定と数学的に完全一致する。<br>
+            2. <strong>多重比較4手法の使い分け</strong>：総当たりの王道 <strong>Tukey-Kramer法</strong>、段階的補正の <strong>Holm法</strong>、対照群比較の <strong>Dunnett法</strong>。<br>
+            3. <strong>Compact Letter Display (CLD)</strong>：共通文字がなければ有意差あり（$p &lt; 0.05$）、同じ文字を共有すれば有意差なし！</p>
+          </div>
+          <div class="card secondary">
+            <h3>次回（第10回）への予告：2元配置分散分析</h3>
+            <p>本日は「肥料だけ」「飼料だけ」という<strong>1つの要因（1元配置）</strong>を比較しました。<br>
+            では、<strong>「イネの遺伝子型（要因A）× 窒素肥料の量（要因B）」のように2つの要因を同時に組み合わせた実験</strong>ではどうなるでしょうか？<br>
+            「品種Aには肥料が効くのに、品種Bには逆効果になる」といった<strong>相乗効果（交互作用 Interaction）</strong>を検定する<strong>第10回「2元配置分散分析（Two-way ANOVA）」</strong>をお楽しみに！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.slide-viewport -->
+
+  <!-- Bottom Navigation Footer -->
+  <div class="bottom-bar">
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSlide()">◀ 前へ</button>
+      <button class="btn" onclick="nextSlide()">次へ ▶</button>
+      <span style="font-size: 0.8rem; color: #64748b; margin-left: 8px;">[← / → / Spaceキーで操作可能]</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="slideCounter" style="font-weight: 600; color: #f1f5f9;">
+      1 / 29
+    </div>
+  </div>
+
+  <!-- Slide Jump Modal -->
+  <div class="modal" id="slideModal" onclick="if(event.target === this) toggleModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="color: var(--primary);">📋 スライド一覧（クリックでジャンプ）</h3>
+        <button class="btn" style="background: #f1f5f9; color: #334155;" onclick="toggleModal()">✕ 閉じる</button>
+      </div>
+      <div class="modal-list" id="modalList"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    const modalList = document.getElementById('modalList');
+
+    // Build modal item list
+    slides.forEach((s, idx) => {
+      const titleElem = s.querySelector('.slide-title') || s.querySelector('h1') || s.querySelector('h2');
+      const titleText = titleElem ? titleElem.innerText.replace(/\n/g, ' ') : `スライド ${idx + 1}`;
+      const item = document.createElement('div');
+      item.className = 'modal-item';
+      item.innerHTML = `<strong>${idx + 1}.</strong> ${titleText}`;
+      item.onclick = () => {
+        goToSlide(idx);
+        toggleModal();
+      };
+      modalList.appendChild(item);
+    });
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+      progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(idx) {
+      currentSlide = idx;
+      updateSlide();
+    }
+
+    function toggleModal() {
+      document.getElementById('slideModal').classList.toggle('active');
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function toggleAllSpoilers() {
+      const spoilers = document.querySelectorAll('details.spoiler-box');
+      const anyClosed = Array.from(spoilers).some(d => !d.open);
+      spoilers.forEach(d => { d.open = anyClosed; });
+      const btn = document.getElementById('toggleSpoilersBtn');
+      if (btn) {
+        btn.innerText = anyClosed ? '🙈 課題解答をすべて閉じる' : '👁️ 課題解答をすべて開く';
+      }
+    }
+
+    function copyCode(btn) {
+      const codeBox = btn.closest('.code-box');
+      const clone = codeBox.cloneNode(true);
+      const btnInClone = clone.querySelector('.copy-btn');
+      if (btnInClone) btnInClone.remove();
+      const text = clone.innerText.trim();
+      
+      const copySuccess = () => {
+        btn.innerHTML = '✓ コピー完了！';
+        btn.style.color = '#4ade80';
+        btn.style.background = 'rgba(74, 222, 128, 0.2)';
+        setTimeout(() => {
+          btn.innerHTML = '📋 コピー';
+          btn.style.color = '#94a3b8';
+          btn.style.background = 'rgba(255, 255, 255, 0.15)';
+        }, 1800);
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(copySuccess).catch(() => fallbackCopy(text, copySuccess));
+      } else {
+        fallbackCopy(text, copySuccess);
+      }
+    }
+
+    function fallbackCopy(text, callback) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        callback();
+      } catch (err) {
+        console.error('Copy failed', err);
+      }
+      document.body.removeChild(ta);
+    }
+
+    // すべての .code-box にコピーボタンを自動追加 ＆ アコーディオン展開時の自動スクロール
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.code-box').forEach(box => {
+        if (!box.querySelector('.copy-btn')) {
+          const btn = document.createElement('button');
+          btn.className = 'copy-btn';
+          btn.type = 'button';
+          btn.innerHTML = '📋 コピー';
+          btn.onclick = function() { copyCode(this); };
+          box.appendChild(btn);
+        }
+      });
+
+      document.querySelectorAll('details.spoiler-box').forEach(det => {
+        det.addEventListener('toggle', () => {
+          if (det.open) {
+            const slide = det.closest('.slide');
+            if (slide && slide.classList.contains('active')) {
+              setTimeout(() => {
+                det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }, 50);
+            }
+          }
+        });
+      });
+    });
+
+    // Keyboard Navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      } else if (e.key === 'Escape') {
+        document.getElementById('slideModal').classList.remove('active');
+      }
+    });
+
+    // KaTeX Math Rendering
+    function initKaTeX() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          ignoredClasses: ['code-box', 'copy-btn', 'no-math'],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+          throwOnError: false
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(initKaTeX, 50);
+    });
+    window.addEventListener('load', () => {
+      setTimeout(initKaTeX, 100);
+      setTimeout(initKaTeX, 500);
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>

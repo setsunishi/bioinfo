@@ -541,40 +541,50 @@ plot(cld(tukey_result))</code></div>
     <!-- Task 4 (Wow 1) -->
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">発展課題4【Wow①：Bonferroni法とHolm法の比較と検出力の違い】</h2>
+        <h2 class="card-title">発展課題4【Wow①：Bonferroni法とHolm法による多重比較と検出力の比較】</h2>
         <span class="badge badge-wow">探究課題（20点）</span>
       </div>
       <div class="callout callout-wow">
-        <strong>問い：</strong> ニワトリ飼料データに対して <strong>Bonferroni法</strong> と <strong>Holm法</strong> で多重比較を行い、Tukey-Kramer法や両手法間の調整済み $p$値（例：<code>soybean - casein</code> のペア）および CLD を比較してください。
+        <strong>問い：</strong> ニワトリ飼料データに対して <strong>Bonferroni法（一律15倍補正）</strong> と <strong>Holm法（段階的補正：$\times 15, \times 14, \dots$）</strong> で多重比較およびCLD付与を行い、特に <code>soybean</code> と <code>casein</code> の比較（<code>soybean - casein</code>：8番目に $p$値が小さいペア）の調整済み $p$値を比較して、補正アルゴリズムによる検出力の違いを確認してください（※ <code>pairwise.t.test()</code> の表と <code>summary(glht(...))</code> の出力は同じ調整済み $p$値になります）。
       </div>
       <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># ① Bonferroni法による多重比較とCLD
 pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "bonferroni")
 bonf_summary &lt;- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("bonferroni"))
 bonf_summary
 cld(bonf_summary)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(bonf_summary))
 
 # ② Holm法による多重比較とCLD
 pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "holm")
 holm_summary &lt;- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("holm"))
 holm_summary
-cld(holm_summary)</code></div>
+cld(holm_summary)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(holm_summary))</code></div>
+
+      <div class="callout" style="font-size: 0.88rem; margin-bottom: 14px;">
+        <strong>💡 発展コラム（参考）：遺伝子発現解析（RNA-seq）など大規模データで使われる FDR（BH法）と使い分けの鉄則</strong><br>
+        数千〜数万個の遺伝子を同時に検定するバイオインフォマティクス解析では、FWER制御（BonferroniやHolm）では補正が厳しく真の差まで検出しにくくなるため、<strong>「有意と判定した中に混じる偽陽性の割合（FDR：偽発見率）の期待値」を5%以下に抑える Benjamini-Hochberg（BH）法（$p_{\text{FDR}} = p_{(k)} \times \frac{m}{k}$）</strong>が標準的に使われます（Rでは <code>p.adjust.method = "fdr"</code> で実行可能）。<br>
+        ⚠️ <strong>使い分けの鉄則</strong>：本課題のような<strong>通常の3〜6群の実験では必ず FWER制御（Tukey-Kramer法やDunnett法）を使います</strong>（少数群の実験に安易にFDRを使うと偽陽性が混じりやすくなるため、数百〜数万個のスクリーニング実験と明確に使い分けます）。
+      </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Bonferroni法の <code>soybean - casein</code> の $p$ 値:</label>
+          <label class="form-label">Bonferroni法の <code>soybean</code> vs <code>casein</code> の $p$ 値:</label>
           <input type="number" step="0.0001" id="q4-bonfp" class="input-field" placeholder="例: 0.0100">
         </div>
         <div class="form-group">
-          <label class="form-label">Holm法の <code>soybean - casein</code> の $p$ 値:</label>
+          <label class="form-label">Holm法の <code>soybean</code> vs <code>casein</code> の $p$ 値:</label>
           <input type="number" step="0.0001" id="q4-holmp" class="input-field" placeholder="例: 0.0053">
         </div>
         <div class="form-group">
-          <label class="form-label">Bonferroni法とHolm法の $p$ 値・検出力の関係:</label>
+          <label class="form-label">Bonferroni法とHolm法の調整済み $p$ 値（検出力）の関係:</label>
           <select id="q4-rel" class="input-field">
             <option value="">選択してください</option>
-            <option value="holm_smaller">Holm法の方が段階的補正によりp値が小さく（または等しく）、検出力が高い</option>
-            <option value="bonf_smaller">Bonferroni法の方が常にp値が小さく、検出力が高い</option>
-            <option value="identical">すべてのペアでp値は完全に一致する</option>
+            <option value="holm_smaller">Holm法の方が常にp値が小さく（または等しく）、Bonferroni法より検出力が高い</option>
+            <option value="bonf_smaller">Bonferroni法の方が常にp値が小さく、Holm法より検出力が高い</option>
+            <option value="identical">すべてのペアでBonferroni法とHolm法のp値は完全に一致する</option>
           </select>
         </div>
       </div>
@@ -582,8 +592,8 @@ cld(holm_summary)</code></div>
       <div id="q4-feedback" class="feedback-box"></div>
 
       <div class="form-group" style="margin-top: 18px;">
-        <label class="form-label">Tukey-Kramer法・Bonferroni法・Holm法の比較とそれぞれの特徴についての考察:</label>
-        <textarea id="q4-text" class="input-field" placeholder="今回のデータでのCLDの一致と、各ペアのp値を比較したときにBonferroni法（一律15倍補正）とHolm法（段階的補正）でどのような違いが見られたかを考察してください。" oninput="updateProgress()"></textarea>
+        <label class="form-label">Tukey-Kramer法・Bonferroni法・Holm法による多重比較の結果と各手法の特徴の比較考察:</label>
+        <textarea id="q4-text" class="input-field" placeholder="3手法でCLDや各ペアの調整済みp値がどう変化したか（なぜHolm法はBonferroni法よりp値が小さくなるのか、それぞれどのような特徴があるか）を考察してください。" oninput="updateProgress()"></textarea>
       </div>
     </div>
 
@@ -798,10 +808,10 @@ oneway.test(SW5_35 ~ Genotype, data = dataset, var.equal = FALSE)</code></div>
 
       if (bonfOk && holmOk && relOk) {
         scores.q4 = 20;
-        showFeedback(fb, true, '🎉 正解です！(+20点) soybean - casein の調整p値は Bonferroni (0.00998) に対し Holm (0.00532) と小さくなり、段階的補正を行うHolm法の方が検出力が高いことを確認できました！');
+        showFeedback(fb, true, '🎉 正解です！(+20点) soybean - casein の調整p値は Bonferroni法で 0.00998 (約0.010)、Holm法で 0.00532 となり、段階的に補正するHolm法の方が常にp値が小さく（検出力が高く）なることを確認できました！');
       } else {
         scores.q4 = 0;
-        showFeedback(fb, false, '❌ 誤りがあります。soybean と casein の比較では Bonferroni p ≈ 0.00998 (約0.010)、Holm p ≈ 0.00532 となり、Holm法の方がp値が小さく検出力が高くなります。');
+        showFeedback(fb, false, '❌ 誤りがあります。soybean と casein の比較では Bonferroni p ≈ 0.00998 (約0.010)、Holm p ≈ 0.00532 となり、常に Holm法 ≦ Bonferroni法 となります。');
       }
       updateTotalScore();
     }
@@ -1013,7 +1023,7 @@ oneway.test(SW5_35 ~ Genotype, data = dataset, var.equal = FALSE)</code></div>
     <tr><td>${reportData.q4.bonfp || '-'}</td><td>${reportData.q4.holmp || '-'}</td><td>${reportData.q4.rel || '-'}</td><td>${scores.q4} / 20点</td></tr>
   </table>
   <div class="item-box">
-    <strong>Tukey-Kramer / Bonferroni / Holm法の比較考察:</strong>
+    <strong>Tukey-Kramer / Bonferroni / Holm の比較考察:</strong>
     <div class="text-box">${reportData.q4.text || '（未記入）'}</div>
   </div>
 

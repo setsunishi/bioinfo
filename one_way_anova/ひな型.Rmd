@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
 |:---|:---|:---|
 | 第7回 | 検定①：1標本 & 対応のある2標本のt検定 | 同一個体の前後比較（イネの登熟前後の茎葉重） |
 | 第8回 | 検定②：独立2群の検定（対応なし） | 異なる個体群同士の比較（F検定、Student vs Welch） |
-| **第9回（本日）** | **検定③：1元配置分散分析と多重比較** | **3群以上の比較（ANOVA ＋ Tukey / Bonferroni / Holm / Dunnett）** |
+| **第9回（本日）** | **検定③：1元配置分散分析と多重比較** | **3群以上の比較（ANOVA ＋ Tukey / Bonferroni / Holm / Dunnett ＋ 発展：FDR）** |
 | 第10回 | 検定④：2元配置分散分析 | 2つの要因の主効果と交互作用 |
 | 第11回 | 検定⑤：ノンパラメトリック検定 | 正規性が仮定できない場合の検定（Wilcoxon / Kruskal-Wallis検定など） |
 
@@ -290,9 +290,9 @@ plot(cld(tukey_result), col = c("#dbeafe", "#fee2e2", "#fef3c7", "#e0f2fe", "#cc
 
 # 発展課題4【Wow体験①：Bonferroni法とHolm法による多重比較と検出力の比較】
 
-**課題内容**：`niwatori.csv` に対して **Bonferroni法** と **Holm法** による多重比較およびCLD付与を行い、Tukey-Kramer法やBonferroni法とHolm法の調整済み $p$値を比較・考察しなさい。
+**課題内容**：`niwatori.csv` に対して **Bonferroni法** および **Holm法** による多重比較とCLD付与を行い、課題3の **Tukey-Kramer法** と合わせて結果を比較し、各手法の特徴を考察しなさい。
 
-## Bonferroni法による多重比較とCLD
+## ① Bonferroni法による多重比較とCLD（一律15倍補正）
 ```{r}
 pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "bonferroni")
 
@@ -303,7 +303,7 @@ par(mar = c(5.1, 4.1, 6, 2.1))
 plot(cld(bonf_summary), main = "Bonferroni CLD")
 ```
 
-## Holm法による多重比較とCLD
+## ② Holm法による多重比較とCLD（段階的補正：×15, ×14, ...）
 ```{r}
 pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "holm")
 
@@ -315,11 +315,24 @@ plot(cld(holm_summary), main = "Holm CLD")
 ```
 
 ## 3手法（Tukey-Kramer / Bonferroni / Holm）の比較考察
-1. **有意ペア数とCLDの比較**：
-   - 今回のニワトリデータでは群間の差が大きいため、Tukey-Kramer法・Bonferroni法・Holm法のいずれにおいても5%水準で有意となるペアは同じ **8通り** であり、CLDの割り当て（`a, b, bc, ac, c, a`）も完全に一致しました。
-2. **調整済み $p$値（検出力）の比較**：
-   - 個々のペアの調整済み $p$値を比較すると（例えば `soybean - casein` では Tukey $p = 0.00837$、Bonferroni **$p = 0.00998$**、Holm **$p = 0.00532$**；`linseed - horsebean` では Bonferroni $p = 0.2283$ vs Holm **$p = 0.0944$**）、**ほぼすべてのペアにおいて Holm法の $p$値は Bonferroni法の $p$値よりも小さく**なっています。
-   - これは、Bonferroni法が全15ペアに対して一律に $p$値を15倍（有意水準を $\alpha / 15$）にするのに対し、Holm法は $p$値が小さい順に $\times 15, \times 14, \times 13, \dots$ と段階的に補正倍率を緩めるため、全体の第1種の過誤（5%）を抑えたまま検出力の低下を防ぐことができるためです。
+1. **有意ペアとCLDの一致**：
+   - 今回のニワトリ飼料データでは、群間の平均差が比較的大きいため、Tukey-Kramer法・Bonferroni法・Holm法のいずれでも5%水準で有意となるペアは同じ **8通り** となり、CLDもすべて `casein="a", horsebean="b", linseed="bc", meatmeal="ac", soybean="c", sun_ower="a"` で一致しました。
+2. **調整済み $p$値（検出力）の違い**：
+   - 個々のペアの調整済み $p$値を細かく比較すると（例えば8番目に $p$値が小さい `soybean - casein` では、Tukey $p = 0.00837$、Bonferroni **$p = 0.00998$**、Holm **$p = 0.00532$**）、すべてのペアにおいて **$p_{\text{Holm}} \le p_{\text{Bonferroni}}$** が成り立っています。
+   - **各手法の特徴**：
+     - **Bonferroni法**は比較ペア数 $m=15$ を一律にすべての $p$値に掛けるため最も保守的（$p$値が大きくなりやすく、検出力が低い）です。
+     - **Holm法**は $p$値が小さい順に $\times 15, \times 14, \dots, \times (15-k+1)$ と段階的に補正倍率を下げるため、全体の第1種過誤（FWER）を5%以下に厳格に保ちながらBonferroni法より高い検出力を持ちます。
+     - **Tukey-Kramer法**は全群の総当たり平均差の最大値の分布（スチューデント化された範囲 $q$ 分布）を直接利用するため、すべてのペアを対等に比較する実験において最も標準的でバランスの取れた手法です。
+
+## 💡【参考・発展コラム】大規模解析（RNA-seq等）で使われるFDR（Benjamini-Hochberg法）と使い分けの注意点
+- 数千〜数万個の遺伝子発現量を同時に比較するトランスクリプトーム解析（RNA-seq）やGWASなどでは、FWER（「1回でも偽陽性が出る確率」を5%以下にするBonferroni法やHolm法）を使うと補正が厳しすぎて有意な遺伝子がほとんど検出できなくなります。
+- そのため大規模スクリーニングでは、発想を転換して**「有意と判定したリストの中に混じる偽陽性の割合（FDR: False Discovery Rate, 偽発見率）」を5%以下に制御する Benjamini-Hochberg（BH）法（$p_{\text{FDR}} = p_{(k)} \times \frac{m}{k}$）**が標準的に用いられます。
+- ⚠️ **使い分けの鉄則**：今回のニワトリ飼料（6群）やトマト肥料（4群）のような**通常の少数群（3〜10群程度）の実験では、必ず FWER を制御する Tukey-Kramer法 や Dunnett法 を使います**（少数群の実験にFDRを使うと偽陽性が混じりやすくなるため、数百〜数万個のスクリーニング解析と明確に使い分けます）。
+
+```{r}
+# （参考）もしニワトリデータに FDR (BH法: p.adjust.method = "fdr") を適用した場合の挙動確認
+pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "fdr")
+```
 
 ---
 

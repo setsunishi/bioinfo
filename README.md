@@ -69,7 +69,7 @@ bioinfo/
 
 1. **第7回（`paired_t_test/`）**：1標本t検定・対応のあるt検定（同一株の前後比較、個体差ノイズ相殺）
 2. **第8回（`unpaired_t_test/`）**：対応のない2標本t検定（独立2群比較、Student vs Welch）
-3. **第9回（`one_way_anova/`）**：1元配置分散分析（One-way ANOVA）と多重比較（Tukey / Bonferroni / Holm / Dunnett）
+3. **第9回（`one_way_anova/`）**：1元配置分散分析（One-way ANOVA）と多重比較（Tukey / Bonferroni / Holm / Dunnett ＋ 発展コラム：FDR (BH法)）
 4. **第10回（`two_way_anova/` 予定）**：2元配置分散分析（Two-way ANOVA）と交互作用
 5. **第11回（`non_parametric/` 予定）**：ノンパラメトリック検定（Wilcoxon / Mann-Whitney / Kruskal-Wallis）
 
@@ -128,7 +128,7 @@ Remote Agent で本リポジトリの作業を継続する際は、以下の設�
   - 「授業内練習（提出不要：トマト4種肥料糖度データ `トマト糖度スタック形式.xlsx`）」と「提出課題の範囲（課題1〜3＋発展課題4〜5＋総合考察）」および「提出方法（`kadai9_interactive.html` から書き出したHTMLレポートを提出）」をポータル・スライド・Webワークブック・Rmdひな型のすべてで完全統一。
   - スライド単体で見返したときにも迷わないよう、HandsOn開始直前に「Step 0：データDL・RStudio作業ディレクトリ設定・必須パッケージ（`multcomp`, `nortest`）のインストール手順」スライドを配置。
 - **2大「Wow!（納得・発見）」体験の組み込み**：
-  1. **6群15ペア総当たりでの多重比較手法（Tukey / Bonferroni / Holm / Dunnett）の検出力比較（発展4）**：`niwatori.csv`（6群15ペア）において一律補正のBonferroni法と段階的補正のHolm法の調整済み $p$値を比較させ（例：`soybean - casein` で Bonferroni $p = 0.00998$ vs Holm $p = 0.00532$）、Holm法が常に検出力で勝ることを体験させる（さらにトマト練習ではTukeyで $p=0.071$ の `BonePowder vs NoFertilizer` がDunnett法では $p=0.041$ で有意になることを実演）。
+  1. **6群15ペア総当たりでの多重比較手法（Tukey / Bonferroni / Holm / Dunnett）の検出力比較（発展4）＋発展コラム（FDR / BH法）**：`niwatori.csv`（6群15ペア）において一律補正のBonferroni法と段階的補正のHolm法の調整済み $p$値を比較させ（`soybean - casein` で Bonferroni $p = 0.00998 \to$ Holm $p = 0.00532$）、段階的補正による検出力向上を体感させる（さらにトマト練習ではTukeyで $p=0.071$ の `BonePowder vs NoFertilizer` がDunnett法では $p=0.041$ で有意になることを実演）。加えて、数千個の遺伝子発現解析（RNA-seq等）で使われる **FDR（Benjamini-Hochberg法：`p.adjust.method = "fdr"`）**を発展コラムとして解説し、「通常の3〜6群の実験ではFWER制御（Tukey/Dunnett）、大規模スクリーニングではFDR制御（BH法）」という統計学的な使い分けの鉄則を明示する。
   2. **2群における独立t検定と1-way ANOVAの数学的同値性 $t^2 = F$（発展5）**：`kadai2_t_vs_ANOVA.csv`（イネ2群データ）に両側t検定と1-way ANOVAの両方を適用させ、等分散仮定で $t = -4.7593 \implies t^2 = F = 22.651$（$p = 9.394 \times 10^{-6}$）、Welchで $t = -4.9457 \implies t^2 = F = 24.460$（$p = 9.193 \times 10^{-6}$）と完全一致することから、ANOVAが2標本t検定の3群以上への一般化であることを数理と実感で理解させる。
 
 ### 6. 第9回データの正解値リファレンス（`niwatori.csv`: 6群 $N = 71$、`kadai2_t_vs_ANOVA.csv`: 2群 $N = 76$）
@@ -143,8 +143,8 @@ Remote Agent で本リポジトリの作業を継続する際は、以下の設�
   - 総当たり比較ペア数：$\binom{6}{2} = 15$ 通り、うち有意（`p adj < 0.05`）なペア数：**8 通り**
   - Compact Letter Display（`cld`）：`casein = "a"`, `horsebean = "b"`, `linseed = "bc"`, `meatmeal = "ac"`, `soybean = "c"`, `sun_ower = "a"`
 - **発展4（`niwatori.csv` Bonferroni法 vs Holm法）**：
-  - 有意ペア数はともに8通り、CLDも一致。
-  - `soybean - casein` 調整済み $p$値：Bonferroni $p = 0.00998$ vs Holm $p = 0.00532$（Tukey $p = 0.00837$）
+  - 有意ペア数：いずれも **8 通り**、CLDもTukeyと一致
+  - `soybean - casein` 調整済み $p$値：Bonferroni $p = 0.00998$ vs Holm $p = 0.00532$（Tukey $p = 0.00837$；参考：FDR / BH法では $p = 0.00125$、有意ペア11通り）
 - **発展5（`kadai2_t_vs_ANOVA.csv` t検定 vs 1-way ANOVA）**：
   - (1)(2) 等分散仮定：Student $t = -4.759292 \implies t^2 = 22.65086 = F$, $df = (1, 74)$, $p = 9.394 \times 10^{-6}$
   - (3)(4) 等分散仮定しない（Welch）：Welch $t = -4.945726 \implies t^2 = 24.46020 = F$, $df = (1, 49.342)$, $p = 9.193 \times 10^{-6}$

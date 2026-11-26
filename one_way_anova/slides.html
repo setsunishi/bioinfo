@@ -660,11 +660,11 @@
           </div>
           <div class="card accent">
             <h3>3. 多重比較4手法とCLD（<code>a, b, bc</code>）</h3>
-            <p><strong>Tukey-Kramer法・Bonferroni法・Holm法・Dunnett法</strong>を使い分け、論文標準のアルファベット表記（Compact Letter Display）を描画する。</p>
+            <p><strong>Tukey-Kramer法・Bonferroni法・Holm法・Dunnett法</strong>を使い分け、論文標準のアルファベット表記（CLD）を描画する（＋発展コラム：大規模解析のFDR法）。</p>
           </div>
           <div class="card">
-            <h3>4. 2大「Wow!」体験</h3>
-            <p>【Wow①】6群15ペア比較での補正法による検出力の違い<br>【Wow②】2群のときt検定と1-way ANOVAで <strong>$t^2 = F$・$p$値が完全一致する</strong>数学的感動！</p>
+            <h3>4. 2つの「発見（Wow!）」体験</h3>
+            <p>【発見①】6群15ペア比較での補正法による検出力の違い<br>【発見②】2群のときt検定と1-way ANOVAで <strong>$t^2 = F$・$p$値が完全一致する</strong>数理的関係！</p>
           </div>
         </div>
       </div>
@@ -722,7 +722,7 @@
               <li>なぜ3群以上でt検定を繰り返してはいけないのか？</li>
               <li>1元配置分散分析の原理：<strong>「変動の分割」</strong>と分散分析表</li>
               <li>前提条件（Shapiro-Wilk正規性・Bartlett等分散性検定）</li>
-              <li>多重比較4手法（Tukey / Bonferroni / Holm / Dunnett）とCLD</li>
+              <li>多重比較4手法（Tukey / Bonferroni / Holm / Dunnett）とCLD（＋発展コラム：FDR法）</li>
               <li><strong>【授業内練習（提出不要）】</strong>：トマト4種肥料の糖度データ（<code>トマト糖度スタック形式.xlsx</code>）で一連のRコードとDunnett法を体験</li>
             </ol>
           </div>
@@ -769,7 +769,7 @@ Residuals   65 195556    3009</code></div>
           <div class="card accent">
             <h3>△ もったいない使い方</h3>
             <p><strong>「課題1〜5の答えと考察を全部書いて」</strong><br>
-            AIに丸投げしてしまうと、本日の最大の発見である<strong>「なぜ6群の比較でt検定を15回繰り返すと53.7%も誤報が出るのか？」「なぜ2群データにANOVAをかけると $t$値の2乗が小数点以下までピタリと $F$値に一致するのか？」</strong>という統計学の感動を味わえません。必ず自分のRStudioで数値を確かめましょう！</p>
+            AIに丸投げしてしまうと、本日の重要な発見である<strong>「なぜ6群の比較でt検定を15回繰り返すと高い確率で偽陽性が生じるのか？」「なぜ2群データにANOVAをかけると $t$値の2乗が小数点以下までピタリと $F$値に一致するのか？」</strong>という統計学の本質を体感できません。必ず自分のRStudioで数値を確かめましょう！</p>
           </div>
         </div>
       </div>
@@ -794,7 +794,7 @@ t.test(x, mu = 8)
 t.test(x, y, paired = TRUE)
 # 対応のない独立2群（Welch / Student）
 t.test(Y ~ X, var.equal = FALSE)</code></div>
-            <p style="font-size: 0.9rem;">2群までの平均値の比較なら <code>t.test()</code> で完璧に解決できた！</p>
+            <p style="font-size: 0.9rem;">2群までの平均値の比較なら <code>t.test()</code> で適切に検定できた！</p>
           </div>
           <div class="card primary" style="border-width: 2px;">
             <h3>3群以上（多群）の実験デザイン</h3>
@@ -807,7 +807,7 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
         </div>
         <div class="takeaway">
           <span class="takeaway-icon">🤔</span>
-          <span>疑問：「3群（A, B, C）や 6群（A〜F）あるとき、2群ずつの <code>t.test()</code> を総当たりで何回も繰り返せばいいのでは？」 $\rightarrow$ <strong>実はそれが最大のタブーです！</strong></span>
+          <span>疑問：「3群（A, B, C）や 6群（A〜F）あるとき、2群ずつの <code>t.test()</code> を総当たりで何回も繰り返せばいいのでは？」 $\rightarrow$ <strong>実はそこに「多重検定の罠（偽陽性の急増）」という大きな落とし穴があります！</strong></span>
         </div>
       </div>
     </div>
@@ -819,7 +819,7 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
           <span class="badge badge-theory">理論最重要</span>
           <h2 class="slide-title">多群の比較に「単純なt検定の繰り返し」を使えない理由</h2>
         </div>
-        <span class="slide-subtitle">検定を繰り返すたびに「少なくとも1回は誤って有意になる確率（偽陽性率）」が膨れ上がる！</span>
+        <span class="slide-subtitle">検定を繰り返すたびに「少なくとも1回は誤って有意になる確率（FWER）」が膨れ上がる！</span>
       </div>
       <div class="slide-body">
         <div class="grid-2">
@@ -827,22 +827,22 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <h3>3群（A, B, C）で t検定を3回繰り返すと…</h3>
             <p>・総当たりペアは <strong>A vs B、B vs C、A vs C の3通り</strong>。<br>
             ・もし<strong>本当は3群すべて母平均が同じ（差がゼロ）</strong>だとしても、1回の検定（有意水準 $\alpha = 0.05$）で「正しく差がない」と判定される確率は $0.95$（95%）。<br>
-            ・3回とも間違えない確率は $(0.95)^3 = 0.857$（85.7%）。<br>
-            ・すると、<strong>少なくとも1ペアで誤って「有意差あり！」と誤報が出る確率（FWER）</strong>は：</p>
+            ・各検定が独立と仮定すると、3回とも間違えない確率は $(0.95)^3 \approx 0.857$（85.7%）。<br>
+            ・すると、<strong>少なくとも1ペアで誤って「有意差あり！」と偽陽性が出る確率（FWER）</strong>は：</p>
             <div class="formula-box" style="background: #ffffff; margin-top: 4px;">
-              $$1 - (1 - 0.05)^3 = 1 - 0.95^3 = \mathbf{14.3\%}$$
+              $$1 - (1 - 0.05)^3 = 1 - 0.95^3 \approx \mathbf{14.3\%}$$
             </div>
-            <p style="font-size: 0.86rem; color: #b91c1c;">5%のつもりが<strong>約3倍（20回に3回も間違える危険な検定）</strong>になってしまう！</p>
+            <p style="font-size: 0.84rem; color: #b91c1c;">5%以下に抑えるつもりが<strong>約3倍近く（10%超）に膨らんでしまう！</strong>（※共通群を含むため完全な独立ではないが、同様に大きく上昇する）</p>
           </div>
           <div class="card">
-            <h3>群数 $a$ と偽陽性率 $1 - (0.95)^m$ の爆発</h3>
+            <h3>群数 $a$ と偽陽性発生確率（FWER）の上昇（独立仮定での概算）</h3>
             <table>
               <thead>
                 <tr>
                   <th>群数 $a$</th>
                   <th>総当たり数 $m = \binom{a}{2}$</th>
-                  <th>全問正解率 $0.95^m$</th>
-                  <th>誤って有意が出る確率</th>
+                  <th>全ペア非棄却 $0.95^m$</th>
+                  <th>少なくとも1回偽陽性が出る確率</th>
                 </tr>
               </thead>
               <tbody>
@@ -856,25 +856,25 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
                   <td><strong>3群</strong></td>
                   <td>3 通り</td>
                   <td>85.7%</td>
-                  <td><strong>14.3%</strong></td>
+                  <td><strong>約 14.3%</strong></td>
                 </tr>
                 <tr>
                   <td><strong>4群</strong>（トマト練習）</td>
                   <td>6 通り</td>
                   <td>73.5%</td>
-                  <td><strong>26.5%</strong>（4回に1回誤報）</td>
+                  <td><strong>約 26.5%</strong>（4回に1回以上）</td>
                 </tr>
                 <tr>
                   <td><strong>5群</strong></td>
                   <td>10 通り</td>
                   <td>59.9%</td>
-                  <td><strong>40.1%</strong></td>
+                  <td><strong>約 40.1%</strong></td>
                 </tr>
                 <tr style="background: #fef2f2;">
                   <td><strong>6群</strong>（ニワトリ課題）</td>
                   <td><strong>15 通り</strong></td>
                   <td>46.3%</td>
-                  <td><strong style="color: #dc2626;">53.7%（半分以上が誤報！）</strong></td>
+                  <td><strong style="color: #dc2626;">約 53.7%（2回に1回以上偽陽性が混じる）</strong></td>
                 </tr>
               </tbody>
             </table>
@@ -900,21 +900,21 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
               <li><strong>問い</strong>：「多群データの<strong>全体のどこかに</strong>平均値の差（要因の効果）があるか？」</li>
               <li><strong>帰無仮説 $H_0$</strong>：$\mu_1 = \mu_2 = \dots = \mu_a$（全群の母平均が等しい）</li>
               <li><strong>対立仮説 $H_1$</strong>：少なくとも1つの群の母平均が異なる</li>
-              <li><strong>特徴</strong>：<strong>1回の $F$検定</strong>で全体の差の有無を判定できるが、<strong>具体的にどの群とどの群が違うかは分からない</strong>。</li>
+              <li><strong>特徴</strong>：<strong>1回の $F$検定</strong>で全体の差の有無を判定できるが、<strong>具体的にどの群とどの群が違うかは特定できない</strong>。</li>
             </ul>
           </div>
           <div class="card secondary">
             <h3>② 多重比較（Multiple Comparisons）</h3>
             <ul>
               <li><strong>問い</strong>：「多群データの<strong>どのグループとどのグループの間</strong>に有意な差があるのか？」</li>
-              <li><strong>仕組み</strong>：検定を繰り返すことで上がる危険率（FWER）を、<strong>先回りして厳しい側に補正</strong>してペアごとに検定する。</li>
+              <li><strong>仕組み</strong>：比較回数に応じて膨らむ第1種過誤（FWER）を、<strong>全体で5%以下になるよう補正</strong>してペアごとに検定する。</li>
               <li><strong>代表手法</strong>：<strong>Tukey-Kramer法</strong>、<strong>Bonferroni法</strong>、<strong>Holm法</strong>（以上は総当たり）、<strong>Dunnett法</strong>（対照群との比較）。</li>
             </ul>
           </div>
         </div>
         <div class="card accent" style="padding: 11px 16px;">
-          <p style="font-size: 0.9rem; margin: 0;"><strong>💡 多重比較の現代的な立ち位置と本授業の方針</strong><br>
-          古い教科書では「まずANOVAを行い、有意なら多重比較へ進む」とされましたが、現在は<strong>「群間のペア比較が目的なら、ANOVAの結果にかかわらず最初から多重比較を行ってよい」</strong>とされています。ただし、ANOVAの根幹である<strong>「変動（分散）の分割」は統計学で最も重要な概念</strong>なので、本授業ではANOVAと多重比較の両方をマスターします！</p>
+          <p style="font-size: 0.89rem; margin: 0;"><strong>💡 分散分析と多重比較の関係について</strong><br>
+          Tukey-Kramer法やDunnett法のように、それ自体で全体の第1種過誤（FWER）を5%以下に制御できる手法は、事前検定としてANOVAを行わずに直接適用しても統計学的に妥当とされています。一方、データ全体の変動を要因別に分解・評価するANOVAは多群解析の基礎（次回の2元配置分散分析の土台）となるため、論文や本演習ではANOVAと多重比較の両方を学びます。</p>
         </div>
       </div>
     </div>
@@ -931,13 +931,13 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
       <div class="slide-body">
         <div class="grid-2">
           <div class="card primary">
-            <h3>群間変動 $\rightarrow$ 「平均の分散 $V_A$」（シグナル）</h3>
-            <p>・各群の平均値 $\bar{X}_1, \bar{X}_2, \dots, \bar{X}_a$ が全体平均 $\bar{X}$ からどれくらい離れているか。<br>
-            ・<strong>要因（飼料や肥料の違い）によって生じたばらつき</strong>を表す！</p>
+            <h3>群間変動 $\rightarrow$ 「平均の分散 $V_A$」（シグナル＋誤差）</h3>
+            <p>・各群の平均値 $\bar{X}_1, \bar{X}_2, \dots, \bar{X}_a$ が全体平均 $\bar{X}$ からどれくらい離れているか（群間平均平方 $V_A$）。<br>
+            ・<strong>要因（飼料や肥料の違い）によって生じたばらつき</strong>を反映する！</p>
           </div>
           <div class="card secondary">
             <h3>群内変動 $\rightarrow$ 「分散の平均 $V_R$」（誤差ノイズ）</h3>
-            <p>・同じグループ内での個体ごとのばらつき（群A内の分散、群B内の分散…の平均）。<br>
+            <p>・同じグループ内での個体ごとのばらつきを全群でプールした平均（群内平均平方・残差分散 $V_R$）。<br>
             ・同じ条件でも生じる<strong>純粋な実験誤差（個体差ノイズ）</strong>を表す！</p>
           </div>
         </div>
@@ -1010,7 +1010,7 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <rect x="20" y="74" width="330" height="72" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
             <text x="185" y="95" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e3a8a">① 群間変動（要因平方和 SA）</text>
             <text x="185" y="113" text-anchor="middle" font-size="11" fill="#1e40af">群間自由度 dfA = a - 1 （群数 - 1）</text>
-            <text x="185" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#dc2626">平均の分散 VA = SA / (a - 1) 【分子】</text>
+            <text x="185" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#dc2626">群間平均平方（平均の分散） VA = SA / (a - 1) 【分子】</text>
 
             <!-- Plus Sign -->
             <text x="390" y="116" text-anchor="middle" font-size="22" font-weight="bold" fill="#64748b">＋</text>
@@ -1019,7 +1019,7 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <rect x="430" y="74" width="330" height="72" rx="8" fill="#f0fdfa" stroke="#0d9488" stroke-width="2"/>
             <text x="595" y="95" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#0f766e">② 群内変動（残差平方和 SR / Residuals）</text>
             <text x="595" y="113" text-anchor="middle" font-size="11" fill="#115e59">群内自由度 dfR = N - a （全データ数 - 群数）</text>
-            <text x="595" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f766e">分散の平均（誤差分散） VR = SR / (N - a) 【分母】</text>
+            <text x="595" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f766e">群内平均平方（誤差分散） VR = SR / (N - a) 【分母】</text>
           </svg>
         </div>
         <div class="grid-2">
@@ -1028,8 +1028,8 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             $$S_T = S_A + S_R$$
           </div>
           <div class="formula-box">
-            <div style="font-size: 0.85rem; color: var(--text-muted);">分散比 $F$（シグナル $\div$ ノイズ）</div>
-            $$F = \frac{V_A\text{（平均の分散）}}{V_R\text{（誤差分散）}} = \frac{S_A / (a - 1)}{S_R / (N - a)}$$
+            <div style="font-size: 0.85rem; color: var(--text-muted);">分散比 $F$（群間平均平方 $\div$ 群内誤差分散）</div>
+            $$F = \frac{V_A\text{（群間分散）}}{V_R\text{（誤差分散）}} = \frac{S_A / (a - 1)}{S_R / (N - a)}$$
           </div>
         </div>
       </div>
@@ -1080,13 +1080,13 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <h3>第8回の $F$検定（<code>var.test</code>：等分散性検定）</h3>
             <p>・2群の<strong>「分散が等しいか」</strong>を検定（$F = s_1^2 / s_2^2$）。<br>
             ・どちらの分散が大きくても不等分散なので<strong>両側検定</strong>。<br>
-            ・$p > 0.05$ なら「等分散とみなせる」。</p>
+            ・$p > 0.05$ なら「等分散性は否定されない」。</p>
           </div>
           <div class="card primary">
             <h3>第9回の $F$検定（<code>aov</code>：1元配置分散分析）</h3>
-            <p>・多群の<strong>「平均が等しいか」</strong>を分散比 $F = V_A / V_R$ で検定！<br>
-            ・群間分散 $V_A$ が誤差分散 $V_R$ より<strong>大きい側（右裾）だけを見る片側検定</strong>。<br>
-            ・$p < 0.05$ なら「群間の平均値に有意な差がある」！</p>
+            <p>・多群の<strong>「母平均が等しいか」</strong>を分散比 $F = V_A / V_R$ で検定！<br>
+            ・群間分散 $V_A$ が誤差分散 $V_R$ より<strong>大きい側（右裾）だけを見る片側（上側）検定</strong>。<br>
+            ・$p < 0.05$ なら「群間の母平均に有意な差がある」！</p>
           </div>
         </div>
       </div>
@@ -1107,18 +1107,18 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <h3>① 正規性の検定</h3>
             <p>・<strong><code>shapiro.test()</code></strong>（シャピロ・ウィルク検定）または <code>lillie.test()</code>（KS検定）。<br>
             ・$H_0$：「正規分布に従う」<br>
-            ・<strong>全群で $p > 0.05$ なら正規分布とみなせる！</strong></p>
+            ・<strong>全群で $p > 0.05$ なら正規性は否定されない</strong></p>
           </div>
           <div class="card secondary">
             <h3>② 等分散性の検定（3群以上）</h3>
-            <p>・<strong><code>bartlett.test(Y ~ X)</code></strong>（バートレット検定）。※2群の <code>var.test</code> の多群版！<br>
+            <p>・<strong><code>bartlett.test(Y ~ X)</code></strong>（バートレット検定）。※2群の <code>var.test</code> の多群版。<br>
             ・$H_0$：「各群の母分散は等しい」<br>
-            ・<strong>$p > 0.05$ なら等分散とみなせる！</strong></p>
+            ・<strong>$p > 0.05$ なら等分散性は否定されない</strong></p>
           </div>
           <div class="card accent">
             <h3>③ 分散分析の選択</h3>
             <p>・正規＆等分散 $\rightarrow$ <strong><code>aov(Y ~ X)</code></strong><br>
-            ・正規だが不等分散 $\rightarrow$ <strong>WelchのANOVA <code>oneway.test(Y ~ X)</code></strong><br>
+            ・正規だが不等分散 $\rightarrow$ <strong>WelchのANOVA <code>oneway.test(Y ~ X)</code></strong>（※最初からWelch法を使う流儀もある）<br>
             ・非正規 $\rightarrow$ ノンパラメトリック（Kruskal-Wallis検定：第11回）</p>
           </div>
         </div>
@@ -1152,25 +1152,25 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <tr style="background: #eff6ff;">
               <td><strong>1. Tukey-Kramer法</strong><br>(Tukey's HSD検定)</td>
               <td><strong>総当たり</strong><br>($\binom{a}{2}$ ペア)</td>
-              <td><strong>総当たり比較の第一選択（王道）！</strong> 期待される標準誤差からスチューデント化された範囲分布で補正。5群以上でも検出力が落ちにくい。</td>
+              <td><strong>総当たり比較の第一選択！</strong> スチューデント化された範囲分布を用いて全ペアの最大差を補正。5群以上でも検出力が落ちにくい。</td>
               <td><code>TukeyHSD(aov_obj)</code><br><code>glht(..., mcp(X="Tukey"))</code></td>
             </tr>
             <tr>
               <td><strong>2. Bonferroni法</strong></td>
               <td><strong>総当たり</strong><br>(任意ペア可)</td>
-              <td>有意水準を比較総数 $m$ で割る（または $p$値を $m$ 倍する）。シンプルだが<strong>5群以上（$m \ge 10$）では厳しすぎて検出力が激減（非常に保守的）</strong>。</td>
+              <td>有意水準を比較総数 $m$ で割る（または $p$値を $m$ 倍する）。シンプルだが<strong>群数が増えて比較数 $m$ が多くなると保守的になり検出力が低下しやすい</strong>。</td>
               <td><code>pairwise.t.test(..., p.adjust.method="bonferroni")</code></td>
             </tr>
             <tr style="background: #f0fdfa;">
               <td><strong>3. Holm法</strong></td>
               <td><strong>総当たり</strong><br>(段階的補正)</td>
-              <td>Bonferroni法の改良版！ $p$値が小さい順に「$\times m, \times (m-1), \dots$」と段階的に補正を緩めるため、<strong>常に Bonferroni法より $p$値が小さく検出力が高い</strong>。</td>
+              <td>Bonferroni法の改良版。$p$値が小さい順に「$\times m, \times (m-1), \dots$」と段階的に補正を緩めるため、<strong>FWERを5%以下に保ったまま常に Bonferroni法以上の検出力を持つ</strong>。</td>
               <td><code>pairwise.t.test(..., p.adjust.method="holm")</code></td>
             </tr>
             <tr style="background: #fffbeb;">
               <td><strong>4. Dunnett法</strong></td>
               <td><strong>対照群 vs 他群</strong><br>($a-1$ ペア)</td>
-              <td><strong>1つの対照区（Control / 無肥料など）と他の試験区だけ</strong>を比較する（1対多）。比較回数が少ないため、総当たりより有意差を検出しやすい！</td>
+              <td><strong>1つの対照区（Control / 無肥料など）と他の試験区だけ</strong>を比較する（1対多）。比較回数が少ないため、対照区との差を検出しやすい。</td>
               <td><code>glht(..., mcp(X="Dunnett"))</code></td>
             </tr>
           </tbody>
@@ -1178,23 +1178,23 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
       </div>
     </div>
 
-    <!-- Slide 14: Bonferroni vs Holm & Compact Letter Display (CLD) -->
+    <!-- Slide 14: Bonferroni vs Holm & Compact Letter Display (CLD) + FDR Column -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
           <span class="badge badge-theory">理論：多重比較 ②</span>
           <h2 class="slide-title">Bonferroni vs Holm の仕組み ＆ アルファベット表記（CLD）</h2>
         </div>
-        <span class="slide-subtitle">なぜHolm法はBonferroni法より優れているのか？ そしてグラフ上の <code>a, b, bc</code> の読み方</span>
+        <span class="slide-subtitle">なぜHolm法はBonferroni法より検出力が高いのか？ そしてグラフ上の <code>a, b, bc</code> の読み方（＋発展コラム：FDR法）</span>
       </div>
       <div class="slide-body">
         <div class="grid-2">
           <div class="card">
-            <h3>Bonferroni法 vs Holm法の補正イメージ（6群15ペア）</h3>
+            <h3>Bonferroni法 vs Holm法（＋発展：FDR法）</h3>
             <ul>
-              <li><strong>Bonferroni法</strong>：全15ペアすべてで、元の $p$値を一律に <strong>$\times 15$ 倍</strong>する（有意水準 $5\% \div 15 \approx 0.33\%$）。</li>
-              <li><strong>Holm法</strong>：15ペアを $p$値が小さい順に並べ、1番目は <strong>$\times 15$</strong>、2番目は <strong>$\times 14$</strong>、3番目は <strong>$\times 13$</strong>…、8番目は <strong>$\times 8$</strong> と段階的に緩める！</li>
-              <li>$\rightarrow$ だから<strong>2番目以降のすべてのペアで「Holmの調整 $p$値 $\le$ Bonferroniの調整 $p$値」</strong>となる！</li>
+              <li><strong>Bonferroni法</strong>：全 $m=15$ ペアすべてで $p$値を一律に <strong>$\times 15$ 倍</strong>（上限1.0、FWER制御）。</li>
+              <li><strong>Holm法</strong>：$p$値が小さい順（順位 $k=1\dots 15$）に <strong>$\times 15, \times 14, \dots$ 倍</strong>（$\times (m-k+1)$）と段階的に補正するため、<strong>常に $p_{\text{Holm}} \le p_{\text{Bonferroni}}$</strong>（$k=1$ で等号、$k \ge 2$ でより小さい $p$値）！</li>
+              <li style="font-size: 0.84rem; color: #475569;"><strong>💡 発展コラム（大規模解析のFDR / BH法）</strong>：遺伝子発現解析（RNA-seq）など数千〜数万項目を検定するときは、「有意と判定した中の偽陽性の割合（FDR）」を5%以下に抑える <strong>BH法</strong>（$\times \frac{m}{k}$ 倍、<code>p.adjust.method="fdr"</code>）を使う（※通常の3〜6群の実験ではTukey法やDunnett法を使う）。</li>
             </ul>
           </div>
           <div class="card primary" style="border-width: 2px;">
@@ -1231,7 +1231,7 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <text x="607" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b91c1c">"b"</text>
             <text x="607" y="78" text-anchor="middle" font-size="10.5" fill="#b91c1c">horsebean (aやcと有意差あり)</text>
 
-            <text x="705" y="60" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">課題3で実際に</text>
+            <text x="705" y="60" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">課題3・発展4で</text>
             <text x="705" y="76" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">この6群が出る！</text>
           </svg>
         </div>
@@ -1289,7 +1289,7 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
 # スタック形式（1行1データ）のExcelを読み込む
 renshu <- read_xlsx("トマト糖度スタック形式.xlsx")
 
-# 【重要儀式】文字型(character)を因子型(factor)に変換！
+# 【重要ステップ】文字型(character)を因子型(factor)に変換！
 renshu$Fertilizer <- as.factor(renshu$Fertilizer)
 summary(renshu)
 
@@ -1610,8 +1610,8 @@ holm_summary; cld(holm_summary)</code></div>
               </div>
               <div class="card primary">
                 <h3>考察のポイント</h3>
-                <p>・今回のデータでは3手法（Tukey / Bonferroni / Holm）すべてで有意ペアは<strong>8通り</strong>、CLDも <code>a, b, bc, ac, c, a</code> で一致した。<br>
-                ・しかし個々の調整済み $p$値を比較すると、<strong>ほぼ全てのペアで「Holm法の $p$値 &lt; Bonferroni法の $p$値」</strong>となっており、段階的に補正を緩めるHolm法の方が検出力が高い（有意になりやすい）ことが実証された！</p>
+                <p>・<code>pairwise.t.test()</code> と <code>glht(..., test=adjusted(...))</code> は同じ調整済み $p$値を返し、今回のデータでは3手法（Tukey / Bonferroni / Holm）すべてで有意ペアは<strong>8通り</strong>、CLDも <code>a, b, bc, ac, c, a</code> で一致した。<br>
+                ・個々の調整済み $p$値を比較すると、<strong>すべてのペアで「Holm法の $p$値 $\le$ Bonferroni法の $p$値」</strong>（1番 $p$値が小さいペアでは等しく、2番目以降ではHolm法の方が小さい値）となっており、段階的に補正を緩めるHolm法の方が検出力が高いことが確認できる。</p>
               </div>
             </div>
           </div>
@@ -1844,7 +1844,7 @@ oneway.test(SW5_35 ~ Genotype, data = dataset, var.equal = FALSE)</code></div>
           <div class="card primary">
             <h3>本日の3大マスターポイント</h3>
             <p>1. <strong>変動の分割と $F = t^2$</strong>：ANOVAは全体のばらつきを「群間分散（シグナル）」と「群内誤差分散（ノイズ）」に分割して検定し、2群のときは独立t検定と数学的に完全一致する。<br>
-            2. <strong>多重比較4手法の使い分け</strong>：総当たりの王道 <strong>Tukey-Kramer法</strong>、段階的補正の <strong>Holm法</strong>、対照群比較の <strong>Dunnett法</strong>。<br>
+            2. <strong>多重比較4手法の使い分け</strong>：通常の3〜6群比較では、総当たりの王道 <strong>Tukey-Kramer法</strong>、段階的補正の <strong>Holm法</strong>、対照群比較の <strong>Dunnett法</strong>（数千〜数万項目の大規模探索では <strong>FDR / BH法</strong>）。<br>
             3. <strong>Compact Letter Display (CLD)</strong>：共通文字がなければ有意差あり（$p &lt; 0.05$）、同じ文字を共有すれば有意差なし！</p>
           </div>
           <div class="card secondary">

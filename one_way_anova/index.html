@@ -409,13 +409,13 @@
     <div class="hero-container">
       <div class="hero-badge">2026年度 | 名古屋大学 農学部・資源生物科学科</div>
       <h1>生物情報処理演習 第9回<br>統計学的仮説検定 ③</h1>
-      <p>1元配置分散分析（One-way ANOVA）と多重比較（Tukey-Kramer / Bonferroni / Holm / Dunnett）<br>3群以上の比較で「t検定を繰り返してはいけない理由」と、変動の分割・アルファベット表記（CLD）をマスターしよう！</p>
+      <p>1元配置分散分析（One-way ANOVA）と多重比較（Tukey-Kramer / Bonferroni / Holm / Dunnett ＋ 発展コラム：FDR）<br>3群以上の比較で「t検定を繰り返してはいけない理由」と、変動の分割・アルファベット表記（CLD）をマスターしよう！</p>
       <div class="hero-buttons">
         <a href="kadai9_interactive.html" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
           📝 インタラクティブWeb課題を開く ↗
         </a>
         <a href="slides.html" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-          📊 講義スライドを開く (全34枚) ↗
+          📊 講義スライドを開く (全29枚) ↗
         </a>
         <a href="#downloads" class="btn btn-secondary">
           📥 演習データをダウンロード
@@ -447,7 +447,7 @@
           <div class="roadmap-item active">
             <div class="roadmap-num">👉 第9回（本日）</div>
             <strong>1元配置分散分析と多重比較</strong><br>
-            <span style="color: var(--text-muted); font-size: 0.82rem;">3群以上の比較。ANOVA・Tukey・Dunnett・CLD</span>
+            <span style="color: var(--text-muted); font-size: 0.82rem;">3群以上の比較。ANOVA・Tukey・Holm・CLD</span>
           </div>
           <div class="roadmap-item">
             <div class="roadmap-num">第10回（次回）</div>
@@ -477,7 +477,7 @@
         　① <strong>課題1（20点）</strong>：ニワトリ6種飼料（<code>niwatori.csv</code>）の可視化・Shapiro-Wilk正規性検定・Bartlett等分散性検定<br>
         　② <strong>課題2（20点）</strong>：ニワトリ体重の1元配置分散分析（<code>aov</code>）とWelchのANOVA（<code>oneway.test</code>）<br>
         　③ <strong>課題3（20点）</strong>：Tukey-Kramer法（<code>TukeyHSD</code>）による全15ペア多重比較とアルファベット表記（CLD）<br>
-        　④ <strong>発展課題4（20点）</strong>：Bonferroni法とHolm法の比較（段階的補正による検出力の違い）<br>
+        　④ <strong>発展課題4（20点）</strong>：Bonferroni法とHolm法の比較（補正アルゴリズムによる調整済み $p$値・検出力の違い）<br>
         　⑤ <strong>発展課題5（20点）</strong>：2群データ（<code>kadai2_t_vs_ANOVA.csv</code>）で検証する「独立2群のt検定と1-way ANOVAの数学的同値性（$t^2 = F$）」<br>
         ・<strong>提出方法（スライド・Web共通）</strong>：<a href="kadai9_interactive.html" target="_blank" rel="noopener noreferrer" style="color: #15803d; font-weight: 800;">インタラクティブWeb課題（<code>kadai9_interactive.html</code>）↗</a> に数値と考察を入力し、ページ最下部の<strong>「📥 提出用レポートHTMLを書き出す」</strong>ボタンでダウンロードしたHTMLファイルを提出してください（RStudioの <code>ひな型.Rmd</code> は手元でのRコード一括実行・学習補助用として自由に活用できます）。
       </div>
@@ -488,7 +488,7 @@
             <span class="step-badge">1</span>講義スライドで理論と手順を確認
           </h3>
           <p style="font-size: 0.9rem; color: #475569;">
-            <a href="slides.html" target="_blank" rel="noopener noreferrer" style="color: var(--primary-light); font-weight: 600;">Web講義スライド ↗</a>を開き、「多重検定の罠」、分散の分割（群間分散 vs 群内分散）、多重比較（Tukey / Bonferroni / Holm / Dunnett）、およびCLD（<code>a, b, bc</code>）の読み方を確認します。
+            <a href="slides.html" target="_blank" rel="noopener noreferrer" style="color: var(--primary-light); font-weight: 600;">Web講義スライド ↗</a>を開き、「多重検定の罠」、分散の分割（群間分散 vs 群内分散）、多重比較（Tukey / Bonferroni / Holm / Dunnett ＋ 発展コラム：FDR）、およびCLD（<code>a, b, bc</code>）の読み方を確認します。
           </p>
         </div>
         <div class="card">
@@ -529,14 +529,14 @@
         <!-- Wow 1 -->
         <div class="card card-wow">
           <div style="font-weight: 800; font-size: 0.85rem; color: var(--accent); margin-bottom: 6px;">【Wow体験 ①】</div>
-          <h3 style="font-size: 1.18rem; font-weight: 800; color: var(--text); margin-bottom: 10px;">⚡ 6群15ペアの総当たりで体感する「多重性の壁」と手法による検出力の違い</h3>
+          <h3 style="font-size: 1.18rem; font-weight: 800; color: var(--text); margin-bottom: 10px;">⚡ 6群15ペアの総当たりで体感する「Bonferroni法 vs Holm法 vs Dunnett法」の検出力の違い</h3>
           <p style="font-size: 0.92rem; color: #475569; margin-bottom: 12px;">
-            6種類の飼料（<code>niwatori.csv</code>）を総当たり比較すると $\binom{6}{2} = 15\text{通り}$ ものペアが生まれます。もし補正なしのt検定を15回繰り返すと、本当は差がなくても $1 - 0.95^{15} \approx \mathbf{53.7\%}$（半分以上の確率！）で偽陽性が出てしまいます。
+            6種類の飼料（<code>niwatori.csv</code>）を総当たり比較すると $\binom{6}{2} = 15\text{通り}$ ものペアが生まれます。もし補正なしのt検定を15回繰り返すと、本当は差がなくても $1 - 0.95^{15} \approx \mathbf{53.7\%}$（独立仮定での概算：2回に1回以上の確率）で少なくとも1ペアに偽陽性が生じてしまいます。
           </p>
           <div class="callout callout-wow" style="margin: 0; font-size: 0.88rem;">
-            <strong>Tukey-Kramer vs Bonferroni vs Holm vs Dunnett を比べると…</strong><br>
-            ・ニワトリ6群では3手法とも有意ペアは<strong>8通り</strong>、CLDも <code>casein="a", sun_ower="a", meatmeal="ac", linseed="bc", soybean="c", horsebean="b"</code> で一致しますが、各ペアの $p$値は常に <strong>Holm法 $\le$ Bonferroni法</strong>（例：`meatmeal - horsebean` で Bonferroni $p=0.000112$ vs Holm $p=0.0000897$）！<br>
-            ・さらにトマト糖度例題では、総当たり（Tukey：6ペア補正）では <code>BonePowder vs NoFertilizer</code> が $p=0.071$ で有意にならないのに、対照区との比較に絞った <strong>Dunnett法（3ペア補正）では $p=0.041 (<0.05)$ で有意差が検出される！</strong>
+            <strong>Tukey-Kramer vs Bonferroni vs Holm を比べると…</strong><br>
+            ・ニワトリ6群では3手法とも有意ペアは<strong>8通り</strong>、CLDも <code>a, b, bc, ac, c, a</code> で一致しますが、各ペアの $p$値は常に <strong>Holm法 $\le$ Bonferroni法</strong>（例：`soybean - casein` で Bonferroni $p=0.00998 \to$ Holm $p=0.00532$ と約半分）！<br>
+            ・さらにトマト肥料データでは、総当たりTukey法で $p=0.071$（有意差なし）だった「骨粉 vs 無施肥」が、対照群との比較に特化した <strong>Dunnett法では $p=0.041$（有意差あり！）</strong> に逆転します！
           </div>
         </div>
 
@@ -573,12 +573,13 @@
         </div>
 
         <div class="card card-accent">
-          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">2. 多重比較の4大手法の使い分け</h3>
+          <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 8px;">2. 多重比較の4大手法（＋発展：FDR）</h3>
           <p style="font-size: 0.88rem; color: #475569;">
-            ・<strong>Tukey-Kramer法</strong>：全ペア総当たり比較の王道（検出力が高い）。<br>
-            ・<strong>Bonferroni法</strong>：有意水準をペア数 $m$ で割る（保守的・5群以上では検出力低下）。<br>
-            ・<strong>Holm法</strong>：$p$値が小さい順に段階的に補正しBonferroniの弱点を改良。<br>
-            ・<strong>Dunnett法</strong>：1つの対照群（Control）と他群の「1対多」比較に特化！
+            ・<strong>Tukey-Kramer法</strong>：全ペア総当たり比較の王道。<br>
+            ・<strong>Bonferroni法</strong>：$p$値をペア数 $m$ 倍する（保守的・検出力低下）。<br>
+            ・<strong>Holm法</strong>：$p$値が小さい順に段階的に補正しBonferroniを改良。<br>
+            ・<strong>Dunnett法</strong>：1つの対照群（Control）と他群の「1対多」比較！<br>
+            ・<span style="color: #0f766e;"><strong>発展：FDR（BH法）</strong></span>：数千個の遺伝子解析などで偽発見率を5%以下に制御（通常の3〜6群実験ではTukey/Dunnettを使用）。
           </p>
         </div>
 
@@ -645,18 +646,21 @@ cld(tukey_result)
 par(mar = c(5.1, 4.1, 6, 2.1))
 plot(cld(tukey_result))</code></div>
 
-        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">発展課題4: Bonferroni法とHolm法による多重比較と検出力の比較</h3>
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">発展課題4: Bonferroni法とHolm法による多重比較と検出力の比較（＋発展参考：FDR）</h3>
         <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># ① Bonferroni法（p値をペア数15で一律補正）
 pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "bonferroni")
 bonf_summary &lt;- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("bonferroni"))
 bonf_summary
 cld(bonf_summary)
 
-# ② Holm法（p値が小さい順に段階的に補正）
+# ② Holm法（p値が小さい順に段階的に補正：×15, ×14, ...）
 pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "holm")
 holm_summary &lt;- summary(glht(anova_result, linfct = mcp(Esa = "Tukey")), test = adjusted("holm"))
 holm_summary
-cld(holm_summary)</code></div>
+cld(holm_summary)
+
+# （参考・発展コラム）大規模遺伝子解析などで使われる FDR / Benjamini-Hochberg法
+pairwise.t.test(niwatori$Taiju, niwatori$Esa, p.adjust.method = "fdr")</code></div>
 
         <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 18px; margin-bottom: 6px;">発展課題5: 2群比較における t検定と1-way ANOVA の同値性検証（<code>kadai2_t_vs_ANOVA.csv</code>）</h3>
         <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>dataset &lt;- read.csv("kadai2_t_vs_ANOVA.csv", stringsAsFactors = TRUE)

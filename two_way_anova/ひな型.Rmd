@@ -1,0 +1,347 @@
+---
+title: "生物情報処理演習 第10回：2元配置分散分析（Two-way ANOVA）と交互作用"
+author: "氏名・学籍番号をここに記入"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{=html}
+<!-- コードブロック用コピーボタンのスタイル & スクリプト -->
+<style>
+div.sourceCode, pre.sourceCode {
+  position: relative !important;
+  padding-top: 28px !important;
+}
+.btn-code-copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 600;
+  color: #475569;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: all 0.2s ease;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn-code-copy:hover {
+  opacity: 1;
+  background-color: #ffffff;
+  color: #1e293b;
+  border-color: #94a3b8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+.btn-code-copy.copied {
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var blocks = document.querySelectorAll('div.sourceCode, pre.sourceCode');
+  blocks.forEach(function(block) {
+    if (block.querySelector('.btn-code-copy')) return;
+    
+    var btn = document.createElement('button');
+    btn.className = 'btn-code-copy';
+    btn.type = 'button';
+    btn.innerHTML = '📋 コピー';
+    
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      var codeElem = block.querySelector('code');
+      var textToCopy = codeElem ? codeElem.innerText : block.innerText;
+      
+      var copySuccess = function() {
+        btn.innerHTML = '✓ コピー完了！';
+        btn.classList.add('copied');
+        setTimeout(function() {
+          btn.innerHTML = '📋 コピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      };
+      
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(copySuccess).catch(function() {
+          fallbackCopy(textToCopy, copySuccess);
+        });
+      } else {
+        fallbackCopy(textToCopy, copySuccess);
+      }
+    });
+    
+    block.appendChild(btn);
+  });
+  
+  function fallbackCopy(text, callback) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+      callback();
+    } catch (err) {
+      console.error('コピーに失敗しました', err);
+    }
+    document.body.removeChild(ta);
+  }
+});
+</script>
+```
+
+# はじめに（演習の背景と目的）
+
+本演習（第7回〜第11回）では、生物実験や農学研究で必須となる**「統計学的仮説検定の体系」**を5回にわたって実践的に習得します。
+
+| 回 | テーマ | 主な対象と検定手法 |
+|:---|:---|:---|
+| 第7回 | 検定①：1標本 & 対応のある2標本のt検定 | 同一個体の前後比較（イネの登熟前後の茎葉重） |
+| 第8回 | 検定②：独立2群の検定（対応なし） | 異なる個体群同士の比較（F検定、Student vs Welch） |
+| 第9回 | 検定③：1元配置分散分析と多重比較 | 1要因の3群以上の比較（ANOVA ＋ Tukey / Bonferroni / Holm / Dunnett） |
+| **第10回（本日）** | **検定④：2元配置分散分析と交互作用** | **2つの要因の主効果・交互作用（`Y ~ A * B`）および反復測定ANOVA（`Y ~ A + ID`）** |
+| 第11回 | 検定⑤：ノンパラメトリック検定 | 正規性が仮定できない場合の検定（Wilcoxon / Kruskal-Wallis検定など） |
+
+第4回となる本日は、**2つの要因（例：土壌と肥料、温度と銘柄、味と衣）が結果に与える主効果（Main effect）と相乗・相殺効果（交互作用 Interaction）**を同時に検定する**「2元配置分散分析（Two-way ANOVA）」**、および交互作用の有無に応じた多重比較の手順を学びます。
+
+> **📌 提出方法について（スライド・Web共通）**  
+> 本R Markdownファイル（`ひな型.Rmd`）は、手元のRStudioで全コードを一括実行してグラフや数値を手元で確認するための学習補助用ファイルです。課題の提出は、Web課題ワークブック（`kadai10_interactive.html`）に課題1〜3・発展課題4〜5を入力して書き出した **`学籍番号_氏名_第10回課題レポート.html`** を提出してください。
+
+---
+
+# 課題1：作物収量データの2元配置分散分析（土壌2種 × 肥料4段階）
+
+**課題内容**：ある作物の収量（`Yield`, 単位: kg）について、肥料の量4パターン（`Fertilizer`: `N100`, `N200`, `N300`, `N400`）と土壌2種類（`Soil`: `SoilA`, `SoilB`）を組み合わせた計8通りの生育環境において各3回（計 $N = 24$）の栽培実験を行った（`kadai1.tsv`）。各要因（土壌・肥料）の主効果および両者の交互作用が収量に影響を与えているかを2元配置分散分析で検定しなさい。
+
+## データの読み込みと交互作用プロットによる可視化
+```{r}
+kadai1 <- read.delim("kadai1.tsv", stringsAsFactors = TRUE)
+summary(kadai1)
+
+# 交互作用プロット（折れ線が平行か、傾きが異なるかを確認）
+interaction.plot(kadai1$Fertilizer, kadai1$Soil, kadai1$Yield,
+                 type = "b", pch = c(16, 17), col = c("#2563eb", "#0d9488"), lwd = 2,
+                 xlab = "肥料の量 (Fertilizer)", ylab = "平均収量 Yield (kg)",
+                 trace.label = "土壌 (Soil)", main = "課題1: 土壌×肥料の交互作用プロット")
+```
+
+## （参考）正規性と等分散性の確認
+```{r}
+if (requireNamespace("nortest", quietly = TRUE)) {
+  library(nortest)
+  print(tapply(kadai1$Yield, kadai1$Soil, lillie.test))
+  print(tapply(kadai1$Yield, kadai1$Fertilizer, lillie.test))
+}
+bartlett.test(Yield ~ Soil, data = kadai1)
+bartlett.test(Yield ~ Fertilizer, data = kadai1)
+```
+
+## 繰り返しありの2元配置分散分析（`Yield ~ Soil * Fertilizer`）
+- **土壌（`Soil`）の主効果**：$H_0$: 土壌の違いによる収量の差はない vs $H_1$: 土壌の効果がある
+- **肥料（`Fertilizer`）の主効果**：$H_0$: 肥料量の違いによる収量の差はない vs $H_1$: 肥料の効果がある
+- **交互作用（`Soil:Fertilizer`）**：$H_0$: 土壌と肥料の間に交互作用はない vs $H_1$: 交互作用がある
+
+```{r}
+anova_k1 <- aov(Yield ~ Soil * Fertilizer, data = kadai1)
+summary(anova_k1)
+```
+
+### 【課題1の結果の解釈】
+- **土壌（`Soil`）の主効果**：自由度 $df_A = 1$、$F = 46.317$、**$p = 4.22 \times 10^{-6} < 0.001$**（0.1%水準で極めて有意）。
+- **肥料（`Fertilizer`）の主効果**：自由度 $df_B = 3$、$F = 29.683$、**$p = 8.99 \times 10^{-7} < 0.001$**（0.1%水準で極めて有意）。
+- **土壌×肥料の交互作用（`Soil:Fertilizer`）**：自由度 $df_{A \times B} = (2-1)(4-1) = 3$、$F = 4.189$、**$p = 0.0229 < 0.05$**（5%水準で有意）。
+- **結論**：土壌の主効果、肥料の主効果に加えて、**土壌と肥料の間に統計学的に有意な交互作用（相乗効果）がある**。交互作用プロットからも分かる通り、`SoilA` よりも `SoilB` において肥料を増量したときの収量の伸びが著しく大きい。
+
+---
+
+# 課題2：交互作用が有意な場合の8試験区展開とTukey-Kramer多重比較
+
+**課題内容**：課題1で土壌と肥料の交互作用が有意となったため、`Soil`（2水準）と `Fertilizer`（4水準）を結合した全8試験区（`SoilFert`）に展開し、Tukey-Kramer法による多重比較と Compact Letter Display (CLD) 付きの箱ひげ図を作成して最適栽培条件を考察しなさい。
+
+```{r}
+# SoilとFertilizerを連結して8試験区を区別する新しい因子 SoilFert を作成
+kadai1$SoilFert <- as.factor(paste(kadai1$Soil, kadai1$Fertilizer, sep = ""))
+summary(kadai1)
+
+# 8試験区の平均収量を確認
+tapply(kadai1$Yield, kadai1$SoilFert, mean)
+
+# 1次元展開した8試験区に対するANOVAとTukey-Kramer多重比較
+library(multcomp)
+result1_k1 <- aov(Yield ~ SoilFert, data = kadai1)
+summary(result1_k1)
+
+result2_k1 <- glht(result1_k1, linfct = mcp(SoilFert = "Tukey"))
+summary(result2_k1)
+cld(result2_k1)
+
+# 上部マージンを広げてCLD付き箱ひげ図を描画
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(result2_k1), col = c(rep("#dbeafe", 4), rep("#ccfbf1", 4)),
+     ylab = "Yield (kg)", xlab = "Soil x Fertilizer (SoilFert)")
+```
+
+### 【課題2のCLDと多重比較の解釈】
+- 8試験区のCLDは **`SoilAN100 = "a"`、`SoilAN200 = "ab"`、`SoilBN100 = "ab"`、`SoilAN300 = "ac"`、`SoilBN200 = "bc"`、`SoilAN400 = "bc"`、`SoilBN300 = "c"`、`SoilBN400 = "d"`** となりました。
+- `SoilA` では肥料を最小の `N100`（平均 $14.57\text{ kg}$, `"a"`）から最大の `N400`（平均 $18.50\text{ kg}$, `"bc"`）まで4倍に増やしても収量は $+3.93\text{ kg}$（$p = 0.0167$）しか増加せず、`SoilAN200`・`SoilAN300`・`SoilAN400` の間には互いに有意差がありません。
+- 一方、`SoilB` では肥料増量に伴って収量が大きく伸び、特に **`SoilBN400`（平均 $24.67\text{ kg}$）は単独で `"d"`** となり、2番目に高い `SoilBN300`（平均 $20.53\text{ kg}$, `"c"`, $p = 0.0114$）や同じ肥料量の `SoilAN400`（平均 $18.50\text{ kg}$, `"bc"`, $p < 0.001$）を含む**他のすべての試験区よりも有意に高い収量**を達成しています。
+
+---
+
+# 課題3：ミネラルウォーターのおいしさ評定（交互作用がない2元配置分散分析）
+
+**課題内容**：ミネラルウォーターの温度2水準（`Ondo`: `冷蔵庫`, `常温`）と銘柄3種類（`Meigara`: `イカアン`, `ビビッテル`, `ボスビック`）のおいしさスコア（`Score`、各5反復、計 $N = 30$、`kadai2.tsv`）について、2元配置分散分析および主効果ごとの多重比較を行い、結果を解釈しなさい。
+
+## データの読み込みと2元配置分散分析
+```{r}
+kadai2 <- read.delim("kadai2.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai2)
+
+# 繰り返しありの2元配置分散分析（Ondo * Meigara）
+anova_k2 <- aov(Score ~ Ondo * Meigara, data = kadai2)
+summary(anova_k2)
+```
+
+- **2元配置分散分析の判定**：
+  - **温度（`Ondo`）の主効果**：$df = 1, S_A = 67.50, F = \mathbf{21.32}, p = \mathbf{0.00011} < 0.001$（0.1%水準で有意）
+  - **銘柄（`Meigara`）の主効果**：$df = 2, S_B = 155.00, V_B = 77.50, F = \mathbf{24.47}, p = \mathbf{1.61 \times 10^{-6}} < 0.001$（0.1%水準で有意）
+  - **温度×銘柄の交互作用（`Ondo:Meigara`）**：$df = 2, S_{A \times B} = 15.00, V_{A \times B} = 7.50, F = \mathbf{2.368}, p = \mathbf{0.115} > 0.05$（**有意差なし＝交互作用は認められない**）
+  - 残差（`Residuals`）：$df = 24, S_R = 76.00, V_R = 3.167$
+
+## 交互作用がないため、主効果（温度・銘柄）ごとに多重比較を実行
+```{r}
+library(multcomp)
+# ※ Macでグラフの日本語が文字化けする場合は下の行の # を外してください
+# par(family = "HiraKakuProN-W6")
+
+# ① 温度（Ondo）についての比較
+res_ondo <- aov(Score ~ Ondo, data = kadai2)
+tukey_ondo <- glht(res_ondo, linfct = mcp(Ondo = "Tukey"))
+summary(tukey_ondo)
+cld(tukey_ondo)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(tukey_ondo), main = "課題3(1): 温度 (Ondo) 別のスコア比較")
+
+# ② 銘柄（Meigara）についての多重比較
+res_meigara <- aov(Score ~ Meigara, data = kadai2)
+tukey_meigara <- glht(res_meigara, linfct = mcp(Meigara = "Tukey"))
+summary(tukey_meigara)
+cld(tukey_meigara)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(tukey_meigara), main = "課題3(2): 銘柄 (Meigara) 別のスコア比較")
+```
+
+### 【課題3の解釈と記述上の重要な注意点】
+1. **温度の効果**：交互作用がないためどの銘柄でも共通して、`冷蔵庫`（平均 $8.0$点, CLD `"a"`）の方が `常温`（平均 $5.0$点, CLD `"b"`）よりも平均 $3.0$点有意においしさスコアが高い（$p = 0.0098$）。
+2. **銘柄の効果**：CLDは **`イカアン = "a"`（平均 $3.5$点）、`ビビッテル = "b"`（平均 $9.0$点）、`ボスビック = "b"`（平均 $7.0$点）** となりました。
+3. **⚠️ 結論の書き方の注意点**：「ビビッテル・ボスビック・イカアンの順にスコアが高い」と主張するのは統計学的に誤りです。`ビビッテル` と `ボスビック` はともに `"b"` を共有しており（両者の比較では差 $-2.0$点, $p = 0.174 > 0.05$ で有意差なし）、正しくは**「ビビッテルおよびボスビックはイカアンより有意にスコアが高いが、ビビッテルとボスビックの間には統計学的に有意な差があるとは言えない」**と結論づけます。
+
+---
+
+# 発展課題4【Wow体験①：主効果が消える？！ クロスオーバー交互作用（`kadai3.tsv`）】
+
+**課題内容**：あるレストランで4種類のフライドチキン試作品（味 `Aji`：普通味／辛口 × 衣 `Koromo`：普通の衣／クリスピー）を作り、独立な60人の被験者（各15人）に試食してもらったスコアデータ（`kadai3.tsv`）を解析し、なぜ主効果が両方とも有意にならないのに交互作用が有意になるのか、またメニューをどの組み合わせに絞るべきかを考察しなさい。
+
+```{r}
+kadai3 <- read.delim("kadai3.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai3)
+
+# 4試験区の平均スコアを確認
+tapply(kadai3$Score, list(kadai3$Aji, kadai3$Koromo), mean)
+
+# 交互作用プロット（折れ線がX字に交差することを確認！）
+interaction.plot(kadai3$Koromo, kadai3$Aji, kadai3$Score,
+                 type = "b", pch = c(16, 17), col = c("#2563eb", "#dc2626"), lwd = 2,
+                 xlab = "衣の種類 (Koromo)", ylab = "平均スコア (Score)",
+                 trace.label = "味 (Aji)", main = "発展課題4: 味×衣のクロスオーバー交互作用")
+
+# (1) 繰り返しありの2元配置分散分析
+anova_k3 <- aov(Score ~ Aji * Koromo, data = kadai3)
+summary(anova_k3)
+
+# (2) 交互作用が有意(p = 0.0125)なので、4群(AjiKoromo)に展開してTukey多重比較
+kadai3$AjiKoromo <- as.factor(paste(kadai3$Aji, kadai3$Koromo, sep = ""))
+library(multcomp)
+res1_k3 <- aov(Score ~ AjiKoromo, data = kadai3)
+summary(res1_k3)
+res2_k3 <- glht(res1_k3, linfct = mcp(AjiKoromo = "Tukey"))
+summary(res2_k3)
+cld(res2_k3)
+
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(res2_k3), main = "発展課題4: 対応なし60人での4試作品CLD")
+```
+
+### 【発展課題4の考察】
+- **なぜ主効果が消えて交互作用のみが有意になったのか？**：
+  - 分散分析表を見ると、味（`Aji`）の主効果は $F = 3.053, p = 0.0860$（非有意）、衣（`Koromo`）の主効果も $F = 0.838, p = 0.3640$（非有意）である一方、**交互作用 `Aji:Koromo` は $F = 6.654, p = 0.0125 < 0.05$ で有意**となっています。
+  - 各組み合わせの平均値を見ると、**「辛口×クリスピー（$79.67$点）」と「普通味×普通の衣（$74.33$点）」が高く**、逆にミスマッチな「普通味×クリスピー（$71.00$点）」と「辛口×普通の衣（$72.67$点）」が低くなっています。このように効果の向きが逆転（クロスオーバー）しているため、味だけ・衣だけで平均をとると高低が相殺されて主効果が見えなくなっていました。
+- **4群展開の多重比較結果**：
+  - CLDは `普通味クリスピー = "a"`, `辛口普通の衣 = "ab"`, `普通味普通の衣 = "ab"`, `辛口クリスピー = "b"` となり、最も評価の高い `辛口クリスピー` は `普通味クリスピー` より有意にスコアが高い（差 $+8.67$点, $p = 0.0176$）ことが示されました。ただし、この対応なしデザイン（残差分散 $V_R = 60.18$）では `辛口クリスピー` と `辛口普通の衣` の差（$+7.00$点, $p = 0.0759$）は5%水準にわずかに届きませんでした。
+
+---
+
+# 発展課題5【Wow体験②：同一パネリスト15名の反復測定ANOVAによる個人差ノイズの除去（`kadai3_2.tsv`）】
+
+**課題内容**：発展課題4と同じスコアデータについて、実は別々の60人ではなく**「同一の15人のパネリスト（`Panel`: A〜O）が4種類すべてのフライドチキンを試食して採点した反復測定（対応あり）データ」**であった場合（`kadai3_2.tsv`）、評価者（`Panel`）をモデルに組み込んだ分散分析 `aov(Score ~ AjiKoromo + Panel)` と多重比較を行い、発展課題4から結果がどう変化するか考察しなさい。
+
+```{r}
+kadai3_2 <- read.delim("kadai3_2.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai3_2)
+
+# (1) パネリスト(Panel)の個人差を分離する反復測定分散分析（AjiKoromo + Panel）
+res1_k3_2 <- aov(Score ~ AjiKoromo + Panel, data = kadai3_2)
+summary(res1_k3_2)
+
+# (2) 個人差を補正したモデルに対するTukey-Kramer多重比較とCLD
+library(multcomp)
+res2_k3_2 <- glht(res1_k3_2, linfct = mcp(AjiKoromo = "Tukey"))
+summary(res2_k3_2)
+cld(res2_k3_2)
+
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(res2_k3_2), main = "発展課題5: パネリスト個人差(Panel)を分離した反復測定CLD")
+```
+
+### 【発展課題4（対応なし）と発展課題5（対応あり・反復測定）の比較考察】
+
+| 比較項目 | 発展課題4：対応なし（`Score ~ AjiKoromo`） | 発展課題5：対応あり反復測定（`Score ~ AjiKoromo + Panel`） |
+|:---|:---:|:---:|
+| **`AjiKoromo` の平方和・平均平方** | $S_A = 634.6, V_A = 211.53$ ($df=3$) | $S_A = 634.6, V_A = 211.53$ ($df=3$) ※全く同じ |
+| **パネリスト個人差 `Panel`** | 分離せず（残差に混入） | **$S_{\text{Panel}} = 2035.8, V_{\text{Panel}} = 145.42$** ($df=14, p = 6.15 \times 10^{-5}$) |
+| **残差 `Residuals`（誤差ノイズ）** | $S_R = 3370.0$, **$V_R = 60.18$** ($df=56$) | $S_R = 1334.2$, **$V_R = 31.77$** ($df=42$) **$\leftarrow$ 誤差分散が約半分に減少！** |
+| **`AjiKoromo` の $F$値・$p$値** | $F = 3.515, p = 0.0209$ (\*) | **$F = 6.659, p = 0.000884$ (\*\*\*)** |
+| **`辛口クリスピー - 辛口普通の衣`** | $SE = 2.833, t = 2.471, p = 0.0759$ (ns) | **$SE = 2.058, t = 3.401, p = 0.00785$ (\*\*) $\leftarrow$ 有意差を検出！** |
+| **Compact Letter Display (CLD)** | `普通クリ="a"`, `辛口普通="ab"`, `普通普通="ab"`, `辛口クリ="b"` | `普通クリ="a"`, **`辛口普通="a"`**, `普通普通="ab"`, `辛口クリ="b"` |
+
+- **統計学的考察（第7回「対応のあるt検定」とのつながり）**：
+  - 発展課題4では、パネリストごとの「いつも高めの点をつける人」「いつも厳しめの点をつける人」という**個人差（$S_{\text{Panel}} = 2035.8$）**がすべて残差平方和（$S_R = 3370.0$）に混ざっていたため、誤差分散 $V_R = 60.18$ が大きくなり、試作品間の差がノイズに埋もれていました。
+  - 発展課題5で `Score ~ AjiKoromo + Panel` としてパネリストの個人差を分離（ブロック化）したことで、残差平方和が $3370.0 - 2035.8 = 1334.2$ へと大幅に減少し、**誤差分散 $V_R$ が $60.18 \to 31.77$ と約半分**になりました。
+  - その結果、発展課題4では $p = 0.0759$ で有意にならなかった **`辛口クリスピー` vs `辛口普通の衣` が $p = 0.00785$ で1%水準有意**となり、CLDでも `辛口クリスピー ("b")` が `普通味クリスピー ("a")` と `辛口普通の衣 ("a")` の両方に対して明確に優れていることが実証されました。これは第7回で学んだ「対応のあるt検定による個体差ノイズの相殺」を多群比較へと拡張したものであり、実験デザイン（対応の有無）を正しくモデルに反映することの重要性を示しています。

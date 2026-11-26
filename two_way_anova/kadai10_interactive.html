@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>第10回 インタラクティブ演習ワークブック：2元配置分散分析と交互作用</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}], ignoredClasses: ['code-box', 'copy-btn']});"></script>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --secondary: #0d9488;
+      --accent: #d97706;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --code-bg: #1e293b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'BIZ UDGothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding-bottom: 100px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f766e 100%);
+      color: white;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    }
+
+    header h1 { font-size: 1.65rem; font-weight: 800; margin-bottom: 6px; }
+    header p { font-size: 0.95rem; color: #e2e8f0; }
+
+    /* Sticky Student Info & Score Bar */
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .user-inputs {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .user-inputs input {
+      padding: 7px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-family: inherit;
+    }
+
+    .user-inputs input:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .score-badge {
+      background: #eff6ff;
+      border: 2px solid #93c5fd;
+      color: var(--primary);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 28px auto;
+      padding: 0 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Task Cards */
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .badge-primary { background: #dbeafe; color: #1e40af; }
+    .badge-wow { background: #fef3c7; color: #b45309; }
+
+    /* Code Box */
+    .code-box {
+      background: var(--code-bg);
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.86rem;
+      line-height: 1.48;
+      overflow-x: auto;
+      position: relative;
+      margin: 12px 0;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #cbd5e1;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 0.74rem;
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.3); color: white; }
+
+    /* Forms & Validation */
+    .form-group {
+      margin: 14px 0;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 700;
+      font-size: 0.92rem;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin: 12px 0;
+    }
+
+    .input-field, select.input-field {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    textarea.input-field {
+      min-height: 88px;
+      resize: vertical;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn-check {
+      background: var(--primary-light);
+      color: white;
+    }
+    .btn-check:hover { background: var(--primary); }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+      color: white;
+      font-size: 1.05rem;
+      padding: 14px 28px;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+    }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(13, 148, 136, 0.35);
+    }
+
+    .feedback-box {
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .feedback-success {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .feedback-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+
+    /* Fixed Bottom Submission Bar */
+    .submit-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 2px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
+      z-index: 99;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .progress-info {
+      font-size: 0.95rem;
+      color: #475569;
+    }
+    .progress-bar-wrap {
+      width: 220px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* Callout */
+    .callout {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 0.92rem;
+    }
+    .callout-wow {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div style="max-width: 900px; margin: 0 auto 10px auto; text-align: left;">
+      <a href="index.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.85rem; font-weight: 600; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 999px;">← 第10回講義トップへ戻る</a>
+    </div>
+    <h1>🌾 生物情報処理演習 第10回：インタラクティブ演習ワークブック</h1>
+    <p>統計学的仮説検定 ④ 〜2元配置分散分析（Two-way ANOVA）と交互作用・反復測定ANOVA〜</p>
+  </header>
+
+  <!-- Sticky Top Bar for Student Identity & Score -->
+  <div class="sticky-bar">
+    <div class="user-inputs">
+      <label for="student-id" style="font-weight: 700; font-size: 0.9rem;">学籍番号:</label>
+      <input type="text" id="student-id" placeholder="例: 26101234" required oninput="updateProgress()">
+      <label for="student-name" style="font-weight: 700; font-size: 0.9rem;">氏名:</label>
+      <input type="text" id="student-name" placeholder="例: 名大 太郎" required oninput="updateProgress()">
+    </div>
+    <div class="score-badge">
+      <span>客観テスト得点:</span>
+      <span id="score-display" style="font-size: 1.15rem; color: #0284c7;">0</span>
+      <span>/ 100 点</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Overview -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📖 本日の提出課題の範囲・提出方法とデータセット</h2>
+        <span class="badge badge-primary">必読ガイド</span>
+      </div>
+      <p style="font-size: 0.95rem; margin-bottom: 12px;">
+        本日は、2つの要因（例：土壌×肥料、温度×銘柄、味×衣）が結果に与える<strong>主効果（Main Effect）と交互作用（Interaction）</strong>を検定する<strong>2元配置分散分析（Two-way ANOVA）</strong>、および交互作用の有無に応じた多重比較を行います。<br>
+        さらに、同一パネリスト15名が4種類の試作品を食べ比べた反復測定データを用いて、<strong>評価者の個人差（<code>Panel</code>）を分離することによる検出力の向上</strong>を検証します。
+      </p>
+      <div class="callout">
+        <strong>📥 課題用データセット（クリックでダウンロードし、RStudioの作業ディレクトリに配置してください）：</strong><br>
+        ・<a href="kadai/kadai1.tsv" download style="color: #1e40af; font-weight: 700;"><code>kadai1.tsv</code></a>: 土壌2種（<code>SoilA, SoilB</code>）× 肥料4段階（<code>N100〜N400</code>）の作物収量データ（課題1・課題2で使用）<br>
+        ・<a href="kadai/kadai2.tsv" download style="color: #1e40af; font-weight: 700;"><code>kadai2.tsv</code></a>: 温度2種（<code>冷蔵庫, 常温</code>）× 銘柄3種（<code>イカアン, ビビッテル, ボスビック</code>）の水おいしさ評定データ（課題3で使用）<br>
+        ・<a href="kadai/kadai3.tsv" download style="color: #1e40af; font-weight: 700;"><code>kadai3.tsv</code></a>: フライドチキンの味2種 × 衣2種（独立な60人が試食：発展課題4で使用）<br>
+        ・<a href="kadai/kadai3_2.tsv" download style="color: #1e40af; font-weight: 700;"><code>kadai3_2.tsv</code></a>: フライドチキン4種 × 同一パネリスト15名（反復測定：発展課題5で使用）<br>
+        ・<strong>提出方法</strong>：以下の<strong>課題1〜3・発展課題4〜5（各20点×5＝100点満点）および総合考察</strong>を入力し、最下部の<strong>「📥 提出用レポートHTMLを書き出す」</strong>ボタンでダウンロードされたHTMLファイルを提出してください。
+      </div>
+    </div>
+
+    <!-- Task 1 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題1：作物収量データの2元配置分散分析（土壌2種 × 肥料4段階）</h2>
+        <span class="badge badge-primary">基本検定（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        RStudioで <code>kadai1.tsv</code> を読み込み、繰り返しありの2元配置分散分析（<code>summary(aov(Yield ~ Soil * Fertilizer, data = kadai1))</code>）を実行して、土壌・肥料の主効果と交互作用（<code>Soil:Fertilizer</code>）の統計量を入力してください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>kadai1 &lt;- read.delim("kadai1.tsv", stringsAsFactors = TRUE)
+summary(kadai1)
+
+# 繰り返しありの2元配置分散分析（アスタリスク * で主効果と交互作用を同時検定）
+summary(aov(Yield ~ Soil * Fertilizer, data = kadai1))</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">土壌（<code>Soil</code>）の <code>F value</code> ($F$値):</label>
+          <input type="number" step="0.01" id="q1-fsoil" class="input-field" placeholder="例: 46.32">
+        </div>
+        <div class="form-group">
+          <label class="form-label">肥料（<code>Fertilizer</code>）の <code>F value</code> ($F$値):</label>
+          <input type="number" step="0.01" id="q1-ffert" class="input-field" placeholder="例: 29.68">
+        </div>
+        <div class="form-group">
+          <label class="form-label">交互作用（<code>Soil:Fertilizer</code>）の $F$ 値:</label>
+          <input type="number" step="0.01" id="q1-fint" class="input-field" placeholder="例: 4.19">
+        </div>
+        <div class="form-group">
+          <label class="form-label">交互作用（<code>Soil:Fertilizer</code>）の $p$ 値:</label>
+          <input type="number" step="0.001" id="q1-pint" class="input-field" placeholder="例: 0.0229">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">課題1の2元配置分散分析の統計的判定 ($\alpha=0.05$):</label>
+        <select id="q1-judge" class="input-field">
+          <option value="">選択してください</option>
+          <option value="all_sig">土壌の主効果・肥料の主効果・交互作用（Soil:Fertilizer）のすべてが有意（p &lt; 0.05）である</option>
+          <option value="main_only">土壌と肥料の主効果のみが有意であり、交互作用は有意ではない（p &gt; 0.05）</option>
+          <option value="none">主効果も交互作用もすべて有意ではない</option>
+        </select>
+      </div>
+      <button class="btn btn-check" onclick="checkQ1()">🔍 課題1を検証する</button>
+      <div id="q1-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題1の主効果（土壌・肥料）および交互作用の有無に関する解釈:</label>
+        <textarea id="q1-text" class="input-field" placeholder="土壌（SoilA vs SoilB）と肥料量（N100〜N400）の主効果、および両者の交互作用（p = 0.0229 < 0.05）が有意であることから何が言えるか記入してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題2：交互作用が有意な場合の8試験区展開とTukey-Kramer多重比較</h2>
+        <span class="badge badge-primary">多重比較（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        課題1で交互作用が有意となったため、<code>Soil</code> と <code>Fertilizer</code> を連結した8試験区（<code>SoilFert</code>）を作成し、Tukey-Kramer多重比較と <code>cld()</code> によるアルファベット表記を行ってください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code># SoilとFertilizerをつなげて8試験区の因子 SoilFert を作成
+kadai1$SoilFert &lt;- as.factor(paste(kadai1$Soil, kadai1$Fertilizer, sep = ""))
+summary(kadai1)
+
+library(multcomp)
+result1 &lt;- aov(Yield ~ SoilFert, data = kadai1)
+summary(result1)
+result2 &lt;- glht(result1, linfct = mcp(SoilFert = "Tukey"))
+summary(result2)
+cld(result2)
+
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(result2))</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><code>cld(result2)</code> で <code>SoilAN400</code> の文字:</label>
+          <select id="q2-cld-an400" class="input-field">
+            <option value="">選択してください</option>
+            <option value="a">"a"</option>
+            <option value="ab">"ab"</option>
+            <option value="ac">"ac"</option>
+            <option value="bc">"bc"</option>
+            <option value="c">"c"</option>
+            <option value="d">"d"</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>cld(result2)</code> で <code>SoilBN300</code> の文字:</label>
+          <select id="q2-cld-bn300" class="input-field">
+            <option value="">選択してください</option>
+            <option value="a">"a"</option>
+            <option value="ab">"ab"</option>
+            <option value="ac">"ac"</option>
+            <option value="bc">"bc"</option>
+            <option value="c">"c"</option>
+            <option value="d">"d"</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>cld(result2)</code> で <code>SoilBN400</code> の文字:</label>
+          <select id="q2-cld-bn400" class="input-field">
+            <option value="">選択してください</option>
+            <option value="a">"a"</option>
+            <option value="ab">"ab"</option>
+            <option value="bc">"bc"</option>
+            <option value="c">"c"</option>
+            <option value="d">"d"</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>SoilBN400 - SoilBN300</code> の調整済み $p$ 値:</label>
+          <input type="number" step="0.001" id="q2-p" class="input-field" placeholder="例: 0.0114">
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ2()">🔍 課題2を検証する</button>
+      <div id="q2-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題2のCLD付きグラフとANOVAの結果を合わせた結論・考察:</label>
+        <textarea id="q2-text" class="input-field" placeholder="土壌Aと土壌Bでの肥料増量に対する収量の伸び方の違い（相乗効果）と、CLDからどの試験区（SoilBN400 = 'd'）が他の試験区と比べてどう優れているかを具体的に記述してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">課題3：ミネラルウォーターのおいしさ評定（交互作用がない2-way ANOVA）</h2>
+        <span class="badge badge-primary">主効果比較（20点）</span>
+      </div>
+      <p style="font-size: 0.92rem; color: var(--text-muted);">
+        <code>kadai2.tsv</code>（温度 <code>Ondo</code>：冷蔵庫／常温 × 銘柄 <code>Meigara</code>：イカアン／ビビッテル／ボスビック）に対して2元配置分散分析を行い、交互作用が非有意であることを確認した上で、主効果ごとの多重比較を行ってください。
+      </p>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>kadai2 &lt;- read.delim("kadai2.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai2)
+
+# (1) 繰り返しありの2元配置分散分析
+summary(aov(Score ~ Ondo * Meigara, data = kadai2))
+
+# (2) 交互作用が非有意(p = 0.115)なので、主効果（Ondo と Meigara）ごとに多重比較
+library(multcomp)
+res_ondo &lt;- aov(Score ~ Ondo, data = kadai2)
+cld(glht(res_ondo, linfct = mcp(Ondo = "Tukey")))
+
+res_meigara &lt;- aov(Score ~ Meigara, data = kadai2)
+tukey_meigara &lt;- glht(res_meigara, linfct = mcp(Meigara = "Tukey"))
+summary(tukey_meigara)
+cld(tukey_meigara)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(tukey_meigara))</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">2-way ANOVAの <code>Ondo:Meigara</code>（交互作用）の $p$ 値:</label>
+          <input type="number" step="0.001" id="q3-pint" class="input-field" placeholder="例: 0.115">
+        </div>
+        <div class="form-group">
+          <label class="form-label">銘柄多重比較での <code>ボスビック - ビビッテル</code> の $p$ 値:</label>
+          <input type="number" step="0.001" id="q3-pbb" class="input-field" placeholder="例: 0.174">
+        </div>
+        <div class="form-group">
+          <label class="form-label">銘柄3種の <code>cld()</code> の結果（イカアン / ビビッテル / ボスビック）:</label>
+          <select id="q3-cld" class="input-field">
+            <option value="">選択してください</option>
+            <option value="a_b_b">イカアン = "a", ビビッテル = "b", ボスビック = "b"</option>
+            <option value="a_b_c">イカアン = "a", ボスビック = "b", ビビッテル = "c"</option>
+            <option value="a_a_a">3銘柄すべて "a"（差なし）</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">銘柄間のスコア比較に関する統計学的に正しい結論:</label>
+        <select id="q3-judge" class="input-field">
+          <option value="">選択してください</option>
+          <option value="correct">ビビッテルとボスビックはイカアンより有意に高いが、ビビッテルとボスビックの間には有意差はない</option>
+          <option value="wrong_order">ビビッテル、ボスビック、イカアンの順にすべて有意にスコアが高いと言える</option>
+        </select>
+      </div>
+      <button class="btn btn-check" onclick="checkQ3()">🔍 課題3を検証する</button>
+      <div id="q3-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">課題3の温度・銘柄の主効果と交互作用の解釈（なぜ「ビビッテル・ボスビック・イカアンの順に高い」と言ってはいけないのかを含む）:</label>
+        <textarea id="q3-text" class="input-field" placeholder="温度（冷蔵庫 vs 常温）の比較結果、銘柄3種の比較結果、およびビビッテルとボスビックのp値・CLDから注意すべき表現について記述してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 4 (Wow 1) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題4【Wow①：主効果が消える？！ クロスオーバー交互作用（<code>kadai3.tsv</code>）】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> 4種類のフライドチキン試作品（味 <code>Aji</code>：普通味／辛口 × 衣 <code>Koromo</code>：普通の衣／クリスピー）を独立な60人（各15人）に試食してもらった <code>kadai3.tsv</code> について、2元配置分散分析（<code>Score ~ Aji * Koromo</code>）と4群展開（<code>AjiKoromo</code>）の多重比較を行ってください。
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>kadai3 &lt;- read.delim("kadai3.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai3)
+
+# (1) 繰り返しありの2元配置分散分析（主効果 Aji, Koromo と 交互作用 Aji:Koromo の p値に注目！）
+summary(aov(Score ~ Aji * Koromo, data = kadai3))
+
+# (2) 交互作用が有意なので4試験区 (AjiKoromo) に展開してTukey多重比較
+kadai3$AjiKoromo &lt;- as.factor(paste(kadai3$Aji, kadai3$Koromo, sep = ""))
+library(multcomp)
+res1_k3 &lt;- aov(Score ~ AjiKoromo, data = kadai3)
+summary(res1_k3)
+res2_k3 &lt;- glht(res1_k3, linfct = mcp(AjiKoromo = "Tukey"))
+summary(res2_k3)
+cld(res2_k3)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">交互作用 <code>Aji:Koromo</code> の <code>F value</code> ($F$値):</label>
+          <input type="number" step="0.01" id="q4-fint" class="input-field" placeholder="例: 6.65">
+        </div>
+        <div class="form-group">
+          <label class="form-label">交互作用 <code>Aji:Koromo</code> の $p$ 値:</label>
+          <input type="number" step="0.001" id="q4-pint" class="input-field" placeholder="例: 0.0125">
+        </div>
+        <div class="form-group">
+          <label class="form-label">残差（<code>Residuals</code>, $df=56$）の平均平方 <code>Mean Sq</code> ($V_R$):</label>
+          <input type="number" step="0.1" id="q4-vr" class="input-field" placeholder="例: 60.2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">2-way ANOVAにおける主効果と交互作用の判定:</label>
+          <select id="q4-judge" class="input-field">
+            <option value="">選択してください</option>
+            <option value="int_only">主効果（Aji, Koromo）はどちらも非有意だが、交互作用（Aji:Koromo）のみが有意（p &lt; 0.05）</option>
+            <option value="main_only">主効果（Aji, Koromo）が有意であり、交互作用は非有意</option>
+            <option value="all_nonsig">主効果も交互作用もすべて非有意</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ4()">🔍 発展課題4を検証する</button>
+      <div id="q4-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">なぜ主効果が両方とも非有意なのに交互作用だけが有意になったのか？ またメニューをどの組み合わせに絞るべきかの考察:</label>
+        <textarea id="q4-text" class="input-field" placeholder="4つの組み合わせの平均スコア（辛口クリスピー 79.7点、普通味普通の衣 74.3点 vs 普通味クリスピー 71.0点、辛口普通の衣 72.7点）から、相性の良し悪し（クロスオーバー交互作用）とCLDの結果を考察してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Task 5 (Wow 2) -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">発展課題5【Wow②：同一パネリスト15名の反復測定ANOVAによる個人差の分離（<code>kadai3_2.tsv</code>）】</h2>
+        <span class="badge badge-wow">探究課題（20点）</span>
+      </div>
+      <div class="callout callout-wow">
+        <strong>問い：</strong> もし4種類のフライドチキンを別々の60人ではなく<strong>「同一の15人のパネリスト（<code>Panel</code>: A〜O）が4種類すべてを試食・採点したデータ（<code>kadai3_2.tsv</code>）」</strong>であった場合、評価者の個人差を分離する反復測定分散分析 <code>aov(Score ~ AjiKoromo + Panel, data = kadai3_2)</code> と多重比較を実行し、発展課題4（対応なし）から残差分散や $p$値・CLDがどう変化するか検証してください。
+      </div>
+      <div class="code-box"><button class="copy-btn" onclick="copyCode(this)">📋 コピー</button><code>kadai3_2 &lt;- read.delim("kadai3_2.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai3_2)
+
+# (1) 評価者の個人差 (Panel) をモデルに入れて分離する反復測定ANOVA
+res1_k3_2 &lt;- aov(Score ~ AjiKoromo + Panel, data = kadai3_2)
+summary(res1_k3_2)
+
+# (2) 個人差を分離したモデルでのTukey-Kramer多重比較とCLD
+library(multcomp)
+res2_k3_2 &lt;- glht(res1_k3_2, linfct = mcp(AjiKoromo = "Tukey"))
+summary(res2_k3_2)
+cld(res2_k3_2)</code></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><code>AjiKoromo</code> の <code>F value</code> ($F$値):</label>
+          <input type="number" step="0.01" id="q5-f" class="input-field" placeholder="例: 6.66">
+        </div>
+        <div class="form-group">
+          <label class="form-label">残差（<code>Residuals</code>, $df=42$）の平均平方 <code>Mean Sq</code> ($V_R$):</label>
+          <input type="number" step="0.1" id="q5-vr" class="input-field" placeholder="例: 31.8">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>辛口普通の衣 - 辛口クリスピー</code> の調整済み $p$ 値:</label>
+          <input type="number" step="0.001" id="q5-p" class="input-field" placeholder="例: 0.00785">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><code>cld(res2_k3_2)</code> での <code>辛口普通の衣</code> のCLD文字の変化:</label>
+          <select id="q5-cld" class="input-field">
+            <option value="">選択してください</option>
+            <option value="ab_to_a">発展4の "ab" から "a" に変わり、辛口クリスピー ("b") との有意差が検出された</option>
+            <option value="no_change">発展4と同じ "ab" のままで変化しなかった</option>
+            <option value="to_b">"b" に変わり、辛口クリスピーと同等になった</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-check" onclick="checkQ5()">🔍 発展課題5を検証する</button>
+      <div id="q5-feedback" class="feedback-box"></div>
+
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label">なぜパネリスト（<code>Panel</code>）をモデルに加えると残差分散（$60.18 \to 31.77$）が減少し、発展課題4と異なる結果（検出力の向上）が得られたのか説明しなさい:</label>
+        <textarea id="q5-text" class="input-field" placeholder="評価者ごとの採点の甘さ・辛さのばらつき（個人差 Sum Sq = 2035.8）が残差から引き算されたことによる誤差分散VRの減少と、実験デザインに合った検定法を選ぶ重要性について記述してください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+    <!-- Overall Discussion -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">総合考察：2元配置分散分析における「交互作用」と「ブロック（対応）要因」の意義</h2>
+        <span class="badge badge-primary">総合まとめ</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">総合考察（交互作用がある場合とない場合の多重比較の進め方の違い、および反復測定／ブロック要因による個人差ノイズの分離について）:</label>
+        <textarea id="overall-text" class="input-field" style="min-height: 120px;" placeholder="第10回全体を通して学んだ「相乗的交互作用（課題1・2）」「交互作用がない場合の主効果比較（課題3）」「クロスオーバー交互作用（発展4）」「反復測定による個人差ノイズの分離（発展5）」について総合的にまとめてください。" oninput="updateProgress()"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Submission Controller -->
+  <div class="submit-bar">
+    <div>
+      <div class="progress-info">
+        <strong>課題入力進捗:</strong> <span id="progress-percent">0%</span>
+        （必須入力項目をすべて入力すると100%になります）
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar-fill"></div>
+      </div>
+    </div>
+    <button class="btn btn-submit" id="btn-download" onclick="generateReportHTML()">
+      📥 提出用レポートHTMLを書き出す
+    </button>
+  </div>
+
+  <script>
+    // Copy Code Helper
+    function copyCode(btn) {
+      const box = btn.closest('.code-box');
+      const clone = box.cloneNode(true);
+      const b = clone.querySelector('.copy-btn');
+      if (b) b.remove();
+      navigator.clipboard.writeText(clone.innerText.trim()).then(() => {
+        btn.innerText = '✓ コピー完了！';
+        setTimeout(() => { btn.innerText = '📋 コピー'; }, 1500);
+      });
+    }
+
+    // Scores
+    let scores = { q1: 0, q2: 0, q3: 0, q4: 0, q5: 0 };
+
+    function updateTotalScore() {
+      const total = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      document.getElementById('score-display').innerText = total;
+      updateProgress();
+    }
+
+    // Validation Functions
+    function checkQ1() {
+      const fsoil = parseFloat(document.getElementById('q1-fsoil').value);
+      const ffert = parseFloat(document.getElementById('q1-ffert').value);
+      const fint = parseFloat(document.getElementById('q1-fint').value);
+      const pint = parseFloat(document.getElementById('q1-pint').value);
+      const judge = document.getElementById('q1-judge').value;
+      const fb = document.getElementById('q1-feedback');
+
+      if (isNaN(fsoil) || isNaN(ffert) || isNaN(fint) || isNaN(pint) || !judge) {
+        showFeedback(fb, false, 'すべての項目を選択・入力してください。');
+        return;
+      }
+
+      const soilOk = Math.abs(fsoil - 46.317) <= 0.15;
+      const fertOk = Math.abs(ffert - 29.683) <= 0.15;
+      const intOk = Math.abs(fint - 4.189) <= 0.1;
+      const pintOk = Math.abs(pint - 0.0229) <= 0.003;
+      const judgeOk = (judge === 'all_sig');
+
+      if (soilOk && fertOk && intOk && pintOk && judgeOk) {
+        scores.q1 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) Soil (F=46.32, p=4.22e-06)、Fertilizer (F=29.68, p=8.99e-07) の主効果に加え、交互作用 Soil:Fertilizer (F=4.189, p=0.0229 < 0.05) も有意であることを正しく確認できました！');
+      } else {
+        scores.q1 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。summary(aov(Yield ~ Soil * Fertilizer, data = kadai1)) の出力（Soil F=46.317, Fertilizer F=29.683, Soil:Fertilizer F=4.189, Pr(>F)=0.0229）を確認してください。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ2() {
+      const an400 = document.getElementById('q2-cld-an400').value;
+      const bn300 = document.getElementById('q2-cld-bn300').value;
+      const bn400 = document.getElementById('q2-cld-bn400').value;
+      const pval = parseFloat(document.getElementById('q2-p').value);
+      const fb = document.getElementById('q2-feedback');
+
+      if (!an400 || !bn300 || !bn400 || isNaN(pval)) {
+        showFeedback(fb, false, 'すべての項目を選択・入力してください。');
+        return;
+      }
+
+      const an400Ok = (an400 === 'bc');
+      const bn300Ok = (bn300 === 'c');
+      const bn400Ok = (bn400 === 'd');
+      const pOk = Math.abs(pval - 0.01136) <= 0.003;
+
+      if (an400Ok && bn300Ok && bn400Ok && pOk) {
+        scores.q2 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) SoilAN400="bc"、SoilBN300="c"、そして SoilBN400="d"（単独トップ！ SoilBN300との差も p=0.0114 で有意）と、土壌B×肥料N400の強い相乗効果を特定できました！');
+      } else {
+        scores.q2 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。cld(result2) の出力では SoilAN400="bc", SoilBN300="c", SoilBN400="d" となり、summary(result2) の SoilBN400 - SoilBN300 の p値は約 0.0114 (0.01136) です。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ3() {
+      const pint = parseFloat(document.getElementById('q3-pint').value);
+      const pbb = parseFloat(document.getElementById('q3-pbb').value);
+      const cld = document.getElementById('q3-cld').value;
+      const judge = document.getElementById('q3-judge').value;
+      const fb = document.getElementById('q3-feedback');
+
+      if (isNaN(pint) || isNaN(pbb) || !cld || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力・選択してください。');
+        return;
+      }
+
+      const pintOk = Math.abs(pint - 0.1152) <= 0.01;
+      const pbbOk = Math.abs(pbb - 0.1742) <= 0.01;
+      const cldOk = (cld === 'a_b_b');
+      const judgeOk = (judge === 'correct');
+
+      if (pintOk && pbbOk && cldOk && judgeOk) {
+        scores.q3 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) 交互作用は p=0.115 (>0.05) で非有意、銘柄比較では イカアン="a", ビビッテル="b", ボスビック="b"（後者2銘柄間は p=0.174 で有意差なし）と正しく判定できました！');
+      } else {
+        scores.q3 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。Ondo:Meigara の p値は 0.115、ボスビック - ビビッテル の p値は 0.1742 (> 0.05) でともに "b" を共有するため、この2銘柄間に有意差があるとは言えません。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ4() {
+      const fint = parseFloat(document.getElementById('q4-fint').value);
+      const pint = parseFloat(document.getElementById('q4-pint').value);
+      const vr = parseFloat(document.getElementById('q4-vr').value);
+      const judge = document.getElementById('q4-judge').value;
+      const fb = document.getElementById('q4-feedback');
+
+      if (isNaN(fint) || isNaN(pint) || isNaN(vr) || !judge) {
+        showFeedback(fb, false, 'すべての項目を入力・選択してください。');
+        return;
+      }
+
+      const fintOk = Math.abs(fint - 6.654) <= 0.1;
+      const pintOk = Math.abs(pint - 0.0125) <= 0.002;
+      const vrOk = Math.abs(vr - 60.18) <= 0.5;
+      const judgeOk = (judge === 'int_only');
+
+      if (fintOk && pintOk && vrOk && judgeOk) {
+        scores.q4 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) Aji (p=0.086) も Koromo (p=0.364) も単独の主効果は非有意なのに、交互作用 Aji:Koromo (F=6.654, p=0.0125) のみが有意になる「クロスオーバー交互作用」を確認できました！');
+      } else {
+        scores.q4 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。summary(aov(Score ~ Aji * Koromo, data = kadai3)) では Aji:Koromo の F value = 6.654, Pr(>F) = 0.0125、Residuals の Mean Sq = 60.2 (60.18) となり、交互作用のみが有意です。');
+      }
+      updateTotalScore();
+    }
+
+    function checkQ5() {
+      const fval = parseFloat(document.getElementById('q5-f').value);
+      const vr = parseFloat(document.getElementById('q5-vr').value);
+      const pval = parseFloat(document.getElementById('q5-p').value);
+      const cld = document.getElementById('q5-cld').value;
+      const fb = document.getElementById('q5-feedback');
+
+      if (isNaN(fval) || isNaN(vr) || isNaN(pval) || !cld) {
+        showFeedback(fb, false, 'すべての項目を入力・選択してください。');
+        return;
+      }
+
+      const fOk = Math.abs(fval - 6.659) <= 0.1;
+      const vrOk = Math.abs(vr - 31.77) <= 0.5;
+      const pOk = Math.abs(pval - 0.00785) <= 0.0015;
+      const cldOk = (cld === 'ab_to_a');
+
+      if (fOk && vrOk && pOk && cldOk) {
+        scores.q5 = 20;
+        showFeedback(fb, true, '🎉 正解です！(+20点) パネリストの個人差 (Panel) を分離したことで残差分散が 60.18 → 31.77 に半減し、AjiKoromo の F=6.659 (p=0.000884)、辛口普通の衣 vs 辛口クリスピー も p=0.00785 で有意（CLD: "ab" → "a"）になりました！');
+      } else {
+        scores.q5 = 0;
+        showFeedback(fb, false, '❌ 誤りがあります。summary(aov(Score ~ AjiKoromo + Panel, data = kadai3_2)) では AjiKoromo F=6.659、Residuals Mean Sq=31.77、辛口普通の衣 - 辛口クリスピー の p=0.00785、辛口普通の衣のCLDは "a" になります。');
+      }
+      updateTotalScore();
+    }
+
+    function showFeedback(elem, isSuccess, msg) {
+      elem.style.display = 'block';
+      elem.className = 'feedback-box ' + (isSuccess ? 'feedback-success' : 'feedback-error');
+      elem.innerText = msg;
+    }
+
+    // Progress Calculation
+    function updateProgress() {
+      const studentId = document.getElementById('student-id').value.trim();
+      const studentName = document.getElementById('student-name').value.trim();
+      const q1Text = document.getElementById('q1-text').value.trim();
+      const q2Text = document.getElementById('q2-text').value.trim();
+      const q3Text = document.getElementById('q3-text').value.trim();
+      const q4Text = document.getElementById('q4-text').value.trim();
+      const q5Text = document.getElementById('q5-text').value.trim();
+      const overallText = document.getElementById('overall-text').value.trim();
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+
+      let filledCount = 0;
+      if (studentId) filledCount++;
+      if (studentName) filledCount++;
+      if (totalScore >= 60) filledCount += 2;
+      if (totalScore >= 100) filledCount += 1;
+      if (q1Text.length >= 10) filledCount++;
+      if (q2Text.length >= 10) filledCount++;
+      if (q3Text.length >= 10) filledCount++;
+      if (q4Text.length >= 15) filledCount++;
+      if (q5Text.length >= 15) filledCount++;
+      if (overallText.length >= 20) filledCount++;
+
+      const pct = Math.min(100, Math.round((filledCount / 11) * 100));
+      document.getElementById('progress-percent').innerText = pct + '%';
+      document.getElementById('progress-bar-fill').style.width = pct + '%';
+    }
+
+    // Generate Submission HTML
+    function generateReportHTML() {
+      const sid = document.getElementById('student-id').value.trim();
+      const sname = document.getElementById('student-name').value.trim();
+
+      if (!sid || !sname) {
+        alert('学籍番号と氏名を入力してください。');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const totalScore = scores.q1 + scores.q2 + scores.q3 + scores.q4 + scores.q5;
+      const now = new Date().toLocaleString('ja-JP');
+
+      const reportData = {
+        lecture: 10,
+        studentId: sid,
+        studentName: sname,
+        submissionDate: now,
+        score: totalScore,
+        scoresDetail: scores,
+        q1: {
+          fsoil: document.getElementById('q1-fsoil').value,
+          ffert: document.getElementById('q1-ffert').value,
+          fint: document.getElementById('q1-fint').value,
+          pint: document.getElementById('q1-pint').value,
+          judge: document.getElementById('q1-judge').value,
+          text: document.getElementById('q1-text').value
+        },
+        q2: {
+          an400: document.getElementById('q2-cld-an400').value,
+          bn300: document.getElementById('q2-cld-bn300').value,
+          bn400: document.getElementById('q2-cld-bn400').value,
+          p: document.getElementById('q2-p').value,
+          text: document.getElementById('q2-text').value
+        },
+        q3: {
+          pint: document.getElementById('q3-pint').value,
+          pbb: document.getElementById('q3-pbb').value,
+          cld: document.getElementById('q3-cld').value,
+          judge: document.getElementById('q3-judge').value,
+          text: document.getElementById('q3-text').value
+        },
+        q4: {
+          fint: document.getElementById('q4-fint').value,
+          pint: document.getElementById('q4-pint').value,
+          vr: document.getElementById('q4-vr').value,
+          judge: document.getElementById('q4-judge').value,
+          text: document.getElementById('q4-text').value
+        },
+        q5: {
+          f: document.getElementById('q5-f').value,
+          vr: document.getElementById('q5-vr').value,
+          p: document.getElementById('q5-p').value,
+          cld: document.getElementById('q5-cld').value,
+          text: document.getElementById('q5-text').value
+        },
+        overallText: document.getElementById('overall-text').value
+      };
+
+      const metaJSON = JSON.stringify(reportData);
+
+      let hash = 0;
+      for (let i = 0; i < metaJSON.length; i++) {
+        hash = ((hash << 5) - hash) + metaJSON.charCodeAt(i);
+        hash |= 0;
+      }
+
+      const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>${sid}_${sname}_第10回課題レポート</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #1e293b; background: #fff; }
+    h1 { color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; font-size: 1.6rem; }
+    h2 { color: #0d9488; margin-top: 24px; font-size: 1.2rem; border-left: 4px solid #0d9488; padding-left: 8px; }
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+    .score-badge { font-size: 1.3rem; font-weight: 800; color: #0284c7; }
+    .item-box { background: #f1f5f9; padding: 12px; border-radius: 6px; margin: 8px 0; }
+    .text-box { background: #fff; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-top: 6px; white-space: pre-wrap; font-size: 0.95rem; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; font-size: 0.9rem; }
+    th { background: #f8fafc; }
+    @media print { body { margin: 0; padding: 0; } }
+  </style>
+  <!-- Embedded Grading Metadata for Automated Evaluation -->
+  <script id="submission-metadata" type="application/json" data-checksum="${hash}">
+  ${metaJSON}
+  <\/script>
+  <script id="grading-data" type="application/json" data-checksum="${hash}">
+  ${metaJSON}
+  <\/script>
+</head>
+<body>
+  <h1>生物情報処理演習 第10回 課題レポート</h1>
+  <div class="meta-box">
+    <div>
+      <p><strong>学籍番号：</strong> ${sid}</p>
+      <p><strong>氏名：</strong> ${sname}</p>
+      <p style="font-size: 0.85rem; color: #64748b;">提出生成日時: ${now}</p>
+    </div>
+    <div style="text-align: right;">
+      <p>客観テスト得点</p>
+      <div class="score-badge">${totalScore} / 100 点</div>
+    </div>
+  </div>
+
+  <h2>1. 課題1（土壌×肥料の作物収量 2元配置分散分析: 20点）</h2>
+  <table>
+    <tr><th>Soil F値</th><th>Fertilizer F値</th><th>交互作用 F値</th><th>交互作用 p値</th><th>判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q1.fsoil || '-'}</td><td>${reportData.q1.ffert || '-'}</td><td>${reportData.q1.fint || '-'}</td><td>${reportData.q1.pint || '-'}</td><td>${reportData.q1.judge || '-'}</td><td>${scores.q1} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>主効果および交互作用の解釈:</strong>
+    <div class="text-box">${reportData.q1.text || '（未記入）'}</div>
+  </div>
+
+  <h2>2. 課題2（8試験区展開 SoilFert のTukey多重比較とCLD: 20点）</h2>
+  <table>
+    <tr><th>SoilAN400 CLD</th><th>SoilBN300 CLD</th><th>SoilBN400 CLD</th><th>BN400-BN300 p値</th><th>得点</th></tr>
+    <tr><td>${reportData.q2.an400 || '-'}</td><td>${reportData.q2.bn300 || '-'}</td><td>${reportData.q2.bn400 || '-'}</td><td>${reportData.q2.p || '-'}</td><td>${scores.q2} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>CLD付きグラフと最適栽培条件の考察:</strong>
+    <div class="text-box">${reportData.q2.text || '（未記入）'}</div>
+  </div>
+
+  <h2>3. 課題3（ミネラルウォーター評定：交互作用なしの2-way ANOVAと多重比較: 20点）</h2>
+  <table>
+    <tr><th>交互作用 p値</th><th>ボスビック-ビビッテル p値</th><th>銘柄CLD</th><th>統計的結論</th><th>得点</th></tr>
+    <tr><td>${reportData.q3.pint || '-'}</td><td>${reportData.q3.pbb || '-'}</td><td>${reportData.q3.cld || '-'}</td><td>${reportData.q3.judge || '-'}</td><td>${scores.q3} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>温度・銘柄の主効果と多重比較の解釈:</strong>
+    <div class="text-box">${reportData.q3.text || '（未記入）'}</div>
+  </div>
+
+  <h2>4. 発展課題4【Wow①：フライドチキン試食のクロスオーバー交互作用】(20点)</h2>
+  <table>
+    <tr><th>交互作用 Aji:Koromo F値</th><th>交互作用 p値</th><th>残差分散 VR (df=56)</th><th>判定</th><th>得点</th></tr>
+    <tr><td>${reportData.q4.fint || '-'}</td><td>${reportData.q4.pint || '-'}</td><td>${reportData.q4.vr || '-'}</td><td>${reportData.q4.judge || '-'}</td><td>${scores.q4} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>クロスオーバー交互作用とメニュー選定の考察:</strong>
+    <div class="text-box">${reportData.q4.text || '（未記入）'}</div>
+  </div>
+
+  <h2>5. 発展課題5【Wow②：同一パネリスト15名の反復測定ANOVAによる個人差分離】(20点)</h2>
+  <table>
+    <tr><th>AjiKoromo F値</th><th>残差分散 VR (df=42)</th><th>辛口普通-辛口クリスピー p値</th><th>CLDの変化</th><th>得点</th></tr>
+    <tr><td>${reportData.q5.f || '-'}</td><td>${reportData.q5.vr || '-'}</td><td>${reportData.q5.p || '-'}</td><td>${reportData.q5.cld || '-'}</td><td>${scores.q5} / 20点</td></tr>
+  </table>
+  <div class="item-box">
+    <strong>パネリスト個人差（Panel）の分離による誤差分散減少と検出力向上の考察:</strong>
+    <div class="text-box">${reportData.q5.text || '（未記入）'}</div>
+  </div>
+
+  <h2>6. 総合考察</h2>
+  <div class="item-box">
+    <div class="text-box">${reportData.overallText || '（未記入）'}</div>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${sid}_${sname}_第10回課題レポート.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert(`✅ レポートHTMLを生成・保存しました！\n\nファイル名: ${sid}_${sname}_第10回課題レポート.html\n\nこのファイルを大学の提出システム（小テスト・TACT）に提出してください。`);
+    }
+  </script>
+</body>
+</html>

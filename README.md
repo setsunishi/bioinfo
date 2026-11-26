@@ -53,15 +53,31 @@ bioinfo/
 │       ├── kadai2_t_vs_ANOVA.csv     # イネ76系統 茎葉重減少量（t検定 vs 1-way ANOVA 同値性検証用）
 │       ├── トマト糖度スタック形式.xlsx # 授業内練習用：トマト4種肥料の糖度データ（スタック形式）
 │       └── トマト糖度.xlsx           # 授業内練習用：トマト4種肥料の糖度データ（ワイド形式）
+├── two_way_anova/                    # 【第10回】検定④：2元配置分散分析と交互作用（完成版）
+│   ├── index.html                    # 第10回 学生向けポータル（表紙・提出範囲完全統一ガイド付）
+│   ├── slieds.html / slides.html     # Web講義スライド（全29枚、交互作用プロットSVG・解答アコーディオン付）
+│   ├── slides.md                     # スライド原稿 Markdown
+│   ├── 生物情報処理演習_検定4_改善版スライド.pptx # PowerPoint版スライド
+│   ├── ひな型.Rmd                    # R Markdown 演習ひな型（コピーボタン付）
+│   ├── kadai10_interactive.html      # 学生用インタラクティブ課題ワークブック（提出用HTML出力機能付）
+│   ├── grader_dashboard.html         # 【教員用・非公開リンク】ドラッグ＆ドロップ一括採点ダッシュボード
+│   ├── grade_submissions.R           # 【教員用・非公開リンク】Rによる提出HTML一括採点スクリプト
+│   ├── kadai1.tsv / kadai2.tsv / kadai3.tsv / kadai3_2.tsv # Rmd直接実行用データ
+│   └── kadai/                        # 演習用データセット一式
+│       ├── kadai1.tsv                # 課題1・2：土壌2種×肥料4段階の作物収量データ（各3反復, N=24）
+│       ├── kadai2.tsv                # 課題3：温度2種×銘柄3種のミネラルウォーター評定データ（各5反復, N=30）
+│       ├── kadai3.tsv                # 発展課題4：フライドチキン味2種×衣2種（独立60人, N=60）
+│       ├── kadai3_2.tsv              # 発展課題5：フライドチキン4種×同一パネリスト15名（反復測定, N=60）
+│       └── renshu1.csv / renshu2.tsv / renshu3.tsv / renshu4.tsv # 授業内練習用データ
 ├── 2025lecture7/                     # 【過去資料】第7回（対応のあるt検定）元資料一式
 ├── 2025lecture8/                     # 【過去資料】第8回（独立2群のt検定）元資料 & 試作HTML一式
 ├── 2025lecture9/                     # 【過去資料】第9回（1元配置分散分析・多重比較）元資料一式
-├── 2025lecture10/                    # 【次回作成用】第10回（2元配置分散分析・交互作用）元資料一式
+├── 2025lecture10/                    # 【過去資料】第10回（2元配置分散分析・交互作用）元資料一式
 └── 2025lecture11/                    # 【次回作成用】第11回（ノンパラメトリック検定）元資料一式
 ```
 
 > **重要（教員用採点ファイルについて）**  
-> `grader_dashboard.html` および `grade_submissions.R` は管理・継続開発のため同じフォルダ（`paired_t_test/`、`unpaired_t_test/`、`one_way_anova/`）内に配置していますが、**学生向けの表紙（`index.html`）からは一切リンクしていません**。
+> `grader_dashboard.html` および `grade_submissions.R` は管理・継続開発のため同じフォルダ（`paired_t_test/`、`unpaired_t_test/`、`one_way_anova/`、`two_way_anova/`）内に配置していますが、**学生向けの表紙（`index.html`）からは一切リンクしていません**。
 
 ---
 
@@ -70,7 +86,7 @@ bioinfo/
 1. **第7回（`paired_t_test/`）**：1標本t検定・対応のあるt検定（同一株の前後比較、個体差ノイズ相殺）
 2. **第8回（`unpaired_t_test/`）**：対応のない2標本t検定（独立2群比較、Student vs Welch）
 3. **第9回（`one_way_anova/`）**：1元配置分散分析（One-way ANOVA）と多重比較（Tukey / Bonferroni / Holm / Dunnett ＋ 発展コラム：FDR (BH法)）
-4. **第10回（`two_way_anova/` 予定）**：2元配置分散分析（Two-way ANOVA）と交互作用
+4. **第10回（`two_way_anova/`）**：2元配置分散分析（Two-way ANOVA）と交互作用・反復測定分散分析
 5. **第11回（`non_parametric/` 予定）**：ノンパラメトリック検定（Wilcoxon / Mann-Whitney / Kruskal-Wallis）
 
 ---
@@ -149,7 +165,41 @@ Remote Agent で本リポジトリの作業を継続する際は、以下の設�
   - (1)(2) 等分散仮定：Student $t = -4.759292 \implies t^2 = 22.65086 = F$, $df = (1, 74)$, $p = 9.394 \times 10^{-6}$
   - (3)(4) 等分散仮定しない（Welch）：Welch $t = -4.945726 \implies t^2 = 24.46020 = F$, $df = (1, 49.342)$, $p = 9.193 \times 10^{-6}$
 
-### 7. UI / コードブロック規約
+### 7. 教育的デザインの柱（第10回 `two_way_anova` の実装仕様）
+- **主効果と交互作用の視覚的・数理的理解**：
+  - 交互作用プロット（折れ線グラフ）の3パターン（①平行＝交互作用なし、②非平行・扇状＝相乗的交互作用、③X字交差＝クロスオーバー逆転交互作用）をSVGで図解。
+  - 交互作用の有無に応じた多重比較の分岐ルール（交互作用が非有意なら有意な主効果ごとに比較、交互作用が有意なら `paste(A, B, sep="")` で全 $a \times b$ 試験区を1次元に展開してTukey-Kramer法＋CLD付与）を明確化。
+- **2つの「発見（Wow!）」体験の組み込み**：
+  1. **主効果が消えるクロスオーバー（逆転）交互作用（発展4：`kadai3.tsv`）**：フライドチキンの味（普通／辛口）×衣（普通／クリスピー）の試食データ（独立60人）で、`Aji` の主効果（$p = 0.0860$）も `Koromo` の主効果（$p = 0.3640$）も非有意なのに、交互作用 `Aji:Koromo`（$F = 6.654, p = 0.0125$）のみが有意になる現象を通して、「普通味×普通の衣（74.3点）」「辛口×クリスピー（79.7点）」という組み合わせの相性を統計的に証明させる。
+  2. **反復測定ANOVAによる個人差ノイズの分離（発展5：`kadai3_2.tsv`）**：同一パネリスト15名（`Panel`: A〜O）が4種を食べ比べた反復測定モデル `aov(Score ~ AjiKoromo + Panel)` により、パネリスト個人差（$S_{\text{Panel}} = 2035.8, df=14$）を残差から引き算することで残差分散 $V_R$ が $60.18 \to 31.77$ に半減し、発展4では $p = 0.0759$ で非有意だった `辛口普通の衣 vs 辛口クリスピー` が $p = 0.00785$ で有意（CLD: `"ab"` $\to$ `"a"`）になることを検証させる（第7回「対応のあるt検定」の多群版）。
+
+### 8. 第10回データの正解値リファレンス
+- **課題1（`kadai1.tsv` 土壌2種×肥料4段階, $N=24$, `aov(Yield ~ Soil * Fertilizer)`）**：
+  - `Soil`：$df = 1, S_A = 66.00, F = 46.317, p = 4.22 \times 10^{-6}$
+  - `Fertilizer`：$df = 3, S_B = 126.90, V_B = 42.30, F = 29.683, p = 8.99 \times 10^{-7}$
+  - `Soil:Fertilizer`（交互作用）：$df = 3, S_{A \times B} = 17.91, V_{A \times B} = 5.97, F = 4.189, p = 0.0229$（有意）
+  - `Residuals`：$df = 16, S_R = 22.80, V_R = 1.425$
+- **課題2（`kadai1.tsv` 8試験区展開 `SoilFert` のTukey多重比較 & CLD）**：
+  - `cld`：`SoilAN100="a", SoilAN200="ab", SoilAN300="ac", SoilAN400="bc", SoilBN100="ab", SoilBN200="bc", SoilBN300="c", SoilBN400="d"`
+  - `SoilBN400 - SoilBN300`：差 $+4.133\text{ kg}, t = 4.241, p = 0.01136$
+- **課題3（`kadai2.tsv` 温度2種×銘柄3種, $N=30$, `aov(Score ~ Ondo * Meigara)`）**：
+  - `Ondo`：$df = 1, S_A = 67.50, F = 21.316, p = 0.00011$（`冷蔵庫="a"` $8.0$点 $>$ `常温="b"` $5.0$点）
+  - `Meigara`：$df = 2, S_B = 155.00, V_B = 77.50, F = 24.474, p = 1.61 \times 10^{-6}$
+  - `Ondo:Meigara`（交互作用）：$df = 2, S_{A \times B} = 15.00, V_{A \times B} = 7.50, F = 2.368, p = 0.1152$（非有意）
+  - 銘柄別Tukey CLD：`イカアン="a"` ($3.5$点), `ビビッテル="b"` ($9.0$点), `ボスビック="b"` ($7.0$点)（`ボスビック - ビビッテル` は $p = 0.1742$ で有意差なし）
+- **発展4（`kadai3.tsv` 味2種×衣2種, 独立60人, `aov(Score ~ Aji * Koromo)`）**：
+  - `Aji`：$df = 1, S_A = 183.75, F = 3.053, p = 0.0860$（非有意）
+  - `Koromo`：$df = 1, S_B = 50.42, F = 0.838, p = 0.3640$（非有意）
+  - `Aji:Koromo`（交互作用）：$df = 1, S_{A \times B} = 400.42, F = 6.654, p = 0.0125$（有意）
+  - `Residuals`：$df = 56, S_R = 3370.0, V_R = 60.18$
+  - 4群展開 `AjiKoromo` のCLD：`普通味クリスピー="a"`, `普通味普通の衣="ab"`, `辛口クリスピー="b"`, `辛口普通の衣="ab"`（`辛口普通の衣 - 辛口クリスピー` は $p = 0.0759$）
+- **発展5（`kadai3_2.tsv` 同一15人反復測定, `aov(Score ~ AjiKoromo + Panel)`）**：
+  - `AjiKoromo`：$df = 3, S_A = 634.6, V_A = 211.53, F = 6.659, p = 0.000884$
+  - `Panel`：$df = 14, S_{\text{Panel}} = 2035.8, V_{\text{Panel}} = 145.42, F = 4.578, p = 6.15 \times 10^{-5}$
+  - `Residuals`：$df = 42, S_R = 1334.2, V_R = 31.77$
+  - `glht` Tukey CLD：`普通味クリスピー="a"`, `普通味普通の衣="ab"`, `辛口クリスピー="b"`, `辛口普通の衣="a"`（`辛口普通の衣 - 辛口クリスピー` が $p = 0.00785$ で有意に変化）
+
+### 9. UI / コードブロック規約
 - すべてのRコードブロックにはワンクリック「📋 コピー」ボタンを付与する。
 - コードブロック（`.code-box`）は上下に余計な空白が入らないよう、`<code>` 内の先頭・末尾の改行を除去し、コンパクトなパディング（`padding: 8px 14px;`）を維持する。
-- 学生用課題ページ（`kadai7_interactive.html` / `kadai8_interactive.html` / `kadai9_interactive.html`）から出力される提出用HTMLには `<script id="grading-data" type="application/json">` として解答JSONが埋め込まれ、`grader_dashboard.html`（ブラウザ上でのドラッグ＆ドロップ）または `grade_submissions.R` で即座に一括採点・CSV出力ができる仕組みになっている。
+- 学生用課題ページ（`kadai7_interactive.html` / `kadai8_interactive.html` / `kadai9_interactive.html` / `kadai10_interactive.html`）から出力される提出用HTMLには `<script id="grading-data" type="application/json">` として解答JSONが埋め込まれ、`grader_dashboard.html`（ブラウザ上でのドラッグ＆ドロップ）または `grade_submissions.R` で即座に一括採点・CSV出力ができる仕組みになっている。

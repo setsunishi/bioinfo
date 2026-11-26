@@ -1,0 +1,2104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物情報処理演習 第10回：統計学的仮説検定 ④（2元配置分散分析と交互作用）</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDGothic:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- KaTeX for crisp LaTeX math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0d9488;
+      --accent: #d97706;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --bg-dark: #0f172a;
+      --slide-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --code-bg: #1e293b;
+      --code-text: #f8fafc;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-dark);
+      font-family: 'Plus Jakarta Sans', 'BIZ UDGothic', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text-main);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 50;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+      font-size: 0.88rem;
+    }
+
+    .top-bar .title {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-bar .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #f8fafc;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    /* Slide Viewport */
+    .slide-viewport {
+      position: absolute;
+      top: 48px;
+      bottom: 46px;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 28px;
+    }
+
+    .slide {
+      width: 100%;
+      max-width: 1200px;
+      height: 100%;
+      max-height: 700px;
+      background: var(--slide-bg);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+      display: none;
+      flex-direction: column;
+      padding: 28px 44px;
+      position: relative;
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    .slide.active {
+      display: flex;
+      animation: fadeIn 0.22s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 11px;
+      flex-shrink: 0;
+    }
+
+    .slide-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .badge-intro { background: #dbeafe; color: #1e40af; }
+    .badge-theory { background: #ccfbf1; color: #115e59; }
+    .badge-practice { background: #fef3c7; color: #92400e; }
+    .badge-alert { background: #fee2e2; color: #991b1b; }
+
+    .slide-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.25;
+    }
+
+    .slide-subtitle {
+      font-size: 0.96rem;
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    /* Slide Body */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      justify-content: flex-start;
+      font-size: 0.98rem;
+      line-height: 1.56;
+    }
+
+    /* Two / Three Columns */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    /* Cards */
+    .card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .card.primary {
+      border-left: 4px solid var(--primary-light);
+    }
+
+    .card.secondary {
+      border-left: 4px solid var(--secondary);
+    }
+
+    .card.accent {
+      border-left: 4px solid var(--accent);
+      background: #fffbeb;
+    }
+
+    .card.danger {
+      border-left: 4px solid #ef4444;
+      background: #fef2f2;
+    }
+
+    .card h3 {
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Code Block */
+    .code-box {
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.86rem;
+      line-height: 1.48;
+      overflow-x: auto;
+      position: relative;
+      border: 1px solid #334155;
+      user-select: text;
+    }
+    .code-box code {
+      font-family: inherit;
+      white-space: pre;
+      display: block;
+      margin: 0;
+      padding: 0;
+    }
+
+    .code-box .copy-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: #94a3b8;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .code-box .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+
+    /* Key takeaway box */
+    .takeaway {
+      background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-weight: 600;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .takeaway-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    /* Math Formula Display */
+    .formula-box {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 1.08rem;
+      color: #0f172a;
+      border: 1px dashed #cbd5e1;
+    }
+
+    /* KaTeX Styles */
+    .katex {
+      font-size: 1.05em !important;
+    }
+    .formula-box .katex {
+      font-size: 1.15em !important;
+    }
+    .formula-box .katex-display {
+      margin: 0.2em 0 !important;
+    }
+
+    /* Lists */
+    ul, ol {
+      padding-left: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    li {
+      line-height: 1.5;
+    }
+
+    li strong {
+      color: var(--primary);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text-main);
+      text-align: left;
+      padding: 7px 11px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 7px 11px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 46px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      font-size: 0.85rem;
+      z-index: 20;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-wrap {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 20px;
+      background: rgba(255, 255, 255, 0.1);
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--primary-light));
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
+    /* Modal for Slide Jump */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 90%;
+      max-width: 820px;
+      max-height: 80vh;
+      border-radius: 12px;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+
+    .modal-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .modal-item {
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .modal-item:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e3a8a;
+    }
+
+    /* Print Style */
+    @media print {
+      html, body {
+        background: transparent;
+        overflow: visible;
+        height: auto;
+      }
+      .top-bar, .bottom-bar, .modal { display: none !important; }
+      .slide-viewport { position: static; padding: 0; display: block; overflow: visible; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 40px;
+      }
+      .spoiler-box[open] .spoiler-body,
+      .spoiler-box .spoiler-body {
+        display: block !important;
+      }
+    }
+
+    /* Clickable Spoiler / Accordion for Task Answers */
+    details.spoiler-box {
+      border: 2px dashed #3b82f6;
+      border-radius: 10px;
+      background: #f8fafc;
+      overflow: visible;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    details.spoiler-box[open] {
+      border-style: solid;
+      border-color: #2563eb;
+      background: #ffffff;
+    }
+    details.spoiler-box summary {
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #1e3a8a;
+      background: linear-gradient(90deg, #eff6ff 0%, #e0f2fe 100%);
+      border-radius: 8px;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    details.spoiler-box[open] summary {
+      border-radius: 8px 8px 0 0;
+    }
+    details.spoiler-box summary::-webkit-details-marker {
+      display: none;
+    }
+    details.spoiler-box summary::after {
+      content: "▼ クリックして開く";
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #2563eb;
+      background: #ffffff;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+    }
+    details.spoiler-box[open] summary::after {
+      content: "▲ 閉じる";
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    details.spoiler-box .spoiler-body {
+      padding: 12px 16px;
+      border-top: 1px solid #dbeafe;
+    }
+
+    /* Diagram Container */
+    .svg-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .svg-box svg {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <div class="top-bar">
+    <div class="title">
+      <span>🌾 生物情報処理演習 第10回</span>
+      <span style="color: #64748b;">|</span>
+      <span style="font-weight: 400; color: #cbd5e1;">統計学的仮説検定 ④（2元配置分散分析と交互作用）</span>
+    </div>
+    <div class="controls">
+      <a href="index.html" class="btn">🏠 演習ポータルへ</a>
+      <button class="btn" id="toggleSpoilersBtn" onclick="toggleAllSpoilers()">👁️ 課題解答をすべて開く</button>
+      <button class="btn" onclick="toggleModal()">📋 スライド目次</button>
+      <button class="btn" onclick="toggleFullScreen()">⛶ 全画面</button>
+    </div>
+  </div>
+
+  <!-- Main Slide Viewport -->
+  <div class="slide-viewport">
+
+    <!-- Slide 1: Title -->
+    <div class="slide active">
+      <div class="slide-header" style="border: none; margin-bottom: 10px;">
+        <span class="badge badge-intro">第10回 講義・演習</span>
+      </div>
+      <div class="slide-body" style="justify-content: center; align-items: center; text-align: center; gap: 24px;">
+        <div style="font-size: 1.1rem; color: var(--secondary); font-weight: 700; letter-spacing: 0.1em;">
+          BIOLOGICAL DATA ANALYSIS & INFERENCE
+        </div>
+        <h1 style="font-size: 2.55rem; font-weight: 900; color: var(--primary); line-height: 1.25;">
+          統計学的仮説検定 ④
+        </h1>
+        <div style="font-size: 1.32rem; color: var(--text-muted); font-weight: 500;">
+          〜2元配置分散分析（Two-way ANOVA）と交互作用・反復測定分散分析〜
+        </div>
+        <div style="margin-top: 18px; padding: 12px 28px; background: #f8fafc; border-radius: 9999px; border: 1px solid var(--border); font-size: 0.95rem; color: #475569;">
+          生物情報処理演習 | 実習課題：土壌×肥料の収量比較（<code>kadai1.tsv</code>）・水評定（<code>kadai2.tsv</code>）・チキン試食（<code>kadai3.tsv</code>）
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Goals -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">イントロダクション</span>
+          <h2 class="slide-title">本日のゴール（What & Why）</h2>
+        </div>
+        <span class="slide-subtitle">「2つの要因（要因A×要因B）」を同時に解析し、相乗効果・逆転効果（交互作用）を見抜く</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🎯</span>
+          <span>「土壌A・B × 肥料4段階」「味付け × 衣の種類」── 2つの要因の組み合わせで結果がどう変わるかを科学的に証明する！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>1. 主効果と交互作用（Interaction）の理解</h3>
+            <p>各要因が単独で効く<strong>「主効果（足し算）」</strong>と、組み合わせによって効き方が変わる<strong>「交互作用（相乗効果・相殺効果）」</strong>の違いを数理とグラフで理解する。</p>
+          </div>
+          <div class="card secondary">
+            <h3>2. 交互作用の有無による多重比較の分岐</h3>
+            <p>交互作用が<strong>非有意なら主効果ごとに比較</strong>し、交互作用が<strong>有意なら全試験区（$a \times b$ 群）を1次元に展開（<code>paste()</code>）して比較</strong>する手順を習得する。</p>
+          </div>
+          <div class="card accent">
+            <h3>3. モデル式 <code>A * B</code> と <code>A + B</code> の使い分け</h3>
+            <p>繰り返しあり（<code>Y ~ A * B</code>）と、繰り返しなし・対応のある反復測定（<code>Y ~ A + B</code>）の自由度分割の違いを理解する。</p>
+          </div>
+          <div class="card">
+            <h3>4. 2つの「発見（Wow!）」体験</h3>
+            <p>【発見①】主効果が両方非有意なのに交互作用だけが有意になる<strong>「クロスオーバー交互作用」</strong><br>【発見②】評価者の個人差（<code>Panel</code>）を分離して検出力を高める<strong>「多群のノイズキャンセリング」</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: 5-Lecture Roadmap -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">全体像</span>
+          <h2 class="slide-title">生物統計・仮説検定ロードマップ（全5回）</h2>
+        </div>
+        <span class="slide-subtitle">第9回「1要因の多群比較」から、第10回「2要因の多群比較＆対応のある多群比較」へ</span>
+      </div>
+      <div class="slide-body">
+        <div class="takeaway">
+          <span class="takeaway-icon">🗺️</span>
+          <span>第9回で学んだ「変動の分割」と「<code>multcomp</code> によるCLD表記（<code>a, b, c</code>）」が、本日の2元配置分散分析でもそのまま活躍します！</span>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第7回・第8回：2群の t検定（対応あり / 対応なし）</div>
+            <p>・第7回：同一株の前後比較（引き算による個体差ノイズの相殺）<br>・第8回：独立2群の比較（Student vs Welch）</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第9回（前回）：1元配置分散分析と多重比較</div>
+            <p><strong>1つの要因</strong>で分けられた3群以上の比較（<code>aov(Y ~ X)</code>）。Tukey-Kramer法・Bonferroni法・Holm法・Dunnett法とCLD。</p>
+          </div>
+          <div class="card primary" style="border-width: 2px;">
+            <div style="font-weight: 800; color: var(--primary); margin-bottom: 4px;">👉 第10回（本日）：2元配置分散分析（Two-way ANOVA）</div>
+            <p><strong>2つの要因（要因A×要因B）</strong>の主効果と<strong>交互作用</strong>（<code>aov(Y ~ A * B)</code>）、および<strong>対応のある多群比較（反復測定：<code>aov(Y ~ A + ID)</code>）</strong>。</p>
+          </div>
+          <div class="card">
+            <div style="font-weight: 700; color: #475569; margin-bottom: 4px;">第11回（次回）：ノンパラメトリック検定</div>
+            <p>正規性が仮定できないデータの順位和検定（Wilcoxon / Mann-Whitney / Kruskal-Wallis / Steel-Dwass）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Timeline & Scope Clarification -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">進行予定・課題範囲</span>
+          <h2 class="slide-title">本日のタイムラインと「練習／提出課題」の明確な区分</h2>
+        </div>
+        <span class="slide-subtitle">どこまでが練習で、どこからが提出課題かを最初に確認！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>Part 1：理論 ＆ 授業内練習1〜4（約40分・提出不要）</h3>
+            <ol>
+              <li>2元配置分散分析の原理：主効果・交互作用・平方和の分割</li>
+              <li><strong>練習1（<code>renshu1.csv</code>）</strong>：繰り返しあり・<strong>交互作用なし</strong>（植物種×肥料）</li>
+              <li><strong>練習2（<code>renshu2.tsv</code>）</strong>：繰り返しあり・<strong>交互作用あり</strong>（薬品×濃度 $\to$ 6群展開）</li>
+              <li><strong>練習3（<code>renshu3.tsv</code>）</strong>：<strong>繰り返しなし</strong>（温度＋触媒：<code>Y ~ A + B</code>）</li>
+              <li><strong>練習4（<code>renshu4.tsv</code>）</strong>：<strong>対応のある多群比較</strong>（血圧の経時変化：<code>mmHg ~ Time + ID</code>）</li>
+            </ol>
+          </div>
+          <div class="card secondary" style="border-width: 2px;">
+            <h3>Part 2：本日の提出課題（全5問・100点満点）</h3>
+            <ul>
+              <li><strong>課題1（20点）</strong>：<code>kadai1.tsv</code>（土壌2種×肥料4段階）の2元配置分散分析</li>
+              <li><strong>課題2（20点）</strong>：課題1の8試験区展開（<code>SoilFert</code>）によるTukey多重比較とCLD</li>
+              <li><strong>課題3（20点）</strong>：<code>kadai2.tsv</code>（温度×銘柄）の2-way ANOVAと主効果の多重比較</li>
+              <li><strong>発展4（20点）</strong>：<code>kadai3.tsv</code>（チキン味×衣：独立60人）の<strong>クロスオーバー交互作用</strong>【Wow①】</li>
+              <li><strong>発展5（20点）</strong>：<code>kadai3_2.tsv</code>（同一15人の反復測定）による<strong>個人差ノイズの分離</strong>【Wow②】</li>
+            </ul>
+          </div>
+        </div>
+        <div class="takeaway" style="background: #f0fdf4; border-color: #86efac; color: #166534;">
+          <span class="takeaway-icon">📥</span>
+          <span><strong>【提出方法（スライド・Web共通）】</strong> インタラクティブWeb課題（<code>kadai10_interactive.html</code>）に課題1〜3・発展4〜5と総合考察を入力し、<strong>「提出用レポートHTMLを書き出す」</strong>ボタンで保存したHTMLファイルを提出してください！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: AI Guide -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">学習のコツ</span>
+          <h2 class="slide-title">生成AI活用ガイド（第10回編）</h2>
+        </div>
+        <span class="slide-subtitle">交互作用の意味やモデル式（<code>A * B</code> と <code>A + B</code>）の使い分けをAIで深掘りしよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card secondary">
+            <h3>⭕ 理解が深まる良い質問例</h3>
+            <div class="code-box" style="margin: 4px 0;"><code>2元配置分散分析で以下の結果が出ました。交互作用 Soil:Fertilizer が有意(p=0.0229)であるとは生物学的にどういう意味ですか？
+                Df Sum Sq Mean Sq F value   Pr(>F)    
+Soil             1  66.00   66.00  46.317 4.22e-06 ***
+Fertilizer       3 126.90   42.30  29.683 8.99e-07 ***
+Soil:Fertilizer  3  17.91    5.97   4.189   0.0229 *  
+Residuals       16  22.80    1.43</code></div>
+            <ul>
+              <li>「<code>aov(Y ~ A * B)</code> と <code>aov(Y ~ A + B)</code> の違いを教えて」</li>
+              <li>「交互作用が有意なとき、なぜ全組み合わせを1列に連結して多重比較するの？」</li>
+            </ul>
+          </div>
+          <div class="card accent">
+            <h3>△ もったいない使い方</h3>
+            <p><strong>「課題1〜5の答えと考察を全部書いて」</strong><br>
+            AIに丸投げしてしまうと、本日のハイライトである<strong>「なぜ主効果が両方とも非有意（$p>0.05$）なのに交互作用だけが有意になるのか（発展4）」「なぜ同じ15人のパネリストの個人差を分離すると残差分散が半減して有意差が見えるようになるのか（発展5）」</strong>という統計学の醍醐味を体感できません。必ず自分のRStudioで実行して確かめましょう！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Why Two-way ANOVA? Main Effects vs Interaction -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論の核心 ①</span>
+          <h2 class="slide-title">なぜ「2元配置分散分析（Two-way ANOVA）」なのか？</h2>
+        </div>
+        <span class="slide-subtitle">2つの要因（要因A × 要因B）の「主効果（Main Effect）」と「交互作用（Interaction）」を同時に検定する</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>① 主効果（Main Effects）＝ 各要因単独の効果</h3>
+            <ul>
+              <li><strong>要因Aの主効果</strong>：要因Bの違いを平均（無視）したときに、<strong>要因Aの水準間で平均値に差があるか</strong>。</li>
+              <li><strong>要因Bの主効果</strong>：要因Aの違いを平均（無視）したときに、<strong>要因Bの水準間で平均値に差があるか</strong>。</li>
+              <li>交互作用がない場合、全体の効果は「要因Aの効果 ＋ 要因Bの効果」という<strong>単純な足し算（加法モデル）</strong>で表せる。</li>
+            </ul>
+          </div>
+          <div class="card secondary" style="border-width: 2px;">
+            <h3>② 交互作用（Interaction：$A \times B$）＝ 相乗・相殺効果</h3>
+            <ul>
+              <li><strong>定義</strong>：「一方の要因の水準によって、<strong>もう一方の要因の効果（効き方）が変わること</strong>」。</li>
+              <li><strong>相乗効果（Synergy）</strong>：土壌Aでは肥料を増やしても少ししか伸びないが、<strong>土壌Bでは肥料を増やすと収量が急増する</strong>（課題1）。</li>
+              <li><strong>相殺・逆転効果（Crossover）</strong>：<strong>普通味には普通の衣、辛口にはクリスピー</strong>が合い、逆の組み合わせだと評価が下がる（発展4）。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">💡</span>
+          <span>1要因ずつ別々に実験（1元配置ANOVA×2回）してしまうと、この<strong>「要因Aと要因Bの組み合わせによって生じる交互作用」を永久に見落としてしまいます！</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: 3 Visual Patterns of Interaction Plots -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論の核心 ②</span>
+          <h2 class="slide-title">視覚で一発理解！ 交互作用プロット（折れ線グラフ）の3パターン</h2>
+        </div>
+        <span class="slide-subtitle">「折れ線が平行なら交互作用なし」「非平行（扇状）や交差（X字）なら交互作用あり！」</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <!-- Pattern 1: No Interaction (Parallel) -->
+          <div class="card">
+            <h3 style="font-size: 0.98rem; color: #1e3a8a;">① 交互作用なし（平行）</h3>
+            <div class="svg-box" style="padding: 6px;">
+              <svg viewBox="0 0 220 125" width="100%" height="115">
+                <line x1="30" y1="105" x2="200" y2="105" stroke="#94a3b8" stroke-width="1.5"/>
+                <line x1="30" y1="15" x2="30" y2="105" stroke="#94a3b8" stroke-width="1.5"/>
+                <!-- Line B2 (High, parallel) -->
+                <polyline points="50,70 115,45 180,25" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+                <circle cx="50" cy="70" r="4" fill="#2563eb"/><circle cx="115" cy="45" r="4" fill="#2563eb"/><circle cx="180" cy="25" r="4" fill="#2563eb"/>
+                <text x="182" y="21" font-size="10" font-weight="bold" fill="#2563eb">冷蔵</text>
+                <!-- Line B1 (Low, parallel) -->
+                <polyline points="50,95 115,70 180,50" fill="none" stroke="#0d9488" stroke-width="2.5"/>
+                <circle cx="50" cy="95" r="4" fill="#0d9488"/><circle cx="115" cy="70" r="4" fill="#0d9488"/><circle cx="180" cy="50" r="4" fill="#0d9488"/>
+                <text x="182" y="62" font-size="10" font-weight="bold" fill="#0d9488">常温</text>
+                <text x="115" y="120" text-anchor="middle" font-size="10" fill="#475569">要因Aの水準 (A1 → A2 → A3)</text>
+              </svg>
+            </div>
+            <p style="font-size: 0.84rem;">・<strong>2本の折れ線が平行</strong>（どの水準でも上昇幅が同じ）。<br>・<strong>練習1・課題3</strong>がこの型！ 主効果ごとに多重比較すればOK。</p>
+          </div>
+
+          <!-- Pattern 2: Synergistic Interaction (Non-parallel / Fan) -->
+          <div class="card primary">
+            <h3 style="font-size: 0.98rem; color: #0f766e;">② 相乗的交互作用（非平行）</h3>
+            <div class="svg-box" style="padding: 6px;">
+              <svg viewBox="0 0 220 125" width="100%" height="115">
+                <line x1="30" y1="105" x2="200" y2="105" stroke="#94a3b8" stroke-width="1.5"/>
+                <line x1="30" y1="15" x2="30" y2="105" stroke="#94a3b8" stroke-width="1.5"/>
+                <!-- Line Soil B (steep rise) -->
+                <polyline points="45,88 95,72 145,48 190,18" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+                <circle cx="45" cy="88" r="4" fill="#dc2626"/><circle cx="95" cy="72" r="4" fill="#dc2626"/><circle cx="145" cy="48" r="4" fill="#dc2626"/><circle cx="190" cy="18" r="4" fill="#dc2626"/>
+                <text x="165" y="16" font-size="10" font-weight="bold" fill="#dc2626">SoilB (急伸!)</text>
+                <!-- Line Soil A (gentle rise) -->
+                <polyline points="45,95 95,86 145,76 190,68" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+                <circle cx="45" cy="95" r="4" fill="#2563eb"/><circle cx="95" cy="86" r="4" fill="#2563eb"/><circle cx="145" cy="76" r="4" fill="#2563eb"/><circle cx="190" cy="68" r="4" fill="#2563eb"/>
+                <text x="165" y="82" font-size="10" font-weight="bold" fill="#2563eb">SoilA</text>
+                <text x="115" y="120" text-anchor="middle" font-size="10" fill="#475569">肥料量 (N100 → N400)</text>
+              </svg>
+            </div>
+            <p style="font-size: 0.84rem;">・<strong>折れ線の傾きが大きく異なる</strong>（片方の条件で効果が急拡大）。<br>・<strong>練習2・課題1・2</strong>がこの型！ 全試験区を展開して多重比較する。</p>
+          </div>
+
+          <!-- Pattern 3: Crossover Interaction (X-shape) -->
+          <div class="card accent">
+            <h3 style="font-size: 0.98rem; color: #b45309;">③ 逆転交互作用（X字交差）</h3>
+            <div class="svg-box" style="padding: 6px;">
+              <svg viewBox="0 0 220 125" width="100%" height="115">
+                <line x1="30" y1="105" x2="200" y2="105" stroke="#94a3b8" stroke-width="1.5"/>
+                <line x1="30" y1="15" x2="30" y2="105" stroke="#94a3b8" stroke-width="1.5"/>
+                <!-- Spicy: Low on normal coat, High on crispy -->
+                <polyline points="60,78 170,24" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+                <circle cx="60" cy="78" r="4.5" fill="#dc2626"/><circle cx="170" cy="24" r="4.5" fill="#dc2626"/>
+                <text x="155" y="18" font-size="10" font-weight="bold" fill="#dc2626">辛口</text>
+                <!-- Mild: High on normal coat, Low on crispy -->
+                <polyline points="60,48 170,88" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+                <circle cx="60" cy="48" r="4.5" fill="#2563eb"/><circle cx="170" cy="88" r="4.5" fill="#2563eb"/>
+                <text x="155" y="100" font-size="10" font-weight="bold" fill="#2563eb">普通味</text>
+                <text x="60" y="118" text-anchor="middle" font-size="9.5" fill="#475569">普通の衣</text>
+                <text x="170" y="118" text-anchor="middle" font-size="9.5" fill="#475569">クリスピー</text>
+              </svg>
+            </div>
+            <p style="font-size: 0.84rem;">・<strong>折れ線が「×字」に交差！</strong><br>・左右を平均すると高低が打ち消し合い、<strong>主効果が非有意（差なし）に見えてしまう</strong>（<strong>発展4</strong>）。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Experimental Designs (With vs Without Replication vs Repeated Measures) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論整理</span>
+          <h2 class="slide-title">2元配置分散分析の3つの実験デザインとRのモデル式</h2>
+        </div>
+        <span class="slide-subtitle">各マス（条件の組み合わせ）に反復（繰り返し）があるかどうかで <code>*</code> と <code>+</code> を使い分ける！</span>
+      </div>
+      <div class="slide-body">
+        <table>
+          <thead>
+            <tr>
+              <th>実験デザイン</th>
+              <th>1マスのデータ数</th>
+              <th>検定できる項目</th>
+              <th>Rのモデル式</th>
+              <th>本日の該当データ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background: #eff6ff;">
+              <td><strong>① 繰り返しあり（対応なし）</strong><br>(Two-way ANOVA with replication)</td>
+              <td><strong>複数個（$r \ge 2$）</strong><br>（反復測定あり）</td>
+              <td>・要因Aの主効果<br>・要因Bの主効果<br>・<strong>交互作用 $A \times B$</strong></td>
+              <td><strong><code>aov(Y ~ A * B)</code></strong><br>（アスタリスク <code>*</code>）</td>
+              <td>・練習1 (<code>renshu1.csv</code>: 種×肥料)<br>・練習2 (<code>renshu2.tsv</code>: 薬×濃度)<br>・<strong>課題1・2, 課題3, 発展4</strong></td>
+            </tr>
+            <tr>
+              <td><strong>② 繰り返しなし（対応なし）</strong><br>(Two-way ANOVA without replication)</td>
+              <td><strong>1個のみ（$r = 1$）</strong><br>（1マスに1データ）</td>
+              <td>・要因Aの主効果<br>・要因Bの主効果<br>（※交互作用は検定不可）</td>
+              <td><strong><code>aov(Y ~ A + B)</code></strong><br>（プラス記号 <code>+</code>）</td>
+              <td>・練習3 (<code>renshu3.tsv</code>: 成型温度4種×触媒3種＝計12個)</td>
+            </tr>
+            <tr style="background: #f0fdfa;">
+              <td><strong>③ 対応のある多群比較</strong><br>(反復測定：Repeated measures)</td>
+              <td><strong>各個体×各条件に1個</strong><br>（同一被験者が全条件）</td>
+              <td>・処理要因Aの主効果<br>・個体差（<code>ID</code> / <code>Panel</code>）<br>（※個人差ノイズを分離！）</td>
+              <td><strong><code>aov(Y ~ A + ID)</code></strong><br>（プラス記号 <code>+</code>）</td>
+              <td>・練習4 (<code>renshu4.tsv</code>: 血圧3時点)<br>・<strong>発展5 (<code>kadai3_2.tsv</code>: 同一15人の試食パネル)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="takeaway">
+          <span class="takeaway-icon">📌</span>
+          <span>Rのチルダ記法の鉄則：<strong>交互作用まで検定したいときは <code>Y ~ A * B</code></strong>、繰り返しがない場合や個人差（ブロック要因）を分離したいときは <strong><code>Y ~ A + B</code></strong> を使います！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: 2D Partitioning of Sum of Squares (With Replication) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論：変動の分割 ①</span>
+          <h2 class="slide-title">変動（平方和）と自由度の分割（① 繰り返しありの場合）</h2>
+        </div>
+        <span class="slide-subtitle">総平方和 $S_T$ ＝ 要因A平方和 $S_A$ ＋ 要因B平方和 $S_B$ ＋ 交互作用平方和 $S_{A \times B}$ ＋ 残差平方和 $S_R$</span>
+      </div>
+      <div class="slide-body">
+        <!-- KaTeX-rendered HTML/CSS + SVG Tree Diagram -->
+        <div class="svg-box" style="flex-direction: column; padding: 10px 16px; gap: 0;">
+          <div style="background: #1e3a8a; color: #ffffff; border-radius: 8px; padding: 7px 22px; text-align: center; width: 460px; max-width: 100%;">
+            <div style="font-size: 0.94rem; font-weight: 700;">総変動（総平方和 $S_T$） <span style="opacity: 0.65;">｜</span> 総自由度 $df_T = N - 1$</div>
+            <div style="font-size: 0.8rem; color: #bfdbfe;">全データ $N = a \times b \times r$ 個の全体平均 $\bar{X}$ からのズレの2乗和</div>
+          </div>
+
+          <svg viewBox="0 0 760 24" width="100%" height="22" style="display: block; overflow: visible;">
+            <line x1="320" y1="2" x2="100" y2="22" stroke="#2563eb" stroke-width="2"/>
+            <line x1="360" y1="2" x2="290" y2="22" stroke="#2563eb" stroke-width="2"/>
+            <line x1="400" y1="2" x2="475" y2="22" stroke="#d97706" stroke-width="2"/>
+            <line x1="440" y1="2" x2="660" y2="22" stroke="#0d9488" stroke-width="2"/>
+          </svg>
+
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;">
+            <div style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 7px 8px; text-align: center;">
+              <div style="font-size: 0.86rem; font-weight: 700; color: #1e3a8a;">① 要因Aの主効果 ($S_A$)</div>
+              <div style="font-size: 0.78rem; color: #1e40af;">自由度 $df_A = a - 1$</div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #1d4ed8; margin-top: 2px;">$V_A = \dfrac{S_A}{a - 1}$</div>
+              <div style="font-size: 0.8rem; font-weight: 700; color: #dc2626;">$F_A = V_A / V_R$</div>
+            </div>
+            <div style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 7px 8px; text-align: center;">
+              <div style="font-size: 0.86rem; font-weight: 700; color: #1e3a8a;">② 要因Bの主効果 ($S_B$)</div>
+              <div style="font-size: 0.78rem; color: #1e40af;">自由度 $df_B = b - 1$</div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #1d4ed8; margin-top: 2px;">$V_B = \dfrac{S_B}{b - 1}$</div>
+              <div style="font-size: 0.8rem; font-weight: 700; color: #dc2626;">$F_B = V_B / V_R$</div>
+            </div>
+            <div style="background: #fffbeb; border: 2px solid #f59e0b; border-radius: 8px; padding: 7px 8px; text-align: center;">
+              <div style="font-size: 0.86rem; font-weight: 700; color: #b45309;">③ 交互作用 ($S_{A \times B}$)</div>
+              <div style="font-size: 0.78rem; color: #92400e;">$df_{A \times B} = (a-1)(b-1)$</div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #b45309; margin-top: 2px;">$V_{A \times B} = \dfrac{S_{A \times B}}{(a-1)(b-1)}$</div>
+              <div style="font-size: 0.8rem; font-weight: 700; color: #dc2626;">$F_{A \times B} = V_{A \times B} / V_R$</div>
+            </div>
+            <div style="background: #f0fdfa; border: 2px solid #0d9488; border-radius: 8px; padding: 7px 8px; text-align: center;">
+              <div style="font-size: 0.86rem; font-weight: 700; color: #0f766e;">④ 残差誤差 ($S_R$)</div>
+              <div style="font-size: 0.78rem; color: #115e59;">$df_R = N - ab$</div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: #0f766e; margin-top: 2px;">$V_R = \dfrac{S_R}{N - ab}$</div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: #0f766e;">【全 $F$検定の分母】</div>
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>R出力の行名</th>
+              <th>自由度 <code>Df</code></th>
+              <th>平方和 <code>Sum Sq</code></th>
+              <th>平均平方 <code>Mean Sq</code></th>
+              <th>分散比 <code>F value</code></th>
+              <th>帰無仮説 $H_0$ と判定</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>要因A（例: <code>Soil</code>）</strong></td>
+              <td>$a - 1$</td>
+              <td>$S_A$</td>
+              <td>$V_A = S_A / (a-1)$</td>
+              <td><strong>$F_A = V_A / V_R$</strong></td>
+              <td>$H_0$: 要因Aの主効果なし（$p &lt; 0.05$ で効果あり）</td>
+            </tr>
+            <tr>
+              <td><strong>要因B（例: <code>Fertilizer</code>）</strong></td>
+              <td>$b - 1$</td>
+              <td>$S_B$</td>
+              <td>$V_B = S_B / (b-1)$</td>
+              <td><strong>$F_B = V_B / V_R$</strong></td>
+              <td>$H_0$: 要因Bの主効果なし（$p &lt; 0.05$ で効果あり）</td>
+            </tr>
+            <tr style="background: #fffbeb;">
+              <td><strong>交互作用 <code>A:B</code></strong></td>
+              <td>$(a-1)(b-1)$</td>
+              <td>$S_{A \times B}$</td>
+              <td>$V_{A \times B} = S_{A \times B} / df_{A \times B}$</td>
+              <td><strong>$F_{A \times B} = V_{A \times B} / V_R$</strong></td>
+              <td>$H_0$: 交互作用なし（<strong>$p &lt; 0.05$ で相乗・相殺効果あり！</strong>）</td>
+            </tr>
+            <tr>
+              <td><strong>残差 <code>Residuals</code></strong></td>
+              <td>$N - ab$</td>
+              <td>$S_R$</td>
+              <td>$V_R = S_R / (N - ab)$</td>
+              <td>—</td>
+              <td>各試験区内の個体差（純粋な誤差ノイズ）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 10: Partitioning Without Replication / Repeated Measures -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論：変動の分割 ②</span>
+          <h2 class="slide-title">繰り返しなし ＆ 対応のある反復測定（<code>Y ~ A + B</code>）の仕組み</h2>
+        </div>
+        <span class="slide-subtitle">第2要因（温度や評価者の個人差）を変動から引き算することで、残差誤差 $V_E$ を小さくする！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>なぜ <code>Y ~ A + B</code> では交互作用を検定しないのか？</h3>
+            <ul>
+              <li>1つのマス（条件A×条件B）にデータが1個しかないとき、総データ数は $N = ab$ 個。</li>
+              <li>もし交互作用まで入れようとすると、残差自由度 $df_R = N - ab = 0$ となり、分母の誤差分散が計算できない。</li>
+              <li>そこで<strong>「交互作用はない」と仮定し、自由度 $(a-1)(b-1)$ の残りの変動を誤差変動 $S_E$（`Residuals`）として $F$検定の分母に使う！</strong></li>
+            </ul>
+          </div>
+          <div class="card secondary" style="border-width: 2px;">
+            <h3>対応のある多群比較（反復測定）での絶大なメリット</h3>
+            <ul>
+              <li>同じ15人のパネリスト（<code>Panel</code>）が4種類のチキン（<code>AjiKoromo</code>）を採点したとき、人によって「甘め・辛め」の個人差がある。</li>
+              <li>1元配置 <code>aov(Score ~ AjiKoromo)</code> では個人差がすべて残差 $S_R$ に混ざり、分母 $V_R$ が膨らんで検出力が落ちる。</li>
+              <li><strong><code>aov(Score ~ AjiKoromo + Panel)</code></strong> とすると、<strong>残差からパネリストの個人差 $S_{\text{Panel}}$ を引き算できるため、誤差分散が劇的に小さくなり本物の差が検出できる！</strong>（発展課題5）</li>
+            </ul>
+          </div>
+        </div>
+        <div class="formula-box">
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2px;">繰り返しなし・反復測定（<code>Y ~ A + B</code>）の平方和と自由度の分割</div>
+          $$S_T = S_A + S_B + S_E, \qquad (ab - 1) = (a - 1) + (b - 1) + (a - 1)(b - 1)$$
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: Multiple Comparison Branching Rule in Two-way ANOVA -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">理論最重要</span>
+          <h2 class="slide-title">2元配置分散分析の後の「多重比較」の分岐ルール</h2>
+        </div>
+        <span class="slide-subtitle">まず分散分析表の「交互作用（<code>A:B</code>）の $p$値」を見る！ そこからの進め方が2通りに分かれる</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <!-- Branch 1: No Interaction -->
+          <div class="card secondary" style="border-width: 2px;">
+            <h3>ルート①：交互作用が「有意でない」とき（$p_{A \times B} \ge 0.05$）</h3>
+            <p><strong>意味</strong>：要因Aと要因Bは互いに干渉せず、独立に効いている（折れ線が平行）。</p>
+            <p><strong>多重比較の進め方</strong>：</p>
+            <ul>
+              <li><strong>主効果が有意（$p &lt; 0.05$）になった要因についてのみ、その要因単独で多重比較（Tukey-Kramer法など）を行う！</strong></li>
+              <li>要因A（例：温度2水準）と要因B（例：銘柄3水準）を別々に <code>aov(Y ~ A)</code>、<code>aov(Y ~ B)</code> で多重比較・CLD描画する。</li>
+              <li>※ <strong>練習1（植物種×肥料）</strong>・<strong>課題3（水温度×銘柄）</strong>はこちら！</li>
+            </ul>
+          </div>
+
+          <!-- Branch 2: Significant Interaction -->
+          <div class="card accent" style="border-width: 2px;">
+            <h3>ルート②：交互作用が「有意である」とき（$p_{A \times B} &lt; 0.05$）</h3>
+            <p><strong>意味</strong>：片方の条件によってもう片方の効き方が変わる（相乗効果や逆転がある）。</p>
+            <p><strong>多重比較の進め方</strong>：</p>
+            <ul>
+              <li>交互作用があるとき、主効果（全体の平均）だけを比較しても意味がない（または誤解を招く）。</li>
+              <li><strong><code>paste(A, B, sep="")</code> で要因Aと要因Bを連結し、全 $a \times b$ 個の試験区を1次元に展開してから Tukey-Kramer多重比較とCLD付与を行う！</strong></li>
+              <li>※ <strong>練習2（薬×濃度6群）</strong>・<strong>課題2（土×肥料8群）</strong>・<strong>発展4（味×衣4群）</strong>はこちら！</li>
+            </ul>
+          </div>
+        </div>
+        <div class="code-box"><code># 【ルート②の必須テクニック】2つの要因列 A と B を連結して1つの新しい因子列 AB を作るコード
+df$AB <- as.factor(paste(df$A, df$B, sep = ""))
+# あとは第9回の1元配置分散分析とまったく同じコードで Tukey-Kramer 多重比較 ＆ CLD 描画ができる！
+result1 <- aov(Y ~ AB, data = df)
+result2 <- glht(result1, linfct = mcp(AB = "Tukey"))
+cld(result2); par(mar = c(5.1, 4.1, 6, 2.1)); plot(cld(result2))</code></div>
+      </div>
+    </div>
+
+    <!-- Slide 12: Step 0 - HandsOn Setup -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">実践 Step 0（必読）</span>
+          <h2 class="slide-title">RStudioの準備：TSVファイルの読み込みと日本語グラフの設定</h2>
+        </div>
+        <span class="slide-subtitle">本日のデータは <code>.tsv</code>（タブ区切りテキスト）が中心！ <code>read.delim()</code> を使おう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>Step 0-1：データ保存と <code>read.delim()</code></h3>
+            <ol>
+              <li>第10回ページのダウンロード欄からファイルを同じフォルダに保存し、RStudioの <strong><code>Session</code> $\rightarrow$ <code>Set Working Directory</code> $\rightarrow$ <code>Choose Directory...</code></strong> で指定する。</li>
+              <li><code>.tsv</code>（タブ区切り）ファイルは <code>read.csv()</code> ではなく <strong><code>read.delim()</code></strong> で読み込む（日本語を含むファイルは <code>fileEncoding = "utf8"</code> を付ける）：</li>
+            </ol>
+            <div class="code-box"><code>kadai1 <- read.delim("kadai1.tsv", stringsAsFactors = TRUE)
+kadai2 <- read.delim("kadai2.tsv", stringsAsFactors = TRUE,
+                     fileEncoding = "utf8")</code></div>
+          </div>
+          <div class="card secondary">
+            <h3>Step 0-2：注意すべき2つのポイント</h3>
+            <ul>
+              <li><strong>① 数値だけの因子列（例：濃度 <code>0.5, 1, 2</code>）</strong>：<br>
+              <code>stringsAsFactors = TRUE</code> をつけても、数字だけの列は数値（<code>numeric</code>）として読み込まれます。必ず <strong><code>df$Nodo &lt;- as.factor(df$Nodo)</code></strong> で因子に変換しましょう！</li>
+              <li><strong>② Macでのグラフ日本語文字化け対策</strong>：<br>
+              <code>kadai2.tsv</code> や <code>kadai3.tsv</code> のように水準名が日本語のデータをMacで <code>plot()</code> するときは、直前に以下を実行すると文字化けを防げます：</li>
+            </ul>
+            <div class="code-box"><code>par(family = "HiraKakuProN-W6") # Mac用</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 13: Practice 1 - renshu1.csv (With Replication, No Interaction) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 1（提出不要）</span>
+          <h2 class="slide-title">練習1：繰り返しあり・交互作用なし（<code>renshu1.csv</code>：植物種×肥料）</h2>
+        </div>
+        <span class="slide-subtitle">植物2種（<code>Species</code>: A, B）× 肥料3種（<code>Fertilizer</code>: X, Y, Z）で育てた苗高（<code>Height</code>, cm, $N=48$）</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="code-box"><code>renshu1 <- read.csv("renshu1.csv", stringsAsFactors = TRUE)
+summary(renshu1)
+
+# (1) 繰り返しありの2元配置分散分析（* を使う）
+summary(aov(Height ~ Fertilizer * Species, data = renshu1))
+
+# (2) 交互作用なし(p=0.478) & Fertilizerのみ有意(p=0.000973)
+#     -> ルート①：Fertilizer 単独でTukey多重比較
+library(multcomp)
+result1 <- aov(Height ~ Fertilizer, data = renshu1)
+result2 <- glht(result1, linfct = mcp(Fertilizer = "Tukey"))
+summary(result2)
+cld(result2)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(result2))</code></div>
+          <div class="card primary">
+            <h3>分散分析表の出力とルート①の解釈</h3>
+            <div class="code-box"><code>                   Df Sum Sq Mean Sq F value   Pr(>F)    
+Fertilizer          2  144.8   72.38   8.218 0.000973 ***
+Species             1   14.0   13.98   1.587 0.214738    
+Fertilizer:Species  2   13.2    6.62   0.751 0.477994    
+Residuals          42  369.9    8.81</code></div>
+            <ul>
+              <li><strong>交互作用 <code>Fertilizer:Species</code></strong>：$p = 0.478 &gt; 0.05$ より<strong>交互作用なし</strong>。</li>
+              <li><strong>主効果</strong>：<code>Species</code> は $p = 0.215$（差なし）、<strong><code>Fertilizer</code> のみ $p = 0.000973$ (\*\*\*) で有意！</strong></li>
+              <li><strong>CLD結果</strong>：<code>X = "a", Y = "a", Z = "b"</code> $\rightarrow$ 植物種A・Bにかかわらず、<strong>肥料ZだけがX・Yより有意に苗高を高める</strong>。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 14: Practice 2 (Part 1) - renshu2.tsv (With Replication, Significant Interaction) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 2-1（提出不要）</span>
+          <h2 class="slide-title">練習2（前半）：繰り返しあり・交互作用あり（<code>renshu2.tsv</code>：薬品×濃度）</h2>
+        </div>
+        <span class="slide-subtitle">薬品2種（<code>Yaku</code>: OJ, VC）× 濃度3段階（<code>Nodo</code>: 0.5, 1, 2 mg）での成長量（<code>Growth</code>, g, $N=60$）</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="code-box"><code>renshu2 <- read.delim("renshu2.tsv", stringsAsFactors = TRUE)
+# 【重要ステップ】Nodoは数値(0.5, 1, 2)なので因子に変換！
+renshu2$Nodo <- as.factor(renshu2$Nodo)
+summary(renshu2)
+
+# 前提条件の確認（正規性KS検定・Bartlett等分散性検定）
+require(nortest)
+tapply(renshu2$Growth, renshu2$Yaku, lillie.test)
+tapply(renshu2$Growth, renshu2$Nodo, lillie.test)
+bartlett.test(Growth ~ Yaku, data = renshu2)
+bartlett.test(Growth ~ Nodo, data = renshu2)
+
+# 繰り返しありの2元配置分散分析
+summary(aov(Growth ~ Yaku * Nodo, data = renshu2))</code></div>
+          <div class="card accent">
+            <h3>分散分析表の出力：交互作用が有意！</h3>
+            <div class="code-box"><code>            Df Sum Sq Mean Sq F value   Pr(>F)    
+Yaku         1  218.5   218.5  17.222 0.000119 ***
+Nodo         2 2369.4  1184.7  93.373  < 2e-16 ***
+Yaku:Nodo    2  114.2    57.1   4.499 0.015595 *  
+Residuals   54  685.1    12.7</code></div>
+            <ul>
+              <li><code>Yaku</code> の主効果（$p = 0.000119$ \*\*\*）、<code>Nodo</code> の主効果（$p &lt; 2 \times 10^{-16}$ \*\*\*）に加えて、<strong>交互作用 <code>Yaku:Nodo</code> が $F = 4.499, p = 0.0156 &lt; 0.05$ (\*) で有意！</strong></li>
+              <li><strong>生物学的意味</strong>：「薬品OJと薬品VCでは、濃度を上げたときの成長量の伸び方が異なる（VCの方が濃度依存的な伸びが急激である）」。</li>
+              <li>$\rightarrow$ <strong>ルート②（全 $2 \times 3 = 6$ 試験区への展開）</strong>へ進む！</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 15: Practice 2 (Part 2) - Unfolding 6 Groups in renshu2.tsv -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 2-2（提出不要）</span>
+          <h2 class="slide-title">練習2（後半）：交互作用が有意なときの6試験区展開（<code>YakuNodo</code>）</h2>
+        </div>
+        <span class="slide-subtitle"><code>paste(Yaku, Nodo, sep="")</code> で6群に展開し、1元配置と同じようにTukey多重比較＆CLD描画！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="code-box"><code># YakuとNodoを連結して6試験区の因子 YakuNodo を作成
+renshu2$YakuNodo <- with(renshu2, paste(Yaku, Nodo, sep = ""))
+renshu2$YakuNodo <- as.factor(renshu2$YakuNodo)
+summary(renshu2)
+
+# 6群に対してTukey-Kramer多重比較とCLD描画を実行
+library(multcomp)
+result1 <- aov(Growth ~ YakuNodo, data = renshu2)
+result2 <- glht(result1, linfct = mcp(YakuNodo = "Tukey"))
+summary(result2)
+cld(result2)
+
+par(mar = c(5.1, 4.1, 6, 2.1)) # 上マージンを広げて文字切れ防止
+plot(cld(result2))</code></div>
+          <div class="card primary">
+            <h3>6試験区展開のCLD結果と解釈</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0;">
+              <div style="background: #fee2e2; border: 1.5px solid #dc2626; border-radius: 6px; padding: 6px; text-align: center;">
+                <div style="font-weight: 800; color: #b91c1c;">"c"（最低）</div>
+                <div style="font-size: 0.8rem; color: #991b1b;"><code>VC0.5</code> (平均 7.98)</div>
+              </div>
+              <div style="background: #dbeafe; border: 1.5px solid #2563eb; border-radius: 6px; padding: 6px; text-align: center;">
+                <div style="font-weight: 800; color: #1e3a8a;">"a"（中位）</div>
+                <div style="font-size: 0.8rem; color: #1e40af;"><code>OJ0.5</code> (13.2) / <code>VC1</code> (16.8)</div>
+              </div>
+              <div style="background: #ccfbf1; border: 1.5px solid #0d9488; border-radius: 6px; padding: 6px; text-align: center;">
+                <div style="font-weight: 800; color: #0f766e;">"b"（最高集団）</div>
+                <div style="font-size: 0.8rem; color: #115e59;"><code>OJ1</code> / <code>OJ2</code> / <code>VC2</code></div>
+              </div>
+            </div>
+            <ul>
+              <li>低濃度（0.5 mg, 1 mg）では <code>OJ</code> の方が <code>VC</code> より有意に成長量が大きい（<code>OJ0.5 "a" &gt; VC0.5 "c"</code>、<code>OJ1 "b" &gt; VC1 "a"</code>）。</li>
+              <li>しかし高濃度（2 mg）になると <code>VC2 ("b")</code> が <code>OJ2 ("b")</code> に完全に追いつき（$p = 1.000$）、<code>OJ</code> は 1 mg $\to$ 2 mg で頭打ちになる一方、<code>VC</code> は 2 mg まで直線的に伸び続けている！</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 16: Practice 3 - renshu3.tsv (Without Replication: Y ~ A + B) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 3（提出不要）</span>
+          <h2 class="slide-title">練習3：繰り返しなしの2元配置分散分析（<code>renshu3.tsv</code>：温度＋触媒）</h2>
+        </div>
+        <span class="slide-subtitle">成型温度4種（<code>Temp</code>）× 触媒量3種（<code>Shoku</code>）の強度（<code>Kyodo</code>, $N=12$）── 温度を考慮すると触媒の差が見える！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="code-box"><code>renshu3 <- read.delim("renshu3.tsv", stringsAsFactors = TRUE)
+summary(renshu3)
+
+# 繰り返しなし（1マス1データ）なので + を使う！
+result1 <- aov(Kyodo ~ Shoku + Temp, data = renshu3)
+summary(result1)
+
+# 温度(Temp)もモデルに入れたまま触媒(Shoku)をTukey多重比較
+library(multcomp)
+result2 <- glht(result1, linfct = mcp(Shoku = "Tukey"))
+summary(result2); cld(result2)
+
+# 【比較】もし温度(Temp)を無視して1元配置で検定すると…？
+summary(aov(Kyodo ~ Shoku, data = renshu3)) # p = 0.1 で非有意！</code></div>
+          <div class="card primary">
+            <h3>第2要因（温度）をモデルに入れる威力！</h3>
+            <div class="code-box"><code>            Df Sum Sq Mean Sq F value Pr(>F)  
+Shoku        2  4.625  2.3125   5.842 0.0391 *
+Temp         3  4.563  1.5208   3.842 0.0756 .
+Residuals    6  2.375  0.3958</code></div>
+            <ul>
+              <li>もし温度 <code>Temp</code> を無視して <code>aov(Kyodo ~ Shoku)</code> を行うと、温度によるばらつき（平方和 $4.563$）が残差に混ざり（$S_R = 6.938, V_R = 0.771$）、<code>Shoku</code> は <strong>$F = 3.00, p = 0.100$（有意差なし）</strong>になってしまう。</li>
+              <li>一方、<strong><code>Kyodo ~ Shoku + Temp</code></strong> で温度の変動を分離すると、残差分散が $V_R = 0.396$ に半減し、<strong><code>Shoku</code> が $p = 0.0391$ (\*) で有意</strong>となり、<code>S0.5 ("a")</code> と <code>S1.0 ("b")</code> の有意差（$p = 0.0489$）が検出できる！</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 17: Practice 4 - renshu4.tsv (Repeated Measures 1-way ANOVA: mmHg ~ Time + ID) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 4（提出不要）</span>
+          <h2 class="slide-title">練習4：対応のある1元配置分散分析（反復測定：<code>renshu4.tsv</code>）</h2>
+        </div>
+        <span class="slide-subtitle">同一被験者5名（<code>ID</code>: A〜E）の投薬前（<code>Mae</code>）・1週後（<code>OneWeek</code>）・2週後（<code>TwoWeeks</code>）の血圧（<code>mmHg</code>）</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="code-box"><code>renshu4 <- read.delim("renshu4.tsv", stringsAsFactors = TRUE)
+summary(renshu4)
+
+# 時間経過(Time) + 被験者個人差(ID) で反復測定ANOVAを実行
+summary(aov(mmHg ~ Time + ID, data = renshu4))
+
+# 対応のある多重比較（paired = TRUE を指定したBonferroni法）
+pairwise.t.test(renshu4$mmHg, renshu4$Time,
+                paired = TRUE, p.adjust.method = "bonferroni")</code></div>
+          <div class="card secondary">
+            <h3>反復測定ANOVAと対応あり多重比較の結果</h3>
+            <div class="code-box"><code>            Df Sum Sq Mean Sq F value   Pr(>F)    
+Time         2 1445.2   722.6  35.509 0.000105 ***
+ID           4  470.4   117.6   5.779 0.017355 *  
+Residuals    8  162.8    20.4</code></div>
+            <ul>
+              <li>被験者間の元々の血圧の違い（<code>ID</code>: $S_{\text{ID}} = 470.4, p = 0.0174$）を分離した上で、投薬後の時間経過 <strong><code>Time</code> が $F = 35.51, p = 0.000105$ (\*\*\*) で極めて有意！</strong></li>
+              <li><code>pairwise.t.test(..., paired = TRUE)</code> の結果：<code>Mae vs OneWeek</code> ($p = 0.0067$)、<code>Mae vs TwoWeeks</code> ($p = 0.0141$) が有意、<code>OneWeek vs TwoWeeks</code> ($p = 0.3647$) は差なし $\rightarrow$ <strong>投薬1週後から血圧が有意に下がり、2週後も効果が持続している</strong>。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 18: Today's Assignment Overview -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">本日の提出課題（全体像）</span>
+          <h2 class="slide-title">ここからは提出課題！ 課題1〜3・発展課題4〜5の概要</h2>
+        </div>
+        <span class="slide-subtitle">Web課題（<code>kadai10_interactive.html</code>）と完全連動した5つのステップ</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="card primary">
+            <h3>データ①：<code>kadai1.tsv</code><br>（課題1・課題2）</h3>
+            <p><strong>作物の収量（<code>Yield</code>, kg）</strong><br>
+            ・土壌2種（<code>SoilA, SoilB</code>）<br>
+            ・肥料4段階（<code>N100〜N400</code>）<br>
+            ・各3反復（計 $N = 24$）<br>
+            $\rightarrow$ <strong>課題1</strong>で2-way ANOVA（相乗的交互作用の検出）、<strong>課題2</strong>で8試験区（<code>SoilFert</code>）展開の多重比較とCLD！</p>
+          </div>
+          <div class="card secondary">
+            <h3>データ②：<code>kadai2.tsv</code><br>（課題3）</h3>
+            <p><strong>水のおいしさ評定（<code>Score</code>）</strong><br>
+            ・温度2種（<code>冷蔵庫, 常温</code>）<br>
+            ・銘柄3種（<code>イカアン, ビビッテル, ボスビック</code>）<br>
+            ・各5反復（計 $N = 30$）<br>
+            $\rightarrow$ <strong>交互作用がない場合</strong>の2-way ANOVAと、主効果ごとの多重比較・CLD解釈！</p>
+          </div>
+          <div class="card accent">
+            <h3>データ③：<code>kadai3.tsv</code> & <code>kadai3_2.tsv</code>（発展4・発展5）</h3>
+            <p><strong>フライドチキン試作品4種の評定</strong><br>
+            ・味2種（<code>普通味, 辛口</code>）× 衣2種（<code>普通の衣, クリスピー</code>）<br>
+            ・<strong>発展4（<code>kadai3.tsv</code>）</strong>：独立60人での<strong>クロスオーバー交互作用</strong>【Wow①】<br>
+            ・<strong>発展5（<code>kadai3_2.tsv</code>）</strong>：同一15人パネルでの<strong>個人差ノイズ分離</strong>【Wow②】</p>
+          </div>
+        </div>
+        <div class="takeaway">
+          <span class="takeaway-icon">📝</span>
+          <span>まずはRStudioで各課題のコードを実行し、手元で出力を確認してからスライドの「解答例ボックス」やWeb課題の「検証する」ボタンで答え合わせしましょう！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 19: Task 1 - Crop Yield 2-way ANOVA (kadai1.tsv) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出課題 1（20点）</span>
+          <h2 class="slide-title">課題1：作物収量データの2元配置分散分析（土壌2種×肥料4段階）</h2>
+        </div>
+        <span class="slide-subtitle"><code>kadai1.tsv</code> を読み込み、土壌・肥料の主効果と両者の交互作用（<code>Soil:Fertilizer</code>）を検定せよ</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>kadai1 <- read.delim("kadai1.tsv", stringsAsFactors = TRUE)
+summary(kadai1)
+
+# （参考）交互作用プロットで土壌A・Bごとの肥料応答を可視化
+interaction.plot(kadai1$Fertilizer, kadai1$Soil, kadai1$Yield,
+                 xlab = "Fertilizer", ylab = "Mean Yield (kg)", trace.label = "Soil")
+
+# 繰り返しありの2元配置分散分析（Soil * Fertilizer）
+summary(aov(Yield ~ Soil * Fertilizer, data = kadai1))</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 課題1のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>分散分析表の出力数値</h3>
+                <div class="code-box"><code>                Df Sum Sq Mean Sq F value   Pr(>F)    
+Soil             1  66.00   66.00  46.317 4.22e-06 ***
+Fertilizer       3 126.90   42.30  29.683 8.99e-07 ***
+Soil:Fertilizer  3  17.91    5.97   4.189   0.0229 *  
+Residuals       16  22.80    1.43</code></div>
+              </div>
+              <div class="card primary">
+                <h3>課題1の統計的結論</h3>
+                <ul>
+                  <li><strong>土壌（<code>Soil</code>）の主効果</strong>：$F = \mathbf{46.32}, p = 4.22 \times 10^{-6}$ (\*\*\*) で有意。</li>
+                  <li><strong>肥料（<code>Fertilizer</code>）の主効果</strong>：$F = \mathbf{29.68}, p = 8.99 \times 10^{-7}$ (\*\*\*) で有意。</li>
+                  <li><strong>交互作用（<code>Soil:Fertilizer</code>）</strong>：<strong>$F = \mathbf{4.189}, p = \mathbf{0.0229} &lt; 0.05$ (\*) で有意！</strong></li>
+                  <li>$\rightarrow$ 土壌の種類によって肥料増量の効果（収量の伸び方）が異なる（相乗効果がある）ため、課題2で8試験区を展開して多重比較を行う！</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 20: Task 2 - Unfolding 8 Groups & Tukey CLD (kadai1.tsv) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出課題 2（20点）</span>
+          <h2 class="slide-title">課題2：8試験区展開（<code>SoilFert</code>）によるTukey多重比較とCLD</h2>
+        </div>
+        <span class="slide-subtitle">交互作用が有意となったため、<code>Soil</code> と <code>Fertilizer</code> を結合した8群で多重比較とCLD描画を行え</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code># SoilとFertilizerを連結して8試験区の因子 SoilFert を作成
+kadai1$SoilFert <- as.factor(paste(kadai1$Soil, kadai1$Fertilizer, sep = ""))
+summary(kadai1)
+
+library(multcomp)
+result1 <- aov(Yield ~ SoilFert, data = kadai1)
+summary(result1)
+result2 <- glht(result1, linfct = mcp(SoilFert = "Tukey"))
+summary(result2)
+cld(result2)
+
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(result2))</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 課題2のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3><code>cld(result2)</code> の出力（全8試験区）</h3>
+                <div class="code-box"><code>SoilAN100 SoilAN200 SoilAN300 SoilAN400 
+      "a"      "ab"      "ac"      "bc" 
+SoilBN100 SoilBN200 SoilBN300 SoilBN400 
+     "ab"      "bc"       "c"       "d"</code></div>
+                <p style="font-size: 0.85rem;">・<code>SoilAN400 = "bc"</code>（平均 $18.50\text{ kg}$）<br>
+                ・<code>SoilBN300 = "c"</code>（平均 $20.53\text{ kg}$）<br>
+                ・<strong><code>SoilBN400 = "d"</code>（平均 $24.67\text{ kg}$：単独最高！）</strong><br>
+                ・<code>SoilBN400 - SoilBN300</code> の $p\text{値} = \mathbf{0.01136}$（約 <code>0.0114</code> \*）</p>
+              </div>
+              <div class="card primary">
+                <h3>課題2の考察のまとめ方</h3>
+                <p style="font-size: 0.88rem;">・<code>SoilA</code> では肥料を <code>N100 ("a")</code> から <code>N400 ("bc")</code> に4倍増やしても収量は $+3.93\text{ kg}$ しか増えず、<code>N200〜N400</code> の間には互いに有意差がない。<br>
+                ・一方、<code>SoilB</code> では肥料増量に伴って収量が急増し、特に <strong><code>SoilBN400 ("d")</code> は <code>SoilBN300 ("c")</code>（$p = 0.0114$）や <code>SoilAN400 ("bc")</code>（$p &lt; 0.001$）を含む他の全7試験区よりも有意に高い収量</strong>を達成しており、土壌Bと高施肥量の強い相乗効果が示された。</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 21: Task 3 - Mineral Water 2-way ANOVA Without Interaction (kadai2.tsv) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出課題 3（20点）</span>
+          <h2 class="slide-title">課題3：ミネラルウォーター評定（交互作用がない2-way ANOVAと多重比較）</h2>
+        </div>
+        <span class="slide-subtitle">温度（<code>冷蔵庫 / 常温</code>）× 銘柄（<code>イカアン / ビビッテル / ボスビック</code>）の検定と、結論の正しい書き方</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>kadai2 <- read.delim("kadai2.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai2)
+
+# (1) 繰り返しありの2元配置分散分析
+summary(aov(Score ~ Ondo * Meigara, data = kadai2))
+
+# (2) 交互作用が非有意(p = 0.115)なので、主効果（Ondo と Meigara）ごとに多重比較
+library(multcomp)
+res_ondo <- aov(Score ~ Ondo, data = kadai2)
+cld(glht(res_ondo, linfct = mcp(Ondo = "Tukey")))
+
+res_meigara <- aov(Score ~ Meigara, data = kadai2)
+tukey_meigara <- glht(res_meigara, linfct = mcp(Meigara = "Tukey"))
+summary(tukey_meigara); cld(tukey_meigara)</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 課題3のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>2-way ANOVA と 銘柄多重比較の出力</h3>
+                <div class="code-box"><code>             Df Sum Sq Mean Sq F value   Pr(>F)    
+Ondo          1   67.5   67.50  21.316 0.000110 ***
+Meigara       2  155.0   77.50  24.474 1.61e-06 ***
+Ondo:Meigara  2   15.0    7.50   2.368 0.115151    
+Residuals    24   76.0    3.17                     
+---
+  イカアン ビビッテル ボスビック 
+       "a"        "b"        "b"</code></div>
+              </div>
+              <div class="card primary">
+                <h3>解釈と記述上の最重要ポイント</h3>
+                <ul>
+                  <li><strong>交互作用 <code>Ondo:Meigara</code></strong>：**$p = 0.115 &gt; 0.05$ で非有意**（どの銘柄も冷やすと約3点おいしくなる）。</li>
+                  <li><strong>温度</strong>：<code>冷蔵庫 ("a", 8.0点) &gt; 常温 ("b", 5.0点)</code>（$p = 0.0098$）。</li>
+                  <li><strong>銘柄</strong>：<code>イカアン = "a" (3.5点)</code>、<code>ビビッテル = "b" (9.0点)</code>、<code>ボスビック = "b" (7.0点)</code>。<strong><code>ボスビック - ビビッテル</code> は $p = 0.1742 &gt; 0.05$ で有意差がない</strong>ため、「ビビッテル・ボスビック・イカアンの順に高い」と書いてはいけない！</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 22: Task 4 (Wow 1) - Fried Chicken Crossover Interaction (kadai3.tsv) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">発展課題 4・発見体験 ①（20点）</span>
+          <h2 class="slide-title">発展課題4：主効果が消える？！ クロスオーバー交互作用（<code>kadai3.tsv</code>）</h2>
+        </div>
+        <span class="slide-subtitle">フライドチキン4試作品（味×衣）を独立な60人が試食！ なぜ主効果が非有意で交互作用だけが有意なのか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>kadai3 <- read.delim("kadai3.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai3)
+
+# (1) 繰り返しありの2元配置分散分析（Aji, Koromo の主効果と Aji:Koromo の交互作用に注目！）
+summary(aov(Score ~ Aji * Koromo, data = kadai3))
+
+# (2) 交互作用が有意(p = 0.0125)なので、4試験区 (AjiKoromo) に展開してTukey多重比較
+kadai3$AjiKoromo <- as.factor(paste(kadai3$Aji, kadai3$Koromo, sep = ""))
+library(multcomp)
+res1_k3 <- aov(Score ~ AjiKoromo, data = kadai3)
+summary(res1_k3)
+res2_k3 <- glht(res1_k3, linfct = mcp(AjiKoromo = "Tukey"))
+summary(res2_k3); cld(res2_k3)</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 発展課題4のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>分散分析表と4群展開のCLD</h3>
+                <div class="code-box"><code>            Df Sum Sq Mean Sq F value Pr(>F)  
+Aji          1    184   183.7   3.053 0.0860 .
+Koromo       1     50    50.4   0.838 0.3640  
+Aji:Koromo   1    400   400.4   6.654 0.0125 *
+Residuals   56   3370    60.2                 
+---
+普通味クリスピー 普通味普通の衣 辛口クリスピー 辛口普通の衣 
+            "a"           "ab"            "b"         "ab"</code></div>
+              </div>
+              <div class="card primary">
+                <h3>クロスオーバー交互作用の考察</h3>
+                <p style="font-size: 0.86rem;">・味単独（$p = 0.0860$）も衣単独（$p = 0.3640$）も非有意だが、<strong>交互作用 <code>Aji:Koromo</code> が $F = 6.654, p = 0.0125$ (\*) で有意！</strong><br>
+                ・平均点を見ると「辛口×クリスピー（79.7点）」と「普通味×普通の衣（74.3点）」が高く、ミスマッチな「普通味×クリスピー（71.0点）」と「辛口×普通の衣（72.7点）」が低いため、1要因ずつ平均すると高低が相殺されていた。<br>
+                ・ただし対応なし60人（残差分散 $V_R = 60.18$）では <code>辛口クリスピー - 辛口普通の衣</code> は $p = 0.0759$ で有意にならず（ともに <code>b</code> を共有）。</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 23: Task 5 (Wow 2) - Repeated Measures ANOVA Removing Panelist Noise (kadai3_2.tsv) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">発展課題 5・発見体験 ②（20点）</span>
+          <h2 class="slide-title">発展課題5：同一パネリスト15名の反復測定ANOVAによる個人差の分離</h2>
+        </div>
+        <span class="slide-subtitle"><code>kadai3_2.tsv</code> で評価者の個人差（<code>Panel</code>）をモデルに加えると、残差分散とCLDはどう変わるか？</span>
+      </div>
+      <div class="slide-body">
+        <div class="code-box"><code>kadai3_2 <- read.delim("kadai3_2.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")
+summary(kadai3_2)
+
+# (1) 評価者の個人差 (Panel) をモデルに入れて分離する反復測定ANOVA（+ Panel を付ける！）
+res1_k3_2 <- aov(Score ~ AjiKoromo + Panel, data = kadai3_2)
+summary(res1_k3_2)
+
+# (2) 個人差を分離したモデルでのTukey-Kramer多重比較とCLD（発展4と比較！）
+library(multcomp)
+res2_k3_2 <- glht(res1_k3_2, linfct = mcp(AjiKoromo = "Tukey"))
+summary(res2_k3_2); cld(res2_k3_2)</code></div>
+        <details class="spoiler-box">
+          <summary>🔍 発展課題5のR実行結果・解答例を確認する（RStudioで実行後にクリック！）</summary>
+          <div class="spoiler-body">
+            <div class="grid-2">
+              <div class="card">
+                <h3>個人差 <code>Panel</code> 分離後のANOVAとCLD</h3>
+                <div class="code-box"><code>            Df Sum Sq Mean Sq F value   Pr(>F)    
+AjiKoromo    3  634.6  211.53   6.659 0.000884 ***
+Panel       14 2035.8  145.42   4.578 6.15e-05 ***
+Residuals   42 1334.2   31.77                     
+---
+普通味クリスピー 普通味普通の衣 辛口クリスピー 辛口普通の衣 
+            "a"           "ab"            "b"          "a"</code></div>
+              </div>
+              <div class="card primary">
+                <h3>発展4（対応なし）と発展5（対応あり）の比較</h3>
+                <ul>
+                  <li>パネリスト15人の採点傾向の個人差（$S_{\text{Panel}} = 2035.8, p = 6.15 \times 10^{-5}$）を残差 $3370.0$ から引き算したことで、残差平方和が $1334.2$ に減り、<strong>誤差分散 $V_R$ が $60.18 \to \mathbf{31.77}$ へと約半分に減少！</strong></li>
+                  <li>その結果、<code>AjiKoromo</code> の $F$値が $3.515 \to \mathbf{6.659}$（$p = 0.000884$ \*\*\*）へ跳ね上がり、発展4では $p = 0.0759$ で非有意だった <strong><code>辛口普通の衣 - 辛口クリスピー</code> が $p = 0.00785$ (\*\*) で有意（CLD: <code>"ab"</code> $\to$ <code>"a"</code>）</strong>になった！</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 24: Deep Dive into Task 4 vs Task 5 (Multi-group Noise Canceling) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">発見体験 ② の数理</span>
+          <h2 class="slide-title">なぜ「<code>+ Panel</code>」で個人差を分離すると隠れていた有意差が見えるのか？</h2>
+        </div>
+        <span class="slide-subtitle">第7回「対応のあるt検定」と第10回「反復測定分散分析」をつなぐ統計的ノイズキャンセリング</span>
+      </div>
+      <div class="slide-body">
+        <div class="svg-box" style="flex-direction: column; padding: 12px 18px; gap: 10px;">
+          <div style="font-size: 0.9rem; font-weight: 700; color: #1e3a8a;">
+            総平方和 $S_T = 4004.6$（$df_T = 59$）の内訳の比較：<code>AjiKoromo</code> の群間平方和 $S_A = 634.6$ はどちらも同じ！
+          </div>
+          <!-- Bar 1: Task 4 (Unpaired) -->
+          <div style="width: 100%;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 3px;">
+              ① 発展課題4（対応なしモデル <code>Score ~ AjiKoromo</code>）：個人差が残差に混入し、分母の誤差分散 $V_R = 60.18$ が巨大！
+            </div>
+            <div style="display: flex; width: 100%; height: 34px; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
+              <div style="width: 16%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700;">
+                $S_A = 634.6$
+              </div>
+              <div style="width: 84%; background: #fca5a5; color: #7f1d1d; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700;">
+                残差 $S_R = 3370.0$ ($df=56 \implies V_R = 60.18$) ※パネリストの個人差が混入！ $\implies F = 3.515$
+              </div>
+            </div>
+          </div>
+
+          <!-- Bar 2: Task 5 (Repeated Measures) -->
+          <div style="width: 100%;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: #0f766e; margin-bottom: 3px;">
+              ② 発展課題5（反復測定モデル <code>Score ~ AjiKoromo + Panel</code>）：個人差 $S_{\text{Panel}} = 2035.8$ を分離し、誤差分散 $V_R = 31.77$ が半減！
+            </div>
+            <div style="display: flex; width: 100%; height: 34px; border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
+              <div style="width: 16%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700;">
+                $S_A = 634.6$
+              </div>
+              <div style="width: 51%; background: #fde68a; color: #92400e; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; border-left: 2px solid white; border-right: 2px solid white;">
+                パネリスト個人差 $S_{\text{Panel}} = 2035.8$ ($df=14$) を分離・除去！
+              </div>
+              <div style="width: 33%; background: #86efac; color: #14532d; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">
+                純粋残差 $S_R = 1334.2$ ($V_R = 31.77 \implies F = 6.659$)
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card primary">
+          <h3>発展課題5の考察ポイント</h3>
+          <p>・Tukey多重比較の標準誤差 $SE = \sqrt{2 V_R / n}$ も、誤差分散 $V_R$ が $60.18 \to 31.77$ に半減したことで <strong>$2.833 \to 2.058$</strong> に縮小した。<br>
+          ・その結果、同じ $7.0$点の平均差（<code>辛口クリスピー - 辛口普通の衣</code>）に対する $t$値が $2.471 \to 3.401$ に上昇し、$p$値が $0.0759 \to \mathbf{0.00785}$ となって有意差が明確に検出された。<strong>「対応があるデータに対して対応を無視した検定を行うと検出力を大きく損なう」</strong>という第7回・第10回共通の重要原則が実証された！</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 25: Summary Reference Table for All 5 Tasks -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">結果リファレンス</span>
+          <h2 class="slide-title">本日の提出課題（課題1〜3・発展4〜5）数値リファレンス一覧</h2>
+        </div>
+        <span class="slide-subtitle">自力でRStudioを実行したあと、下のボックスを開いてWeb課題の入力値を確認しよう</span>
+      </div>
+      <div class="slide-body">
+        <details class="spoiler-box">
+          <summary>🔍 全課題（課題1〜3・発展課題4〜5）の正解数値一覧表を開く</summary>
+          <div class="spoiler-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>課題</th>
+                  <th>データ・Rモデル式</th>
+                  <th>主要な統計量（$F$値・残差 $V_R$）</th>
+                  <th>$p$値</th>
+                  <th>結論・CLD</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>課題1</strong></td>
+                  <td><code>kadai1.tsv</code> ($N=24$)<br><code>aov(Yield ~ Soil * Fertilizer)</code></td>
+                  <td><code>Soil</code>: $F = \mathbf{46.32}$ ($df=1$)<br><code>Fertilizer</code>: $F = \mathbf{29.68}$ ($df=3$)<br><strong><code>Soil:Fertilizer</code>: $F = \mathbf{4.189}$</strong> ($df=3$)</td>
+                  <td><code>Soil</code>: <code>4.22e-06</code><br><code>Fert</code>: <code>8.99e-07</code><br><strong>交互作用: <code>0.0229</code></strong></td>
+                  <td><strong>主効果・交互作用ともすべて有意</strong><br>（SoilB×高施肥で強い相乗効果）</td>
+                </tr>
+                <tr>
+                  <td><strong>課題2</strong></td>
+                  <td><code>kadai1.tsv</code> (8群展開)<br><code>aov(Yield ~ SoilFert)</code> + Tukey</td>
+                  <td><code>SoilFert</code>: $F = 21.13$ ($df=7$)<br><code>Residuals</code>: $V_R = 1.425$ ($df=16$)</td>
+                  <td><code>BN400 - BN300</code>:<br><strong>$p = 0.0114$</strong></td>
+                  <td><code>AN400="bc"</code>, <code>BN300="c"</code>, <strong><code>BN400="d"</code></strong><br>（<code>SoilBN400</code> が単独トップ）</td>
+                </tr>
+                <tr>
+                  <td><strong>課題3</strong></td>
+                  <td><code>kadai2.tsv</code> ($N=30$)<br><code>aov(Score ~ Ondo * Meigara)</code></td>
+                  <td><code>Ondo</code>: $F = 21.32$, <code>Meigara</code>: $F = 24.47$<br><strong><code>Ondo:Meigara</code>: $F = 2.368$</strong></td>
+                  <td><strong>交互作用: <code>0.115</code></strong><br><code>ボス-ビビ</code>: <strong><code>0.174</code></strong></td>
+                  <td>交互作用なし。<code>冷蔵庫("a") &gt; 常温("b")</code><br><strong><code>イカアン="a", ビビッテル="b", ボスビック="b"</code></strong></td>
+                </tr>
+                <tr>
+                  <td><strong>発展4</strong></td>
+                  <td><code>kadai3.tsv</code> (独立60人)<br><code>aov(Score ~ Aji * Koromo)</code></td>
+                  <td><code>Aji</code>: $F=3.053$, <code>Koromo</code>: $F=0.838$<br><strong><code>Aji:Koromo</code>: $F = \mathbf{6.654}$</strong><br>残差 $V_R = \mathbf{60.18}$ ($df=56$)</td>
+                  <td><code>Aji</code>: $0.086$, <code>Koromo</code>: $0.364$<br><strong>交互作用: <code>0.0125</code></strong></td>
+                  <td><strong>クロスオーバー交互作用のみ有意！</strong><br>CLD: <code>普通クリ="a", 辛口普通="ab", 普通普通="ab", 辛口クリ="b"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>発展5</strong></td>
+                  <td><code>kadai3_2.tsv</code> (15人反復測定)<br><code>aov(Score ~ AjiKoromo + Panel)</code></td>
+                  <td><strong><code>AjiKoromo</code>: $F = \mathbf{6.659}$</strong> ($df=3$)<br><code>Panel</code>: $F = 4.578$ ($df=14$)<br>残差 <strong>$V_R = \mathbf{31.77}$</strong> ($df=42$)</td>
+                  <td><code>AjiKoromo</code>: <code>0.000884</code><br><code>辛口普通-辛口クリ</code>:<br><strong>$p = 0.00785$</strong></td>
+                  <td>個人差分離で誤差分散が半減！<br>CLD: <code>普通クリ="a"</code>, <strong><code>辛口普通="a"</code></strong>, <code>普通普通="ab", 辛口クリ="b"</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Slide 26: Submission Guide -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">提出ガイド</span>
+          <h2 class="slide-title">Web課題ワークブックの提出手順と <code>ひな型.Rmd</code> の活用</h2>
+        </div>
+        <span class="slide-subtitle">スライドとWebで完全統一！ 迷わず提出まで完了しよう</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary" style="border-width: 2px;">
+            <h3>📌 提出方法（Web課題からHTMLを書き出して提出！）</h3>
+            <ol>
+              <li>第10回ページの<strong>「📝 インタラクティブWeb課題（<code>kadai10_interactive.html</code>）」</strong>を開く。</li>
+              <li>上部バーに<strong>学籍番号・氏名</strong>を入力する。</li>
+              <li><strong>課題1〜3・発展課題4〜5</strong>の数値を入力し、「🔍 検証する」ボタンで即時採点（100点満点）を行う。</li>
+              <li>各課題の考察欄と最後の<strong>総合考察</strong>を記入する。</li>
+              <li>画面下部の<strong>「📥 提出用レポートHTMLを書き出す」</strong>ボタンを押し、保存された <code>学籍番号_氏名_第10回課題レポート.html</code> を提出する！</li>
+            </ol>
+          </div>
+          <div class="card secondary">
+            <h3>💻 R Markdown（<code>ひな型.Rmd</code>）の位置づけ</h3>
+            <p>・ダウンロード欄の <code>ひな型.Rmd</code> には、本日の課題1〜3・発展課題4〜5のすべてのRコード（交互作用プロット <code>interaction.plot()</code> を含む）が収録されています。<br>
+            ・RStudioで開いてチャンクを上から順に実行したり、<strong>Knit</strong> ボタンを押してCLD付き箱ひげ図入りのHTMLレポートを手元で出力・保存するための学習補助ファイルとして活用してください。<br>
+            ・※ 提出ファイルは左記の<strong>Web課題から書き出したHTMLレポート</strong>に統一しています。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 27: Troubleshooting -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">FAQ</span>
+          <h2 class="slide-title">トラブルシューティング（第10回でよくあるエラーと対処法）</h2>
+        </div>
+        <span class="slide-subtitle">RStudioでエラーや警告が出たらここをチェック！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card danger">
+            <h3>⚠️ <code>read.csv("kadai1.tsv")</code> で1列に潰れてしまう</h3>
+            <p><strong>原因</strong>：<code>.tsv</code> はタブ区切りファイル。<br>
+            <strong>対策</strong>：<strong><code>read.delim("kadai1.tsv", stringsAsFactors = TRUE)</code></strong> を使う（日本語を含む <code>kadai2.tsv</code> 等は <code>fileEncoding = "utf8"</code> も指定）。</p>
+          </div>
+          <div class="card danger">
+            <h3>⚠️ 数値の水準（濃度 <code>0.5, 1, 2</code>）で自由度が <code>1</code> になる</h3>
+            <p><strong>原因</strong>：数値のみの列が因子（<code>factor</code>）ではなく連続変数（<code>numeric</code>）として扱われている。<br>
+            <strong>対策</strong>：<code>renshu2$Nodo &lt;- as.factor(renshu2$Nodo)</code> を実行してから <code>aov()</code> を行う。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ <code>glht()</code> で <code>Completion with error &gt; abseps</code> 警告</h3>
+            <p><strong>原因</strong>：8群（28ペア）の多重比較で多変量t分布の数値積分の近似精度に関するWarningが出ることがある。<br>
+            <strong>対策</strong>：エラーではなく計算結果やCLDには影響しないため、そのまま進めて問題ない。</p>
+          </div>
+          <div class="card">
+            <h3>⚠️ グラフの日本語が四角（□□□）に文字化けする（Mac）</h3>
+            <p><strong>対策</strong>：MacのRStudioでは <code>plot()</code> の直前に <code>par(family = "HiraKakuProN-W6")</code> を実行すると日本語がきれいに表示される。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 28: Summary Matrix of Parametric ANOVA (Lectures 7 to 10) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-theory">体系的整理</span>
+          <h2 class="slide-title">第7回〜第10回で学んだパラメトリック検定の全体マップ</h2>
+        </div>
+        <span class="slide-subtitle">「群の数（2群 vs 3群以上）」「要因の数（1要因 vs 2要因）」「対応の有無」ですべてがつながる！</span>
+      </div>
+      <div class="slide-body">
+        <table>
+          <thead>
+            <tr>
+              <th>比較の構造</th>
+              <th>2群の比較（第7回・第8回）</th>
+              <th>3群以上の比較（第9回・第10回）</th>
+              <th>数理的なつながり</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1要因・対応なし</strong><br>（独立した群）</td>
+              <td><strong>独立2群のt検定</strong>（第8回）<br><code>t.test(Y ~ X)</code></td>
+              <td><strong>1元配置分散分析</strong>（第9回）<br><code>aov(Y ~ X)</code> ＋ Tukey / Dunnett</td>
+              <td>2群のとき <strong>$t^2 = F$</strong> で完全一致！<br>（第9回 発展課題5で証明）</td>
+            </tr>
+            <tr style="background: #f0fdfa;">
+              <td><strong>1要因・対応あり</strong><br>（同一個体・同一パネル）</td>
+              <td><strong>対応のあるt検定</strong>（第7回）<br><code>t.test(x, y, paired = TRUE)</code></td>
+              <td><strong>反復測定1元配置分散分析</strong>（第10回）<br><code>aov(Y ~ A + Panel)</code></td>
+              <td>個体差（<code>ID</code> / <code>Panel</code>）を残差から引き算して<strong>誤差分散を大幅削減！</strong></td>
+            </tr>
+            <tr style="background: #eff6ff;">
+              <td><strong>2要因・対応なし</strong><br>（要因A × 要因B）</td>
+              <td colspan="2"><strong>2元配置分散分析</strong>（第10回 本日！）<br>・繰り返しあり：<strong><code>aov(Y ~ A * B)</code></strong>（主効果A・主効果B・交互作用 $A \times B$ を同時検定）<br>・繰り返しなし：<strong><code>aov(Y ~ A + B)</code></strong>（第2要因の変動を分離して主効果を検定）</td>
+              <td>交互作用が有意なら全 $a \times b$ 群を展開（<code>paste(A, B)</code>）して多重比較！</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="takeaway">
+          <span class="takeaway-icon">🎓</span>
+          <span>第7回〜第10回の検定はすべて「平均値と分散（平方和の分割）」に基づく<strong>パラメトリック検定の統一体系</strong>としてつながっています！</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 29: Summary & Preview of Lecture 11 -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-intro">まとめ</span>
+          <h2 class="slide-title">本日のまとめと次回（第11回・最終回）への予告</h2>
+        </div>
+        <span class="slide-subtitle">2元配置分散分析と交互作用を習得し、次回は「ノンパラメトリック検定」へ！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card primary">
+            <h3>本日の3大マスターポイント</h3>
+            <p>1. <strong>主効果と交互作用（<code>Y ~ A * B</code>）</strong>：単独の効果（主効果）だけでなく、組み合わせによる相乗効果（課題1）やクロスオーバー逆転効果（発展4）を検出できる。<br>
+            2. <strong>多重比較の分岐ルール</strong>：交互作用が非有意（$p \ge 0.05$）なら主効果ごとに比較し（課題3）、有意（$p &lt; 0.05$）なら <code>paste()</code> で全試験区を展開してTukey法＋CLDで比較する（課題2・発展4）。<br>
+            3. <strong>反復測定・ブロック要因（<code>Y ~ A + Panel</code>）</strong>：評価者や被験者の個人差を分離することで誤差分散 $V_R$ を減らし、検出力を大幅に高められる（発展5）。</p>
+          </div>
+          <div class="card secondary">
+            <h3>次回（第11回）への予告：ノンパラメトリック検定</h3>
+            <p>第7回〜第10回で学んだ t検定や分散分析は、すべて「データが正規分布に従う」ことを前提とした<strong>パラメトリック検定</strong>でした。<br>
+            では、<strong>極端な外れ値があるデータや、正規性検定（Shapiro-Wilk検定）で $p &lt; 0.05$ となって正規分布が仮定できないデータ</strong>はどう検定すればよいでしょうか？<br>
+            データを「順位（ランク）」に置き換えて頑健に検定する<strong>第11回「ノンパラメトリック検定（Wilcoxon / Mann-Whitney / Kruskal-Wallis / Steel-Dwass）」</strong>をお楽しみに！</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.slide-viewport -->
+
+  <!-- Bottom Navigation Footer -->
+  <div class="bottom-bar">
+    <div class="nav-buttons">
+      <button class="btn" onclick="prevSlide()">◀ 前へ</button>
+      <button class="btn" onclick="nextSlide()">次へ ▶</button>
+      <span style="font-size: 0.8rem; color: #64748b; margin-left: 8px;">[← / → / Spaceキーで操作可能]</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="slideCounter" style="font-weight: 600; color: #f1f5f9;">
+      1 / 29
+    </div>
+  </div>
+
+  <!-- Slide Jump Modal -->
+  <div class="modal" id="slideModal" onclick="if(event.target === this) toggleModal()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="color: var(--primary);">📋 スライド一覧（クリックでジャンプ）</h3>
+        <button class="btn" style="background: #f1f5f9; color: #334155;" onclick="toggleModal()">✕ 閉じる</button>
+      </div>
+      <div class="modal-list" id="modalList"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const counter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    const modalList = document.getElementById('modalList');
+
+    // Build modal item list
+    slides.forEach((s, idx) => {
+      const titleElem = s.querySelector('.slide-title') || s.querySelector('h1') || s.querySelector('h2');
+      const titleText = titleElem ? titleElem.innerText.replace(/\n/g, ' ') : `スライド ${idx + 1}`;
+      const item = document.createElement('div');
+      item.className = 'modal-item';
+      item.innerHTML = `<strong>${idx + 1}.</strong> ${titleText}`;
+      item.onclick = () => {
+        goToSlide(idx);
+        toggleModal();
+      };
+      modalList.appendChild(item);
+    });
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      counter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+      progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function goToSlide(idx) {
+      currentSlide = idx;
+      updateSlide();
+    }
+
+    function toggleModal() {
+      document.getElementById('slideModal').classList.toggle('active');
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function toggleAllSpoilers() {
+      const spoilers = document.querySelectorAll('details.spoiler-box');
+      const anyClosed = Array.from(spoilers).some(d => !d.open);
+      spoilers.forEach(d => { d.open = anyClosed; });
+      const btn = document.getElementById('toggleSpoilersBtn');
+      if (btn) {
+        btn.innerText = anyClosed ? '🙈 課題解答をすべて閉じる' : '👁️ 課題解答をすべて開く';
+      }
+    }
+
+    function copyCode(btn) {
+      const codeBox = btn.closest('.code-box');
+      const clone = codeBox.cloneNode(true);
+      const btnInClone = clone.querySelector('.copy-btn');
+      if (btnInClone) btnInClone.remove();
+      const text = clone.innerText.trim();
+      
+      const copySuccess = () => {
+        btn.innerHTML = '✓ コピー完了！';
+        btn.style.color = '#4ade80';
+        btn.style.background = 'rgba(74, 222, 128, 0.2)';
+        setTimeout(() => {
+          btn.innerHTML = '📋 コピー';
+          btn.style.color = '#94a3b8';
+          btn.style.background = 'rgba(255, 255, 255, 0.15)';
+        }, 1800);
+      };
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(copySuccess).catch(() => fallbackCopy(text, copySuccess));
+      } else {
+        fallbackCopy(text, copySuccess);
+      }
+    }
+
+    function fallbackCopy(text, callback) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        callback();
+      } catch (err) {
+        console.error('Copy failed', err);
+      }
+      document.body.removeChild(ta);
+    }
+
+    // すべての .code-box にコピーボタンを自動追加 ＆ アコーディオン展開時の自動スクロール
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.code-box').forEach(box => {
+        if (!box.querySelector('.copy-btn')) {
+          const btn = document.createElement('button');
+          btn.className = 'copy-btn';
+          btn.type = 'button';
+          btn.innerHTML = '📋 コピー';
+          btn.onclick = function() { copyCode(this); };
+          box.appendChild(btn);
+        }
+      });
+
+      document.querySelectorAll('details.spoiler-box').forEach(det => {
+        det.addEventListener('toggle', () => {
+          if (det.open) {
+            const slide = det.closest('.slide');
+            if (slide && slide.classList.contains('active')) {
+              setTimeout(() => {
+                det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }, 50);
+            }
+          }
+        });
+      });
+    });
+
+    // Keyboard Navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullScreen();
+      } else if (e.key === 'Escape') {
+        document.getElementById('slideModal').classList.remove('active');
+      }
+    });
+
+    // KaTeX Math Rendering
+    function initKaTeX() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          ignoredClasses: ['code-box', 'copy-btn', 'no-math'],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option'],
+          throwOnError: false
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(initKaTeX, 50);
+    });
+    window.addEventListener('load', () => {
+      setTimeout(initKaTeX, 100);
+      setTimeout(initKaTeX, 500);
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>

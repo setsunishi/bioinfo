@@ -979,7 +979,7 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             <text x="695" y="148" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">群C (高)</text>
             <!-- Arrow showing large between-group spread -->
             <line x1="525" y1="54" x2="525" y2="121" stroke="#dc2626" stroke-width="2"/>
-            <text x="532" y="75" text-anchor="start" font-size="10.5" font-weight="bold" fill="#dc2626">群間分散 VA が大！</text>
+            <text x="532" y="75" text-anchor="start" font-size="10.5" font-weight="bold" fill="#dc2626">群間分散 <tspan font-style="italic" font-family="serif" font-size="12">V</tspan><tspan dy="2" font-size="8.5">A</tspan><tspan dy="-2"> が大！</tspan></text>
           </svg>
         </div>
       </div>
@@ -995,32 +995,40 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
         <span class="slide-subtitle">総平方和 $S_T$ ＝ 群間平方和 $S_A$ ＋ 群内（残差）平方和 $S_R$</span>
       </div>
       <div class="slide-body">
-        <div class="svg-box">
-          <svg viewBox="0 0 780 155" width="100%" height="148" aria-label="平方和と自由度の分割ツリー図">
-            <!-- Top Box: Total Variation -->
-            <rect x="230" y="6" width="320" height="44" rx="8" fill="#1e3a8a"/>
-            <text x="390" y="25" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">総変動（総平方和 ST） | 総自由度 dfT = N - 1</text>
-            <text x="390" y="42" text-anchor="middle" font-size="10.5" fill="#bfdbfe">全データ Xij と全体平均 X̄ の差の2乗和</text>
+        <div class="svg-box" style="flex-direction: column; padding: 12px 18px; gap: 0;">
+          <!-- Top Box: Total Variation (KaTeX rendered) -->
+          <div style="background: #1e3a8a; color: #ffffff; border-radius: 8px; padding: 8px 24px; text-align: center; width: 420px; max-width: 100%; box-shadow: 0 2px 4px rgba(30,58,138,0.15);">
+            <div style="font-size: 0.96rem; font-weight: 700;">総変動（総平方和 $S_T$） <span style="opacity: 0.65;">｜</span> 総自由度 $df_T = N - 1$</div>
+            <div style="font-size: 0.82rem; color: #bfdbfe; margin-top: 2px;">全データ $X_{ij}$ と全体平均 $\bar{X}$ の差の2乗和：$\sum_{i=1}^{a}\sum_{j=1}^{n_i}(X_{ij} - \bar{X})^2$</div>
+          </div>
 
-            <!-- Arrows -->
-            <line x1="310" y1="50" x2="185" y2="74" stroke="#2563eb" stroke-width="2.5"/>
-            <line x1="470" y1="50" x2="595" y2="74" stroke="#0d9488" stroke-width="2.5"/>
+          <!-- SVG Connector Arrows -->
+          <svg viewBox="0 0 760 28" width="100%" height="26" style="display: block; overflow: visible;">
+            <line x1="310" y1="2" x2="185" y2="26" stroke="#2563eb" stroke-width="2.5"/>
+            <polygon points="185,26 191,18 196,24" fill="#2563eb"/>
+            <line x1="450" y1="2" x2="575" y2="26" stroke="#0d9488" stroke-width="2.5"/>
+            <polygon points="575,26 564,24 569,18" fill="#0d9488"/>
+          </svg>
 
+          <!-- Bottom Two Boxes: Between-group + Within-group (KaTeX rendered) -->
+          <div style="display: flex; align-items: stretch; justify-content: space-between; width: 100%; gap: 12px;">
             <!-- Left Box: Between-group -->
-            <rect x="20" y="74" width="330" height="72" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
-            <text x="185" y="95" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1e3a8a">① 群間変動（要因平方和 SA）</text>
-            <text x="185" y="113" text-anchor="middle" font-size="11" fill="#1e40af">群間自由度 dfA = a - 1 （群数 - 1）</text>
-            <text x="185" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#dc2626">群間平均平方（平均の分散） VA = SA / (a - 1) 【分子】</text>
+            <div style="flex: 1; background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 8px 14px; text-align: center;">
+              <div style="font-size: 0.92rem; font-weight: 700; color: #1e3a8a;">① 群間変動（要因平方和 $S_A$）</div>
+              <div style="font-size: 0.84rem; color: #1e40af; margin-top: 2px;">群間自由度 $df_A = a - 1$（群数 $- 1$）</div>
+              <div style="font-size: 0.88rem; font-weight: 700; color: #dc2626; margin-top: 3px;">群間平均平方（平均の分散） $V_A = \dfrac{S_A}{a - 1}$ 【分子】</div>
+            </div>
 
             <!-- Plus Sign -->
-            <text x="390" y="116" text-anchor="middle" font-size="22" font-weight="bold" fill="#64748b">＋</text>
+            <div style="display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: #64748b; padding: 0 4px;">＋</div>
 
             <!-- Right Box: Within-group (Residual) -->
-            <rect x="430" y="74" width="330" height="72" rx="8" fill="#f0fdfa" stroke="#0d9488" stroke-width="2"/>
-            <text x="595" y="95" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#0f766e">② 群内変動（残差平方和 SR / Residuals）</text>
-            <text x="595" y="113" text-anchor="middle" font-size="11" fill="#115e59">群内自由度 dfR = N - a （全データ数 - 群数）</text>
-            <text x="595" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0f766e">群内平均平方（誤差分散） VR = SR / (N - a) 【分母】</text>
-          </svg>
+            <div style="flex: 1; background: #f0fdfa; border: 2px solid #0d9488; border-radius: 8px; padding: 8px 14px; text-align: center;">
+              <div style="font-size: 0.92rem; font-weight: 700; color: #0f766e;">② 群内変動（残差平方和 $S_R$ / <code>Residuals</code>）</div>
+              <div style="font-size: 0.84rem; color: #115e59; margin-top: 2px;">群内自由度 $df_R = N - a$（全データ数 $-$ 群数）</div>
+              <div style="font-size: 0.88rem; font-weight: 700; color: #0f766e; margin-top: 3px;">群内平均平方（誤差分散） $V_R = \dfrac{S_R}{N - a}$ 【分母】</div>
+            </div>
+          </div>
         </div>
         <div class="grid-2">
           <div class="formula-box">

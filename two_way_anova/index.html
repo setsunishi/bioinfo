@@ -617,6 +617,95 @@
           </p>
         </div>
       </div>
+
+      <!-- Data Format Preview Card -->
+      <div class="card" style="margin-top: 20px;">
+        <h3 style="font-size: 1.08rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">📋 本日の練習・課題データの形式プレビュー（2次元表 vs R用スタック形式）</h3>
+        <p style="font-size: 0.88rem; color: #475569; margin-bottom: 12px;">
+          実験ノートでよく作る「縦×横の2次元表（ワイド形式）」は、Rでは<strong>「要因A列・要因B列・測定値Y列」の3列のスタック形式（1行＝1データ）</strong>に並べて読み込みます。交互作用が有意なときは、<code>paste(A, B, sep="")</code> で4列目に連結因子を追加して多重比較を行います。
+        </p>
+        <div class="grid-2" style="gap: 14px;">
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 0.86rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">① 授業内練習データ（<code>renshu1.csv</code> 〜 <code>renshu4.tsv</code>）の先頭行抜粋</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; background: white;">
+              <thead>
+                <tr style="background: #e2e8f0; text-align: left;">
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">ファイル名</th>
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">列名（3列構成）</th>
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">データの先頭行例</th>
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">特徴・Rモデル式</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>renshu1.csv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Species, Fertilizer, Height</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>A, X, 7.16</code>（各8反復）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">交互作用なし (<code>*</code>)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>renshu2.tsv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Growth, Yaku, Nodo</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>15.2, OJ, 0.5</code>（各10反復）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Nodo</code>を因子化＋6群展開</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>renshu3.tsv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Temp, Shoku, Kyodo</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>T80, S0.5, 14.0</code>（反復なし）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">1マス1個 (<code>Kyodo ~ Shoku + Temp</code>)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>renshu4.tsv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Time, ID, mmHg</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Mae, A, 116</code>（被験者A〜E）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">反復測定 (<code>mmHg ~ Time + ID</code>)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 0.86rem; font-weight: 700; color: var(--secondary); margin-bottom: 6px;">② 提出課題データ（<code>kadai1.tsv</code> 〜 <code>kadai3_2.tsv</code>）の先頭行抜粋</div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; background: white;">
+              <thead>
+                <tr style="background: #ccfbf1; text-align: left;">
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">ファイル名</th>
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">列名（3列構成）</th>
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">データの先頭行例</th>
+                  <th style="padding: 5px 8px; border: 1px solid #cbd5e1;">課題と解析モデル</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>kadai1.tsv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Soil, Fertilizer, Yield</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>SoilA, N100, 14.5</code>（各3反復）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">課題1 (<code>*</code>) ＆ 課題2 (8群 <code>SoilFert</code>)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>kadai2.tsv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Ondo, Meigara, Score</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>冷蔵庫, イカアン, 6</code>（各5反復）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">課題3（交互作用なし $\to$ 主効果比較）</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>kadai3.tsv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>Aji, Koromo, Score</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>辛口, クリスピー, 65</code>（各15人）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">発展4（逆転交互作用 $\to$ 4群展開）</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>kadai3_2.tsv</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>AjiKoromo, Panel, Score</code></td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><code>辛口クリスピー, A, 65</code>（15人×4種）</td>
+                  <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">発展5 (<code>Score ~ AjiKoromo + Panel</code>)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- R Code Cheatsheet -->

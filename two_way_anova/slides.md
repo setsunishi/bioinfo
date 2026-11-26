@@ -193,25 +193,35 @@ $$S_T = S_A + S_B + S_{A \times B} + S_R, \qquad (N - 1) = (a - 1) + (b - 1) + (
 :::
 :::
 
-# 【実践 Step 0】RStudioの準備（ファイルDL・作業ディレクトリ・日本語文字化け対策）
+# 【実践 Step 0】2元配置のデータ形式：「2次元表」から「R用スタック形式（3列）」へ
 
-### スライド単体で見返しても迷わない！ 解析を始める前のチェックポイント
+### 実験ノートのクロス表（ワイド形式）を「要因A列・要因B列・測定値Y列」のスタック形式に変換して読み込む！
 
 ::: columns
 ::: {.column width="50%"}
-### Step 0-1：データ保存と作業ディレクトリ設定
-1. 第10回ページのダウンロード欄から以下のファイルを同じフォルダに保存する：
-   - 練習用：`renshu1.csv`, `renshu2.tsv`, `renshu3.tsv`, `renshu4.tsv`
-   - 提出課題用：**`kadai1.tsv`**, **`kadai2.tsv`**, **`kadai3.tsv`**, **`kadai3_2.tsv`**
-2. RStudio上部メニューの **`Session` $\rightarrow$ `Set Working Directory` $\rightarrow$ `Choose Directory...`** で保存先フォルダを指定する。
+### ❌ 実験ノートの2次元表（このままではRに不向き）
+- 例：練習1（植物2種×肥料3種、各マス8個体、計48個体）
+
+| 肥料 ＼ 植物種 | 種 A（各8個体） | 種 B（各8個体） |
+|:---|:---|:---|
+| **肥料 X** | 7.16, 6.78, 8.93, ... | 8.03, 4.86, 5.49, ... |
+| **肥料 Y** | 9.98, 5.20, 7.18, ... | 4.47, 7.82, 5.75, ... |
+| **肥料 Z** | 11.11, 10.55, 14.6, ... | 9.63, 6.38, 9.99, ... |
 :::
 ::: {.column width="50%"}
-### Step 0-2：TSV読み込みとグラフの日本語設定
-- `.tsv`（タブ区切りファイル）は `read.csv()` ではなく **`read.delim("ファイル名.tsv", stringsAsFactors = TRUE, fileEncoding = "utf8")`** で読み込む！
-- MacのRStudioでグラフの日本語が文字化けする場合は、`plot()` の前に以下を実行する：
+### ⭕ R用のスタック形式（1行＝1データ、3列構成）
+- **`renshu1.csv` の中身（抜粋）**：同じ条件が複数行続く＝「繰り返しあり」
+
+| 行 | `Species` (要因A) | `Fertilizer` (要因B) | `Height` (目的変数Y) |
+|:---:|:---:|:---:|:---:|
+| 1 | `A` | `X` | **7.16** |
+| 2 | `A` | `X` | **6.78** |
+| 9 | `A` | `Y` | **9.98** |
+
 ```r
-# Macでグラフの日本語文字化けを防ぐ設定
-par(family = "HiraKakuProN-W6")
+# CSVは read.csv()、TSV(タブ区切り)は read.delim() で読み込む！
+renshu1 <- read.csv("renshu1.csv", stringsAsFactors = TRUE)
+kadai1  <- read.delim("kadai1.tsv", stringsAsFactors = TRUE)
 ```
 :::
 :::

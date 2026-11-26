@@ -552,6 +552,33 @@
       border-top: 1px solid #dbeafe;
     }
 
+    /* Scrollable Data Table Container */
+    .scroll-table-wrap {
+      max-height: 340px;
+      overflow-y: auto;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .scroll-table-wrap table {
+      border: none;
+      border-radius: 0;
+      font-size: 0.82rem;
+    }
+    .scroll-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #e2e8f0;
+      color: #1e293b;
+      box-shadow: 0 1px 0 #cbd5e1;
+      padding: 6px 10px;
+    }
+    .scroll-table-wrap tbody td {
+      padding: 5px 10px;
+    }
+
     /* Diagram Container */
     .svg-box {
       background: #ffffff;
@@ -1095,81 +1122,108 @@ cld(result2); par(mar = c(5.1, 4.1, 6, 2.1)); plot(cld(result2))</code></div>
       </div>
     </div>
 
-    <!-- Slide 12: Step 0 - HandsOn Setup & Data Format Preview -->
+    <!-- Slide 12: Step 0 - HandsOn Setup -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
           <span class="badge badge-practice">実践 Step 0（必読）</span>
-          <h2 class="slide-title">2元配置のデータ形式：「2次元表」から「R用スタック形式（3列）」へ</h2>
+          <h2 class="slide-title">RStudioの準備：TSVファイルの読み込みと日本語グラフの設定</h2>
         </div>
-        <span class="slide-subtitle">実験ノートのクロス表（ワイド形式）を「要因A列・要因B列・測定値Y列」のスタック形式に変換して <code>read.delim()</code> で読み込む！</span>
+        <span class="slide-subtitle">本日のデータは <code>.tsv</code>（タブ区切りテキスト）が中心！ <code>read.delim()</code> を使おう</span>
       </div>
       <div class="slide-body">
         <div class="grid-2">
-          <div class="card">
-            <h3>❌ 実験ノートの2次元表（このままではRに不向き）</h3>
-            <p style="font-size: 0.84rem; color: #475569;">例：練習1（植物2種×肥料3種、各マス8個体、計48個体）</p>
-            <table style="font-size: 0.8rem;">
-              <thead>
-                <tr><th>肥料 ＼ 植物種</th><th>種 A（各8個体）</th><th>種 B（各8個体）</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><strong>肥料 X</strong></td><td>7.16, 6.78, 8.93, 13.6, ...</td><td>8.03, 4.86, 5.49, 10.42, ...</td></tr>
-                <tr><td><strong>肥料 Y</strong></td><td>9.98, 5.20, 7.18, 6.37, ...</td><td>4.47, 7.82, 5.75, 10.11, ...</td></tr>
-                <tr><td><strong>肥料 Z</strong></td><td>11.11, 10.55, 14.6, ...</td><td>9.63, 6.38, 9.99, 14.55, ...</td></tr>
-              </tbody>
-            </table>
-            <p style="font-size: 0.82rem; color: #b91c1c; margin-top: 2px;">※ 練習3（繰り返しなし）のように各マスに数値が1個ずつの表も同じように縦長（3列）に並べ替えます。</p>
+          <div class="card primary">
+            <h3>Step 0-1：データ保存と <code>read.delim()</code></h3>
+            <ol>
+              <li>第10回ページのダウンロード欄からファイルを同じフォルダに保存し、RStudioの <strong><code>Session</code> $\rightarrow$ <code>Set Working Directory</code> $\rightarrow$ <code>Choose Directory...</code></strong> で指定する。</li>
+              <li><code>.tsv</code>（タブ区切り）ファイルは <code>read.csv()</code> ではなく <strong><code>read.delim()</code></strong> で読み込む（日本語を含むファイルは <code>fileEncoding = "utf8"</code> を付ける）：</li>
+            </ol>
+            <div class="code-box"><code>kadai1 <- read.delim("kadai1.tsv", stringsAsFactors = TRUE)
+kadai2 <- read.delim("kadai2.tsv", stringsAsFactors = TRUE,
+                     fileEncoding = "utf8")</code></div>
           </div>
-          <div class="card primary" style="border-width: 2px;">
-            <h3>⭕ R用のスタック形式（1行＝1データ、3列構成）</h3>
-            <p style="font-size: 0.84rem; color: #1e3a8a;"><strong><code>renshu1.csv</code> の中身（抜粋）</strong>：同じ条件が複数行続く＝「繰り返しあり」</p>
-            <table style="font-size: 0.8rem;">
-              <thead>
-                <tr style="background: #dbeafe;"><th>行</th><th><code>Species</code> (要因A)</th><th><code>Fertilizer</code> (要因B)</th><th><code>Height</code> (目的変数Y)</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>1</td><td><code>A</code></td><td><code>X</code></td><td><strong>7.16</strong></td></tr>
-                <tr><td>2</td><td><code>A</code></td><td><code>X</code></td><td><strong>6.78</strong></td></tr>
-                <tr><td>...</td><td>...（種A×肥料X が8行）</td><td>...</td><td>...</td></tr>
-                <tr><td>9</td><td><code>A</code></td><td><code>Y</code></td><td><strong>9.98</strong></td></tr>
-                <tr><td>...</td><td>...（全48行）</td><td>...</td><td>...</td></tr>
-              </tbody>
-            </table>
-            <div class="code-box" style="margin: 2px 0;"><code># CSVは read.csv()、TSV(タブ区切り)は read.delim() で読み込む！
-renshu1 <- read.csv("renshu1.csv", stringsAsFactors = TRUE)
-kadai1  <- read.delim("kadai1.tsv", stringsAsFactors = TRUE)</code></div>
+          <div class="card secondary">
+            <h3>Step 0-2：注意すべき2つのポイント</h3>
+            <ul>
+              <li><strong>① 数値だけの因子列（例：濃度 <code>0.5, 1, 2</code>）</strong>：<br>
+              <code>stringsAsFactors = TRUE</code> をつけても、数字だけの列は数値（<code>numeric</code>）として読み込まれます。必ず <strong><code>df$Nodo &lt;- as.factor(df$Nodo)</code></strong> で因子に変換しましょう！</li>
+              <li><strong>② Macでのグラフ日本語文字化け対策</strong>：<br>
+              <code>kadai2.tsv</code> や <code>kadai3.tsv</code> のように水準名が日本語のデータをMacで <code>plot()</code> するときは、直前に以下を実行すると文字化けを防げます：</li>
+            </ul>
+            <div class="code-box"><code>par(family = "HiraKakuProN-W6") # Mac用</code></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 13: Practice 1 - renshu1.csv (With Replication, No Interaction) -->
+    <!-- Slide 13: Practice 1 Data Format (renshu1.csv Scrollable) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 1：データ形式の確認</span>
+          <h2 class="slide-title">練習1のデータ（<code>renshu1.csv</code>）：2次元表とスタック形式（全48行）</h2>
+        </div>
+        <span class="slide-subtitle">植物2種（<code>Species</code>: A, B）× 肥料3種（<code>Fertilizer</code>: X, Y, Z）の苗高（<code>Height</code>, cm）── 右の表をスクロールして確認！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>① 実験ノートの2次元クロス表（ワイド形式）</h3>
+            <p style="font-size: 0.85rem; color: #475569;">各マス（種×肥料の組み合わせ）に $r = 8$ 個体ずつ反復データがある（計 $N = 2 \times 3 \times 8 = 48$ 個体）：</p>
+            <table style="font-size: 0.82rem;">
+              <thead>
+                <tr><th>肥料 ＼ 植物種</th><th>種 A（各8個体）</th><th>種 B（各8個体）</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>肥料 X</strong></td>
+                  <td>7.16, 6.78, 8.93, 13.60,<br>16.12, 12.11, 8.25, 9.66</td>
+                  <td>8.03, 4.86, 5.49, 10.42,<br>10.09, 11.76, 6.14, 5.88</td>
+                </tr>
+                <tr>
+                  <td><strong>肥料 Y</strong></td>
+                  <td>9.98, 5.20, 7.18, 6.37,<br>8.39, 7.18, 13.24, 10.49</td>
+                  <td>4.47, 7.82, 5.75, 10.11,<br>10.00, 11.82, 6.49, 5.43</td>
+                </tr>
+                <tr>
+                  <td><strong>肥料 Z</strong></td>
+                  <td>11.11, 10.55, 14.60, 11.12,<br>18.83, 11.80, 9.74, 9.67</td>
+                  <td>9.63, 6.38, 9.99, 14.55,<br>13.40, 14.29, 17.13, 12.23</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="font-size: 0.84rem; color: #1e3a8a; margin-top: 4px;">
+              👉 Rで解析するため、右のように<strong>「1行＝1個体（<code>Species</code>, <code>Fertilizer</code>, <code>Height</code> の3列）」のスタック形式</strong>に変換して保存してあります。
+            </p>
+          </div>
+          <div class="card primary">
+            <h3>② <code>renshu1.csv</code> の実際の中身（全48行・スクロール可 ↕）</h3>
+            <div class="scroll-table-wrap" style="max-height: 330px;">
+  <table>
+    <thead><tr><th>行</th><th><code>Species</code></th><th><code>Fertilizer</code></th><th><code>Height</code></th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>A</td><td>X</td><td>7.16</td></tr><tr><td style="color:#64748b;">2</td><td>A</td><td>X</td><td>6.78</td></tr><tr><td style="color:#64748b;">3</td><td>A</td><td>X</td><td>8.93</td></tr><tr><td style="color:#64748b;">4</td><td>A</td><td>X</td><td>13.6</td></tr><tr><td style="color:#64748b;">5</td><td>A</td><td>X</td><td>16.12</td></tr><tr><td style="color:#64748b;">6</td><td>A</td><td>X</td><td>12.11</td></tr><tr><td style="color:#64748b;">7</td><td>A</td><td>X</td><td>8.25</td></tr><tr><td style="color:#64748b;">8</td><td>A</td><td>X</td><td>9.66</td></tr><tr><td style="color:#64748b;">9</td><td>A</td><td>Y</td><td>9.98</td></tr><tr><td style="color:#64748b;">10</td><td>A</td><td>Y</td><td>5.2</td></tr><tr><td style="color:#64748b;">11</td><td>A</td><td>Y</td><td>7.18</td></tr><tr><td style="color:#64748b;">12</td><td>A</td><td>Y</td><td>6.37</td></tr><tr><td style="color:#64748b;">13</td><td>A</td><td>Y</td><td>8.39</td></tr><tr><td style="color:#64748b;">14</td><td>A</td><td>Y</td><td>7.18</td></tr><tr><td style="color:#64748b;">15</td><td>A</td><td>Y</td><td>13.24</td></tr><tr><td style="color:#64748b;">16</td><td>A</td><td>Y</td><td>10.49</td></tr><tr><td style="color:#64748b;">17</td><td>A</td><td>Z</td><td>11.11</td></tr><tr><td style="color:#64748b;">18</td><td>A</td><td>Z</td><td>10.55</td></tr><tr><td style="color:#64748b;">19</td><td>A</td><td>Z</td><td>14.6</td></tr><tr><td style="color:#64748b;">20</td><td>A</td><td>Z</td><td>11.12</td></tr><tr><td style="color:#64748b;">21</td><td>A</td><td>Z</td><td>18.83</td></tr><tr><td style="color:#64748b;">22</td><td>A</td><td>Z</td><td>11.8</td></tr><tr><td style="color:#64748b;">23</td><td>A</td><td>Z</td><td>9.74</td></tr><tr><td style="color:#64748b;">24</td><td>A</td><td>Z</td><td>9.67</td></tr><tr><td style="color:#64748b;">25</td><td>B</td><td>X</td><td>8.03</td></tr><tr><td style="color:#64748b;">26</td><td>B</td><td>X</td><td>4.86</td></tr><tr><td style="color:#64748b;">27</td><td>B</td><td>X</td><td>5.49</td></tr><tr><td style="color:#64748b;">28</td><td>B</td><td>X</td><td>10.42</td></tr><tr><td style="color:#64748b;">29</td><td>B</td><td>X</td><td>10.09</td></tr><tr><td style="color:#64748b;">30</td><td>B</td><td>X</td><td>11.76</td></tr><tr><td style="color:#64748b;">31</td><td>B</td><td>X</td><td>6.14</td></tr><tr><td style="color:#64748b;">32</td><td>B</td><td>X</td><td>5.88</td></tr><tr><td style="color:#64748b;">33</td><td>B</td><td>Y</td><td>4.47</td></tr><tr><td style="color:#64748b;">34</td><td>B</td><td>Y</td><td>7.82</td></tr><tr><td style="color:#64748b;">35</td><td>B</td><td>Y</td><td>5.75</td></tr><tr><td style="color:#64748b;">36</td><td>B</td><td>Y</td><td>10.11</td></tr><tr><td style="color:#64748b;">37</td><td>B</td><td>Y</td><td>10</td></tr><tr><td style="color:#64748b;">38</td><td>B</td><td>Y</td><td>11.82</td></tr><tr><td style="color:#64748b;">39</td><td>B</td><td>Y</td><td>6.49</td></tr><tr><td style="color:#64748b;">40</td><td>B</td><td>Y</td><td>5.43</td></tr><tr><td style="color:#64748b;">41</td><td>B</td><td>Z</td><td>9.63</td></tr><tr><td style="color:#64748b;">42</td><td>B</td><td>Z</td><td>6.38</td></tr><tr><td style="color:#64748b;">43</td><td>B</td><td>Z</td><td>9.99</td></tr><tr><td style="color:#64748b;">44</td><td>B</td><td>Z</td><td>14.55</td></tr><tr><td style="color:#64748b;">45</td><td>B</td><td>Z</td><td>13.4</td></tr><tr><td style="color:#64748b;">46</td><td>B</td><td>Z</td><td>14.29</td></tr><tr><td style="color:#64748b;">47</td><td>B</td><td>Z</td><td>17.13</td></tr><tr><td style="color:#64748b;">48</td><td>B</td><td>Z</td><td>12.23</td></tr>
+    </tbody>
+  </table>
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 14: Practice 1 R Code & Output -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
           <span class="badge badge-practice">授業内練習 1（提出不要）</span>
-          <h2 class="slide-title">練習1：繰り返しあり・交互作用なし（<code>renshu1.csv</code>：植物種×肥料）</h2>
+          <h2 class="slide-title">練習1の解析：繰り返しあり・交互作用なし（<code>renshu1.csv</code>）</h2>
         </div>
-        <span class="slide-subtitle">植物2種（<code>Species</code>: A, B）× 肥料3種（<code>Fertilizer</code>: X, Y, Z）で育てた苗高（<code>Height</code>, cm, $N=48$）</span>
+        <span class="slide-subtitle"><code>aov(Height ~ Fertilizer * Species)</code> を実行し、交互作用がないことを確認して主効果を多重比較する</span>
       </div>
       <div class="slide-body">
         <div class="grid-2">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="card" style="padding: 8px 12px;">
-              <div style="font-size: 0.82rem; font-weight: 700; color: #1e3a8a;">📋 <code>renshu1.csv</code> のデータ形式（全48行の抜粋）</div>
-              <table style="font-size: 0.76rem;">
-                <thead>
-                  <tr><th><code>Species</code> (2水準)</th><th><code>Fertilizer</code> (3水準)</th><th><code>Height</code> (cm)</th><th>データ構造の説明</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td><code>A</code></td><td><code>X</code></td><td>7.16, 6.78, ... (8行)</td><td>種A × 肥料X（反復 $r=8$）</td></tr>
-                  <tr><td><code>A</code></td><td><code>Y</code> / <code>Z</code></td><td>9.98, ... / 11.11, ...</td><td>種A × 肥料Y, Z（各 $r=8$）</td></tr>
-                  <tr><td><code>B</code></td><td><code>X</code> / <code>Y</code> / <code>Z</code></td><td>8.03, ... / 4.47, ...</td><td>種B × 肥料X, Y, Z（各 $r=8$）</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="code-box" style="margin: 0;"><code>renshu1 <- read.csv("renshu1.csv", stringsAsFactors = TRUE)
+          <div class="code-box"><code>renshu1 <- read.csv("renshu1.csv", stringsAsFactors = TRUE)
 summary(renshu1)
 
 # (1) 繰り返しありの2元配置分散分析（* を使う）
@@ -1180,8 +1234,10 @@ summary(aov(Height ~ Fertilizer * Species, data = renshu1))
 library(multcomp)
 result1 <- aov(Height ~ Fertilizer, data = renshu1)
 result2 <- glht(result1, linfct = mcp(Fertilizer = "Tukey"))
-cld(result2); par(mar = c(5.1, 4.1, 6, 2.1)); plot(cld(result2))</code></div>
-          </div>
+summary(result2)
+cld(result2)
+par(mar = c(5.1, 4.1, 6, 2.1))
+plot(cld(result2))</code></div>
           <div class="card primary">
             <h3>分散分析表の出力とルート①の解釈</h3>
             <div class="code-box"><code>                   Df Sum Sq Mean Sq F value   Pr(>F)    
@@ -1191,7 +1247,7 @@ Fertilizer:Species  2   13.2    6.62   0.751 0.477994
 Residuals          42  369.9    8.81</code></div>
             <ul>
               <li><strong>交互作用 <code>Fertilizer:Species</code></strong>：$p = 0.478 &gt; 0.05$ より<strong>交互作用なし</strong>。</li>
-              <li><strong>主効果</strong>：<code>Species</code> は $p = 0.215$（差なし）、<strong><code>Fertilizer</code> のみ $p = 0.000973$ (\*\*\*) で有意！</strong></li>
+              <li><strong>主効果</strong>：<code>Species</code> は $p = 0.215$（差なし）、<strong><code>Fertilizer</code> のみ $p = 0.000973$ (***) で有意！</strong></li>
               <li><strong>CLD結果</strong>：<code>X = "a", Y = "a", Z = "b"</code> $\rightarrow$ 植物種A・Bにかかわらず、<strong>肥料ZだけがX・Yより有意に苗高を高める</strong>。</li>
             </ul>
           </div>
@@ -1199,7 +1255,59 @@ Residuals          42  369.9    8.81</code></div>
       </div>
     </div>
 
-    <!-- Slide 14: Practice 2 (Part 1) - renshu2.tsv (With Replication, Significant Interaction) -->
+    <!-- Slide 15: Practice 2 Data Format (renshu2.tsv Scrollable) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 2：データ形式の確認</span>
+          <h2 class="slide-title">練習2のデータ（<code>renshu2.tsv</code>）：全60行と6試験区展開列（<code>YakuNodo</code>）</h2>
+        </div>
+        <span class="slide-subtitle">薬品2種（<code>Yaku</code>: OJ, VC）× 濃度3段階（<code>Nodo</code>: 0.5, 1, 2 mg）の成長量（<code>Growth</code>, g）── 右の表をスクロールして確認！</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="card">
+            <h3>① 実験の2次元表と数値因子 <code>Nodo</code> の注意点</h3>
+            <table style="font-size: 0.8rem;">
+              <thead>
+                <tr><th>薬品 ＼ 濃度</th><th>0.5 mg（各10個体）</th><th>1 mg（各10個体）</th><th>2 mg（各10個体）</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>薬品 OJ</strong></td>
+                  <td>15.2, 21.5, 17.6, 11.0, 14.4,<br>10.0, 10.5, 9.4, 16.5, 9.7</td>
+                  <td>19.7, 23.3, 23.6, 26.4, 20.0,<br>25.2, 25.8, 21.2, 14.5, 27.3</td>
+                  <td>25.5, 26.4, 22.4, 24.5, 24.8,<br>30.9, 26.5, 27.2, 29.4, 23.0</td>
+                </tr>
+                <tr>
+                  <td><strong>薬品 VC</strong></td>
+                  <td>4.2, 11.5, 7.3, 5.8, 6.4,<br>10.0, 11.2, 11.2, 5.2, 7.0</td>
+                  <td>16.5, 16.5, 15.2, 17.3, 22.5,<br>17.3, 13.6, 14.5, 18.8, 15.5</td>
+                  <td>23.6, 18.5, 33.9, 25.5, 26.4,<br>32.5, 26.7, 21.5, 23.3, 29.5</td>
+                </tr>
+              </tbody>
+            </table>
+            <ul style="font-size: 0.84rem; margin-top: 4px;">
+              <li><strong>注意点①</strong>：<code>Nodo</code> 列（<code>0.5, 1, 2</code>）は数字のみのため、読み込み後に必ず <strong><code>renshu2$Nodo &lt;- as.factor(renshu2$Nodo)</code></strong> で因子に変換する！</li>
+              <li><strong>注意点②</strong>：交互作用が有意なときは、右表の右端列のように <code>paste(Yaku, Nodo, sep="")</code> で6水準の因子 <strong><code>YakuNodo</code></strong> を作って比較する。</li>
+            </ul>
+          </div>
+          <div class="card primary">
+            <h3>② <code>renshu2.tsv</code>（全60行＋展開後の <code>YakuNodo</code> 列 ↕）</h3>
+            <div class="scroll-table-wrap" style="max-height: 330px;">
+  <table>
+    <thead><tr><th>行</th><th><code>Growth</code></th><th><code>Yaku</code></th><th><code>Nodo</code></th><th style="background:#ccfbf1;color:#0f766e;"><code>YakuNodo</code> (展開後)</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>15.2</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">2</td><td>21.5</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">3</td><td>17.6</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">4</td><td>11</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">5</td><td>14.4</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">6</td><td>10</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">7</td><td>10.5</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">8</td><td>9.4</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">9</td><td>16.5</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">10</td><td>9.7</td><td>OJ</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ0.5</code></td></tr><tr><td style="color:#64748b;">11</td><td>19.7</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">12</td><td>23.3</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">13</td><td>23.6</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">14</td><td>26.4</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">15</td><td>20</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">16</td><td>25.2</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">17</td><td>25.8</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">18</td><td>21.2</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">19</td><td>14.5</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">20</td><td>27.3</td><td>OJ</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ1</code></td></tr><tr><td style="color:#64748b;">21</td><td>25.5</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">22</td><td>26.4</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">23</td><td>22.4</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">24</td><td>24.5</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">25</td><td>24.8</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">26</td><td>30.9</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">27</td><td>26.5</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">28</td><td>27.2</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">29</td><td>29.4</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">30</td><td>23</td><td>OJ</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>OJ2</code></td></tr><tr><td style="color:#64748b;">31</td><td>4.2</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">32</td><td>11.5</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">33</td><td>7.3</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">34</td><td>5.8</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">35</td><td>6.4</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">36</td><td>10</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">37</td><td>11.2</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">38</td><td>11.2</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">39</td><td>5.2</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">40</td><td>7</td><td>VC</td><td>0.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC0.5</code></td></tr><tr><td style="color:#64748b;">41</td><td>16.5</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">42</td><td>16.5</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">43</td><td>15.2</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">44</td><td>17.3</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">45</td><td>22.5</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">46</td><td>17.3</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">47</td><td>13.6</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">48</td><td>14.5</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">49</td><td>18.8</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">50</td><td>15.5</td><td>VC</td><td>1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC1</code></td></tr><tr><td style="color:#64748b;">51</td><td>23.6</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">52</td><td>18.5</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">53</td><td>33.9</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">54</td><td>25.5</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">55</td><td>26.4</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">56</td><td>32.5</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">57</td><td>26.7</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">58</td><td>21.5</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">59</td><td>23.3</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr><tr><td style="color:#64748b;">60</td><td>29.5</td><td>VC</td><td>2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>VC2</code></td></tr>
+    </tbody>
+  </table>
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 16: Practice 2 (Part 1) - renshu2.tsv 2-way ANOVA -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
@@ -1210,28 +1318,20 @@ Residuals          42  369.9    8.81</code></div>
       </div>
       <div class="slide-body">
         <div class="grid-2">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="card" style="padding: 8px 12px;">
-              <div style="font-size: 0.82rem; font-weight: 700; color: #b45309;">📋 <code>renshu2.tsv</code> のデータ形式（全60行の抜粋・タブ区切り）</div>
-              <table style="font-size: 0.76rem;">
-                <thead>
-                  <tr><th><code>Growth</code> (g)</th><th><code>Yaku</code> (薬品2種)</th><th><code>Nodo</code> (濃度3段階 ※数値!)</th><th>注意点</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>15.2, 21.5, ...</td><td><code>OJ</code></td><td><code>0.5</code>（各10行）</td><td rowspan="3" style="color: #b91c1c; font-weight: 600;"><code>Nodo</code> は数字のみなので、そのままでは数値扱いになる！<br>$\rightarrow$ <code>as.factor()</code> が必須</td></tr>
-                  <tr><td>19.7, ... / 25.5, ...</td><td><code>OJ</code></td><td><code>1</code> / <code>2</code>（各10行）</td></tr>
-                  <tr><td>4.2, ... / 16.5, ... / 23.6, ...</td><td><code>VC</code></td><td><code>0.5</code> / <code>1</code> / <code>2</code>（各10行）</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="code-box" style="margin: 0;"><code>renshu2 <- read.delim("renshu2.tsv", stringsAsFactors = TRUE)
+          <div class="code-box"><code>renshu2 <- read.delim("renshu2.tsv", stringsAsFactors = TRUE)
 # 【重要ステップ】Nodoは数値(0.5, 1, 2)なので因子に変換！
 renshu2$Nodo <- as.factor(renshu2$Nodo)
 summary(renshu2)
 
+# 前提条件の確認（正規性KS検定・Bartlett等分散性検定）
+require(nortest)
+tapply(renshu2$Growth, renshu2$Yaku, lillie.test)
+tapply(renshu2$Growth, renshu2$Nodo, lillie.test)
+bartlett.test(Growth ~ Yaku, data = renshu2)
+bartlett.test(Growth ~ Nodo, data = renshu2)
+
 # 繰り返しありの2元配置分散分析
 summary(aov(Growth ~ Yaku * Nodo, data = renshu2))</code></div>
-          </div>
           <div class="card accent">
             <h3>分散分析表の出力：交互作用が有意！</h3>
             <div class="code-box"><code>            Df Sum Sq Mean Sq F value   Pr(>F)    
@@ -1240,7 +1340,7 @@ Nodo         2 2369.4  1184.7  93.373  < 2e-16 ***
 Yaku:Nodo    2  114.2    57.1   4.499 0.015595 *  
 Residuals   54  685.1    12.7</code></div>
             <ul>
-              <li><code>Yaku</code> の主効果（$p = 0.000119$ \*\*\*）、<code>Nodo</code> の主効果（$p &lt; 2 \times 10^{-16}$ \*\*\*）に加えて、<strong>交互作用 <code>Yaku:Nodo</code> が $F = 4.499, p = 0.0156 &lt; 0.05$ (\*) で有意！</strong></li>
+              <li><code>Yaku</code> の主効果（$p = 0.000119$ ***）、<code>Nodo</code> の主効果（$p &lt; 2 \times 10^-16$ ***）に加えて、<strong>交互作用 <code>Yaku:Nodo</code> が $F = 4.499, p = 0.0156 &lt; 0.05$ (*) で有意！</strong></li>
               <li><strong>生物学的意味</strong>：「薬品OJと薬品VCでは、濃度を上げたときの成長量の伸び方が異なる（VCの方が濃度依存的な伸びが急激である）」。</li>
               <li>$\rightarrow$ <strong>ルート②（全 $2 \times 3 = 6$ 試験区への展開）</strong>へ進む！</li>
             </ul>
@@ -1249,41 +1349,31 @@ Residuals   54  685.1    12.7</code></div>
       </div>
     </div>
 
-    <!-- Slide 15: Practice 2 (Part 2) - Unfolding 6 Groups in renshu2.tsv -->
+    <!-- Slide 17: Practice 2 (Part 2) - Unfolding 6 Groups in renshu2.tsv -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
           <span class="badge badge-practice">授業内練習 2-2（提出不要）</span>
           <h2 class="slide-title">練習2（後半）：交互作用が有意なときの6試験区展開（<code>YakuNodo</code>）</h2>
         </div>
-        <span class="slide-subtitle"><code>paste(Yaku, Nodo, sep="")</code> で新しい4列目 <code>YakuNodo</code> を追加し、6群の1元配置としてTukey多重比較！</span>
+        <span class="slide-subtitle"><code>paste(Yaku, Nodo, sep="")</code> で6群に展開し、1元配置と同じようにTukey多重比較＆CLD描画！</span>
       </div>
       <div class="slide-body">
         <div class="grid-2">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="card" style="padding: 8px 12px;">
-              <div style="font-size: 0.82rem; font-weight: 700; color: #0f766e;">📋 <code>paste()</code> 実行後のデータ表イメージ（4列目に <code>YakuNodo</code> が追加される！）</div>
-              <table style="font-size: 0.76rem;">
-                <thead>
-                  <tr><th><code>Growth</code></th><th><code>Yaku</code></th><th><code>Nodo</code></th><th style="background: #ccfbf1; color: #0f766e;"><code>YakuNodo</code>（連結された新因子：6水準）</th></tr>
-                </thead>
-                <tbody>
-                  <tr><td>15.2</td><td><code>OJ</code></td><td><code>0.5</code></td><td style="background: #f0fdfa; font-weight: 700; color: #0f766e;"><code>OJ0.5</code> （← <code>"OJ"</code> と <code>"0.5"</code> を結合！）</td></tr>
-                  <tr><td>19.7</td><td><code>OJ</code></td><td><code>1</code></td><td style="background: #f0fdfa; font-weight: 700; color: #0f766e;"><code>OJ1</code></td></tr>
-                  <tr><td>4.2</td><td><code>VC</code></td><td><code>0.5</code></td><td style="background: #f0fdfa; font-weight: 700; color: #0f766e;"><code>VC0.5</code> （以下 <code>VC1</code>, <code>OJ2</code>, <code>VC2</code> まで計6群）</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="code-box" style="margin: 0;"><code># YakuとNodoを連結して6試験区の因子 YakuNodo を作成
-renshu2$YakuNodo <- as.factor(with(renshu2, paste(Yaku, Nodo, sep = "")))
+          <div class="code-box"><code># YakuとNodoを連結して6試験区の因子 YakuNodo を作成
+renshu2$YakuNodo <- with(renshu2, paste(Yaku, Nodo, sep = ""))
+renshu2$YakuNodo <- as.factor(renshu2$YakuNodo)
 summary(renshu2)
 
 # 6群に対してTukey-Kramer多重比較とCLD描画を実行
 library(multcomp)
 result1 <- aov(Growth ~ YakuNodo, data = renshu2)
 result2 <- glht(result1, linfct = mcp(YakuNodo = "Tukey"))
-cld(result2); par(mar = c(5.1, 4.1, 6, 2.1)); plot(cld(result2))</code></div>
-          </div>
+summary(result2)
+cld(result2)
+
+par(mar = c(5.1, 4.1, 6, 2.1)) # 上マージンを広げて文字切れ防止
+plot(cld(result2))</code></div>
           <div class="card primary">
             <h3>6試験区展開のCLD結果と解釈</h3>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0;">
@@ -1309,42 +1399,76 @@ cld(result2); par(mar = c(5.1, 4.1, 6, 2.1)); plot(cld(result2))</code></div>
       </div>
     </div>
 
-    <!-- Slide 16: Practice 3 - renshu3.tsv (Without Replication: Y ~ A + B) -->
+    <!-- Slide 18: Practice 3 & 4 Data Format (renshu3.tsv & renshu4.tsv Scrollable) -->
+    <div class="slide">
+      <div class="slide-header">
+        <div class="slide-title-wrap">
+          <span class="badge badge-practice">授業内練習 3 & 4：データ形式の確認</span>
+          <h2 class="slide-title">練習3（<code>renshu3.tsv</code>）と練習4（<code>renshu4.tsv</code>）のデータ表（全行スクロール可）</h2>
+        </div>
+        <span class="slide-subtitle">「1マスに1データしかない場合（繰り返しなし）」と「同一被験者を反復測定した場合（対応あり）」のスタック形式</span>
+      </div>
+      <div class="slide-body">
+        <div class="grid-2">
+          <!-- Practice 3 Data -->
+          <div class="card primary">
+            <h3>練習3：<code>renshu3.tsv</code>（温度4種×触媒3種＝全12行）</h3>
+            <table style="font-size: 0.76rem; margin-bottom: 4px;">
+              <thead><tr><th>成型温度 ＼ 触媒量</th><th>0.50% (<code>S0.5</code>)</th><th>1.00% (<code>S1.0</code>)</th><th>1.50% (<code>S1.5</code>)</th></tr></thead>
+              <tbody>
+                <tr><td><strong>80℃ (<code>T80</code>) / 90℃ (<code>T90</code>)</strong></td><td>14.0 / 13.5</td><td>13.0 / 12.0</td><td>13.5 / 13.0</td></tr>
+                <tr><td><strong>100℃ (<code>T100</code>) / 110℃ (<code>T110</code>)</strong></td><td>13.5 / 11.5</td><td>11.0 / 11.0</td><td>12.5 / 13.0</td></tr>
+              </tbody>
+            </table>
+            <div style="font-size: 0.78rem; color: #1e3a8a; font-weight: 600;">▼ スタック形式（全12行・数値水準に頭文字 <code>T</code>, <code>S</code> を付与 ↕）</div>
+            <div class="scroll-table-wrap" style="max-height: 195px;">
+  <table>
+    <thead><tr><th>行</th><th><code>Temp</code></th><th><code>Shoku</code></th><th><code>Kyodo</code></th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>T80</td><td>S0.5</td><td>14</td></tr><tr><td style="color:#64748b;">2</td><td>T80</td><td>S1.0</td><td>13</td></tr><tr><td style="color:#64748b;">3</td><td>T80</td><td>S1.5</td><td>13.5</td></tr><tr><td style="color:#64748b;">4</td><td>T90</td><td>S0.5</td><td>13.5</td></tr><tr><td style="color:#64748b;">5</td><td>T90</td><td>S1.0</td><td>12</td></tr><tr><td style="color:#64748b;">6</td><td>T90</td><td>S1.5</td><td>13</td></tr><tr><td style="color:#64748b;">7</td><td>T100</td><td>S0.5</td><td>13.5</td></tr><tr><td style="color:#64748b;">8</td><td>T100</td><td>S1.0</td><td>11</td></tr><tr><td style="color:#64748b;">9</td><td>T100</td><td>S1.5</td><td>12.5</td></tr><tr><td style="color:#64748b;">10</td><td>T110</td><td>S0.5</td><td>11.5</td></tr><tr><td style="color:#64748b;">11</td><td>T110</td><td>S1.0</td><td>11</td></tr><tr><td style="color:#64748b;">12</td><td>T110</td><td>S1.5</td><td>13</td></tr>
+    </tbody>
+  </table>
+</div>
+          </div>
+
+          <!-- Practice 4 Data -->
+          <div class="card secondary">
+            <h3>練習4：<code>renshu4.tsv</code>（被験者5名×3時点＝全15行）</h3>
+            <table style="font-size: 0.76rem; margin-bottom: 4px;">
+              <thead><tr><th>被験者 <code>ID</code></th><th>投与前 (<code>Mae</code>)</th><th>1週後 (<code>OneWeek</code>)</th><th>2週後 (<code>TwoWeeks</code>)</th></tr></thead>
+              <tbody>
+                <tr><td><strong>A / B / C</strong></td><td>116 / 128 / 129</td><td>106 / 102 / 111</td><td>108 / 100 / 108</td></tr>
+                <tr><td><strong>D / E</strong></td><td>137 / 140</td><td>118 / 116</td><td>114 / 110</td></tr>
+              </tbody>
+            </table>
+            <div style="font-size: 0.78rem; color: #0f766e; font-weight: 600;">▼ スタック形式（全15行・<code>ID</code> 列で「誰の血圧か」を保持 ↕）</div>
+            <div class="scroll-table-wrap" style="max-height: 195px;">
+  <table>
+    <thead><tr><th>行</th><th><code>Time</code></th><th><code>ID</code></th><th><code>mmHg</code></th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>Mae</td><td>A</td><td>116</td></tr><tr><td style="color:#64748b;">2</td><td>Mae</td><td>B</td><td>128</td></tr><tr><td style="color:#64748b;">3</td><td>Mae</td><td>C</td><td>129</td></tr><tr><td style="color:#64748b;">4</td><td>Mae</td><td>D</td><td>137</td></tr><tr><td style="color:#64748b;">5</td><td>Mae</td><td>E</td><td>140</td></tr><tr><td style="color:#64748b;">6</td><td>OneWeek</td><td>A</td><td>106</td></tr><tr><td style="color:#64748b;">7</td><td>OneWeek</td><td>B</td><td>102</td></tr><tr><td style="color:#64748b;">8</td><td>OneWeek</td><td>C</td><td>111</td></tr><tr><td style="color:#64748b;">9</td><td>OneWeek</td><td>D</td><td>118</td></tr><tr><td style="color:#64748b;">10</td><td>OneWeek</td><td>E</td><td>116</td></tr><tr><td style="color:#64748b;">11</td><td>TwoWeeks</td><td>A</td><td>108</td></tr><tr><td style="color:#64748b;">12</td><td>TwoWeeks</td><td>B</td><td>100</td></tr><tr><td style="color:#64748b;">13</td><td>TwoWeeks</td><td>C</td><td>108</td></tr><tr><td style="color:#64748b;">14</td><td>TwoWeeks</td><td>D</td><td>114</td></tr><tr><td style="color:#64748b;">15</td><td>TwoWeeks</td><td>E</td><td>110</td></tr>
+    </tbody>
+  </table>
+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 19: Practice 3 R Code & Output -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
           <span class="badge badge-practice">授業内練習 3（提出不要）</span>
-          <h2 class="slide-title">練習3：繰り返しなしの2元配置分散分析（<code>renshu3.tsv</code>：温度＋触媒）</h2>
+          <h2 class="slide-title">練習3の解析：繰り返しなしの2元配置分散分析（<code>renshu3.tsv</code>）</h2>
         </div>
-        <span class="slide-subtitle">成型温度4種（<code>Temp</code>）× 触媒量3種（<code>Shoku</code>）の強度（<code>Kyodo</code>, $N=12$）── 1マスに1データしかない表！</span>
+        <span class="slide-subtitle">成型温度4種（<code>Temp</code>）× 触媒量3種（<code>Shoku</code>）の強度（<code>Kyodo</code>, $N=12$）── 温度を考慮すると触媒の差が見える！</span>
       </div>
       <div class="slide-body">
         <div class="grid-2">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="card" style="padding: 8px 12px;">
-              <div style="font-size: 0.8rem; font-weight: 700; color: #1e3a8a;">📋 元の2次元表（1マス1データ）と <code>renshu3.tsv</code>（頭文字 <code>T</code>, <code>S</code> で因子化！）</div>
-              <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 8px; align-items: center;">
-                <table style="font-size: 0.72rem;">
-                  <thead><tr><th>温度＼触媒</th><th>0.5%</th><th>1.0%</th><th>1.5%</th></tr></thead>
-                  <tbody>
-                    <tr><td><strong>80℃</strong></td><td>14.0</td><td>13.0</td><td>13.5</td></tr>
-                    <tr><td><strong>90℃</strong></td><td>13.5</td><td>12.0</td><td>13.0</td></tr>
-                    <tr><td><strong>100℃</strong></td><td>13.5</td><td>11.0</td><td>12.5</td></tr>
-                    <tr><td><strong>110℃</strong></td><td>11.5</td><td>11.0</td><td>13.0</td></tr>
-                  </tbody>
-                </table>
-                <table style="font-size: 0.72rem;">
-                  <thead><tr style="background: #dbeafe;"><th><code>Temp</code></th><th><code>Shoku</code></th><th><code>Kyodo</code></th></tr></thead>
-                  <tbody>
-                    <tr><td><code>T80</code></td><td><code>S0.5</code></td><td>14.0</td></tr>
-                    <tr><td><code>T80</code></td><td><code>S1.0</code></td><td>13.0</td></tr>
-                    <tr><td><code>T80</code></td><td><code>S1.5</code></td><td>13.5</td></tr>
-                    <tr><td colspan="3" style="text-align: center; color: #64748b;">...（全12行・反復なし）</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div class="code-box" style="margin: 0;"><code>renshu3 <- read.delim("renshu3.tsv", stringsAsFactors = TRUE)
+          <div class="code-box"><code>renshu3 <- read.delim("renshu3.tsv", stringsAsFactors = TRUE)
+summary(renshu3)
+
 # 繰り返しなし（1マス1データ）なので + を使う！
 result1 <- aov(Kyodo ~ Shoku + Temp, data = renshu3)
 summary(result1)
@@ -1352,8 +1476,10 @@ summary(result1)
 # 温度(Temp)もモデルに入れたまま触媒(Shoku)をTukey多重比較
 library(multcomp)
 result2 <- glht(result1, linfct = mcp(Shoku = "Tukey"))
-summary(result2); cld(result2)</code></div>
-          </div>
+summary(result2); cld(result2)
+
+# 【比較】もし温度(Temp)を無視して1元配置で検定すると…？
+summary(aov(Kyodo ~ Shoku, data = renshu3)) # p = 0.1 で非有意！</code></div>
           <div class="card primary">
             <h3>第2要因（温度）をモデルに入れる威力！</h3>
             <div class="code-box"><code>            Df Sum Sq Mean Sq F value Pr(>F)  
@@ -1362,54 +1488,33 @@ Temp         3  4.563  1.5208   3.842 0.0756 .
 Residuals    6  2.375  0.3958</code></div>
             <ul>
               <li>もし温度 <code>Temp</code> を無視して <code>aov(Kyodo ~ Shoku)</code> を行うと、温度によるばらつき（平方和 $4.563$）が残差に混ざり（$S_R = 6.938, V_R = 0.771$）、<code>Shoku</code> は <strong>$F = 3.00, p = 0.100$（有意差なし）</strong>になってしまう。</li>
-              <li>一方、<strong><code>Kyodo ~ Shoku + Temp</code></strong> で温度の変動を分離すると、残差分散が $V_R = 0.396$ に半減し、<strong><code>Shoku</code> が $p = 0.0391$ (\*) で有意</strong>となり、<code>S0.5 ("a")</code> と <code>S1.0 ("b")</code> の有意差（$p = 0.0489$）が検出できる！</li>
+              <li>一方、<strong><code>Kyodo ~ Shoku + Temp</code></strong> で温度の変動を分離すると、残差分散が $V_R = 0.396$ に半減し、<strong><code>Shoku</code> が $p = 0.0391$ (*) で有意</strong>となり、<code>S0.5 ("a")</code> と <code>S1.0 ("b")</code> の有意差（$p = 0.0489$）が検出できる！</li>
             </ul>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Slide 17: Practice 4 - renshu4.tsv (Repeated Measures 1-way ANOVA: mmHg ~ Time + ID) -->
+    <!-- Slide 20: Practice 4 R Code & Output -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
           <span class="badge badge-practice">授業内練習 4（提出不要）</span>
-          <h2 class="slide-title">練習4：対応のある1元配置分散分析（反復測定：<code>renshu4.tsv</code>）</h2>
+          <h2 class="slide-title">練習4の解析：対応のある1元配置分散分析（反復測定：<code>renshu4.tsv</code>）</h2>
         </div>
         <span class="slide-subtitle">同一被験者5名（<code>ID</code>: A〜E）の投薬前（<code>Mae</code>）・1週後（<code>OneWeek</code>）・2週後（<code>TwoWeeks</code>）の血圧（<code>mmHg</code>）</span>
       </div>
       <div class="slide-body">
         <div class="grid-2">
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="card" style="padding: 8px 12px;">
-              <div style="font-size: 0.8rem; font-weight: 700; color: #0f766e;">📋 被験者別テーブルと <code>renshu4.tsv</code>（<code>ID</code> 列で「誰のデータか」を保持！）</div>
-              <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 8px; align-items: center;">
-                <table style="font-size: 0.72rem;">
-                  <thead><tr><th>被験者</th><th>投与前</th><th>1週後</th><th>2週後</th></tr></thead>
-                  <tbody>
-                    <tr><td><strong>A</strong></td><td>116</td><td>106</td><td>108</td></tr>
-                    <tr><td><strong>B</strong></td><td>128</td><td>102</td><td>100</td></tr>
-                    <tr><td><strong>C / D / E</strong></td><td>129〜140</td><td>111〜118</td><td>108〜114</td></tr>
-                  </tbody>
-                </table>
-                <table style="font-size: 0.72rem;">
-                  <thead><tr style="background: #ccfbf1;"><th><code>Time</code></th><th><code>ID</code></th><th><code>mmHg</code></th></tr></thead>
-                  <tbody>
-                    <tr><td><code>Mae</code></td><td><code>A</code></td><td>116</td></tr>
-                    <tr><td><code>Mae</code></td><td><code>B</code></td><td>128</td></tr>
-                    <tr><td>...</td><td>...</td><td>...（全15行）</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div class="code-box" style="margin: 0;"><code>renshu4 <- read.delim("renshu4.tsv", stringsAsFactors = TRUE)
+          <div class="code-box"><code>renshu4 <- read.delim("renshu4.tsv", stringsAsFactors = TRUE)
+summary(renshu4)
+
 # 時間経過(Time) + 被験者個人差(ID) で反復測定ANOVAを実行
 summary(aov(mmHg ~ Time + ID, data = renshu4))
 
 # 対応のある多重比較（paired = TRUE を指定したBonferroni法）
 pairwise.t.test(renshu4$mmHg, renshu4$Time,
                 paired = TRUE, p.adjust.method = "bonferroni")</code></div>
-          </div>
           <div class="card secondary">
             <h3>反復測定ANOVAと対応あり多重比較の結果</h3>
             <div class="code-box"><code>            Df Sum Sq Mean Sq F value   Pr(>F)    
@@ -1417,7 +1522,7 @@ Time         2 1445.2   722.6  35.509 0.000105 ***
 ID           4  470.4   117.6   5.779 0.017355 *  
 Residuals    8  162.8    20.4</code></div>
             <ul>
-              <li>被験者間の元々の血圧の違い（<code>ID</code>: $S_{\text{ID}} = 470.4, p = 0.0174$）を分離した上で、投薬後の時間経過 <strong><code>Time</code> が $F = 35.51, p = 0.000105$ (\*\*\*) で極めて有意！</strong></li>
+              <li>被験者間の元々の血圧の違い（<code>ID</code>: $S_{\text{ID}} = 470.4, p = 0.0174$）を分離した上で、投薬後の時間経過 <strong><code>Time</code> が $F = 35.51, p = 0.000105$ (***) で極めて有意！</strong></li>
               <li><code>pairwise.t.test(..., paired = TRUE)</code> の結果：<code>Mae vs OneWeek</code> ($p = 0.0067$)、<code>Mae vs TwoWeeks</code> ($p = 0.0141$) が有意、<code>OneWeek vs TwoWeeks</code> ($p = 0.3647$) は差なし $\rightarrow$ <strong>投薬1週後から血圧が有意に下がり、2週後も効果が持続している</strong>。</li>
             </ul>
           </div>
@@ -1425,57 +1530,69 @@ Residuals    8  162.8    20.4</code></div>
       </div>
     </div>
 
-    <!-- Slide 18: Today's Assignment Overview & Data Previews -->
+    <!-- Slide 21: Assignment Datasets Scrollable Viewer (kadai1, kadai2, kadai3, kadai3_2) -->
     <div class="slide">
       <div class="slide-header">
         <div class="slide-title-wrap">
-          <span class="badge badge-practice">本日の提出課題（全体像とデータ形式）</span>
-          <h2 class="slide-title">提出課題で使う4つのTSVファイルのデータ形式一覧</h2>
+          <span class="badge badge-practice">本日の提出課題：データ形式の確認</span>
+          <h2 class="slide-title">提出課題で使う4つのTSVデータ（全行スクロール確認 ↕）</h2>
         </div>
-        <span class="slide-subtitle">すべてタブ区切り（<code>read.delim()</code> で読み込み）のスタック形式（3列構成）になっています！</span>
+        <span class="slide-subtitle">各ボックス内を上下にスクロールして、列名（変数名）とデータの並び方を確認しよう！</span>
       </div>
       <div class="slide-body">
-        <div class="grid-3">
-          <div class="card primary" style="padding: 12px 14px;">
-            <h3 style="font-size: 0.98rem;">① <code>kadai1.tsv</code>（課題1・2, $N=24$）</h3>
-            <table style="font-size: 0.75rem;">
-              <thead><tr style="background: #dbeafe;"><th><code>Soil</code> (2種)</th><th><code>Fertilizer</code> (4種)</th><th><code>Yield</code> (kg)</th></tr></thead>
-              <tbody>
-                <tr><td><code>SoilA</code></td><td><code>N100</code></td><td>14.5 (計3行)</td></tr>
-                <tr><td><code>SoilB</code></td><td><code>N100</code></td><td>16.2 (計3行)</td></tr>
-                <tr><td><code>SoilA / B</code></td><td><code>N200〜N400</code></td><td>... (各3行)</td></tr>
-              </tbody>
-            </table>
-            <p style="font-size: 0.8rem;">・<strong>課題1</strong>：<code>Yield ~ Soil * Fertilizer</code><br>・<strong>課題2</strong>：8試験区 <code>SoilFert</code> に展開してTukey多重比較＆CLD</p>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: stretch;">
+          <div class="card primary" style="padding: 10px;">
+            <div style="font-size: 0.85rem; font-weight: 800; color: #1e3a8a;">① <code>kadai1.tsv</code> ($N=24$)</div>
+            <div style="font-size: 0.75rem; color: #475569;">課題1・2：土壌2種×肥料4種（各3反復）</div>
+            <div class="scroll-table-wrap" style="max-height: 290px;">
+  <table>
+    <thead><tr><th>行</th><th><code>Soil</code></th><th><code>Fertilizer</code></th><th><code>Yield</code></th><th style="background:#ccfbf1;color:#0f766e;"><code>SoilFert</code> (課題2)</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>SoilA</td><td>N100</td><td>14.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN100</code></td></tr><tr><td style="color:#64748b;">2</td><td>SoilA</td><td>N100</td><td>15.1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN100</code></td></tr><tr><td style="color:#64748b;">3</td><td>SoilA</td><td>N100</td><td>14.1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN100</code></td></tr><tr><td style="color:#64748b;">4</td><td>SoilB</td><td>N100</td><td>16.2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN100</code></td></tr><tr><td style="color:#64748b;">5</td><td>SoilB</td><td>N100</td><td>15.3</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN100</code></td></tr><tr><td style="color:#64748b;">6</td><td>SoilB</td><td>N100</td><td>17.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN100</code></td></tr><tr><td style="color:#64748b;">7</td><td>SoilA</td><td>N200</td><td>16.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN200</code></td></tr><tr><td style="color:#64748b;">8</td><td>SoilA</td><td>N200</td><td>16.1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN200</code></td></tr><tr><td style="color:#64748b;">9</td><td>SoilA</td><td>N200</td><td>15</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN200</code></td></tr><tr><td style="color:#64748b;">10</td><td>SoilB</td><td>N200</td><td>18.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN200</code></td></tr><tr><td style="color:#64748b;">11</td><td>SoilB</td><td>N200</td><td>16.9</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN200</code></td></tr><tr><td style="color:#64748b;">12</td><td>SoilB</td><td>N200</td><td>18.6</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN200</code></td></tr><tr><td style="color:#64748b;">13</td><td>SoilA</td><td>N300</td><td>17.8</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN300</code></td></tr><tr><td style="color:#64748b;">14</td><td>SoilA</td><td>N300</td><td>19</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN300</code></td></tr><tr><td style="color:#64748b;">15</td><td>SoilA</td><td>N300</td><td>15.2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN300</code></td></tr><tr><td style="color:#64748b;">16</td><td>SoilB</td><td>N300</td><td>21.7</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN300</code></td></tr><tr><td style="color:#64748b;">17</td><td>SoilB</td><td>N300</td><td>20.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN300</code></td></tr><tr><td style="color:#64748b;">18</td><td>SoilB</td><td>N300</td><td>19.4</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN300</code></td></tr><tr><td style="color:#64748b;">19</td><td>SoilA</td><td>N400</td><td>18.1</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN400</code></td></tr><tr><td style="color:#64748b;">20</td><td>SoilA</td><td>N400</td><td>20.2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN400</code></td></tr><tr><td style="color:#64748b;">21</td><td>SoilA</td><td>N400</td><td>17.2</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilAN400</code></td></tr><tr><td style="color:#64748b;">22</td><td>SoilB</td><td>N400</td><td>23.6</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN400</code></td></tr><tr><td style="color:#64748b;">23</td><td>SoilB</td><td>N400</td><td>24.9</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN400</code></td></tr><tr><td style="color:#64748b;">24</td><td>SoilB</td><td>N400</td><td>25.5</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>SoilBN400</code></td></tr>
+    </tbody>
+  </table>
+</div>
           </div>
-          <div class="card secondary" style="padding: 12px 14px;">
-            <h3 style="font-size: 0.98rem;">② <code>kadai2.tsv</code>（課題3, $N=30$）</h3>
-            <table style="font-size: 0.75rem;">
-              <thead><tr style="background: #ccfbf1;"><th><code>Ondo</code> (2種)</th><th><code>Meigara</code> (3種)</th><th><code>Score</code></th></tr></thead>
-              <tbody>
-                <tr><td><code>冷蔵庫</code></td><td><code>イカアン</code></td><td>6, 4, ... (5行)</td></tr>
-                <tr><td><code>冷蔵庫</code></td><td><code>ボスビック / ビビッテル</code></td><td>10, ... (各5行)</td></tr>
-                <tr><td><code>常温</code></td><td><code>3銘柄</code></td><td>... (各5行)</td></tr>
-              </tbody>
-            </table>
-            <p style="font-size: 0.8rem;">・日本語を含むため <code>fileEncoding="utf8"</code> を指定。<br>・交互作用なし（$p=0.115$）$\to$ 主効果ごとに多重比較！</p>
+          <div class="card secondary" style="padding: 10px;">
+            <div style="font-size: 0.85rem; font-weight: 800; color: #0f766e;">② <code>kadai2.tsv</code> ($N=30$)</div>
+            <div style="font-size: 0.75rem; color: #475569;">課題3：温度2種×水3銘柄（各5反復）</div>
+            <div class="scroll-table-wrap" style="max-height: 290px;">
+  <table>
+    <thead><tr><th>行</th><th><code>Ondo</code></th><th><code>Meigara</code></th><th><code>Score</code></th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>冷蔵庫</td><td>イカアン</td><td>6</td></tr><tr><td style="color:#64748b;">2</td><td>冷蔵庫</td><td>イカアン</td><td>4</td></tr><tr><td style="color:#64748b;">3</td><td>冷蔵庫</td><td>イカアン</td><td>5</td></tr><tr><td style="color:#64748b;">4</td><td>冷蔵庫</td><td>イカアン</td><td>3</td></tr><tr><td style="color:#64748b;">5</td><td>冷蔵庫</td><td>イカアン</td><td>2</td></tr><tr><td style="color:#64748b;">6</td><td>冷蔵庫</td><td>ボスビック</td><td>10</td></tr><tr><td style="color:#64748b;">7</td><td>冷蔵庫</td><td>ボスビック</td><td>8</td></tr><tr><td style="color:#64748b;">8</td><td>冷蔵庫</td><td>ボスビック</td><td>10</td></tr><tr><td style="color:#64748b;">9</td><td>冷蔵庫</td><td>ボスビック</td><td>8</td></tr><tr><td style="color:#64748b;">10</td><td>冷蔵庫</td><td>ボスビック</td><td>9</td></tr><tr><td style="color:#64748b;">11</td><td>冷蔵庫</td><td>ビビッテル</td><td>11</td></tr><tr><td style="color:#64748b;">12</td><td>冷蔵庫</td><td>ビビッテル</td><td>12</td></tr><tr><td style="color:#64748b;">13</td><td>冷蔵庫</td><td>ビビッテル</td><td>12</td></tr><tr><td style="color:#64748b;">14</td><td>冷蔵庫</td><td>ビビッテル</td><td>10</td></tr><tr><td style="color:#64748b;">15</td><td>冷蔵庫</td><td>ビビッテル</td><td>10</td></tr><tr><td style="color:#64748b;">16</td><td>常温</td><td>イカアン</td><td>5</td></tr><tr><td style="color:#64748b;">17</td><td>常温</td><td>イカアン</td><td>4</td></tr><tr><td style="color:#64748b;">18</td><td>常温</td><td>イカアン</td><td>2</td></tr><tr><td style="color:#64748b;">19</td><td>常温</td><td>イカアン</td><td>2</td></tr><tr><td style="color:#64748b;">20</td><td>常温</td><td>イカアン</td><td>2</td></tr><tr><td style="color:#64748b;">21</td><td>常温</td><td>ボスビック</td><td>7</td></tr><tr><td style="color:#64748b;">22</td><td>常温</td><td>ボスビック</td><td>6</td></tr><tr><td style="color:#64748b;">23</td><td>常温</td><td>ボスビック</td><td>5</td></tr><tr><td style="color:#64748b;">24</td><td>常温</td><td>ボスビック</td><td>4</td></tr><tr><td style="color:#64748b;">25</td><td>常温</td><td>ボスビック</td><td>3</td></tr><tr><td style="color:#64748b;">26</td><td>常温</td><td>ビビッテル</td><td>12</td></tr><tr><td style="color:#64748b;">27</td><td>常温</td><td>ビビッテル</td><td>8</td></tr><tr><td style="color:#64748b;">28</td><td>常温</td><td>ビビッテル</td><td>5</td></tr><tr><td style="color:#64748b;">29</td><td>常温</td><td>ビビッテル</td><td>6</td></tr><tr><td style="color:#64748b;">30</td><td>常温</td><td>ビビッテル</td><td>4</td></tr>
+    </tbody>
+  </table>
+</div>
           </div>
-          <div class="card accent" style="padding: 12px 14px;">
-            <h3 style="font-size: 0.98rem;">③ <code>kadai3.tsv</code> & <code>kadai3_2.tsv</code> ($N=60$)</h3>
-            <table style="font-size: 0.73rem;">
-              <thead><tr style="background: #fef3c7;"><th><code>kadai3.tsv</code> (発展4)</th><th><code>kadai3_2.tsv</code> (発展5)</th></tr></thead>
-              <tbody>
-                <tr><td><code>Aji | Koromo | Score</code></td><td><code>AjiKoromo | Panel | Score</code></td></tr>
-                <tr><td><code>辛口 | クリスピー | 65</code></td><td><code>辛口クリスピー | A | 65</code></td></tr>
-                <tr><td>独立60人（各15人）</td><td>同一15人（<code>Panel A〜O</code>）</td></tr>
-              </tbody>
-            </table>
-            <p style="font-size: 0.8rem;">・<strong>発展4</strong>：<code>Score ~ Aji * Koromo</code>（逆転交互作用）<br>・<strong>発展5</strong>：<code>Score ~ AjiKoromo + Panel</code>（個人差分離）</p>
+          <div class="card accent" style="padding: 10px;">
+            <div style="font-size: 0.85rem; font-weight: 800; color: #b45309;">③ <code>kadai3.tsv</code> ($N=60$)</div>
+            <div style="font-size: 0.75rem; color: #475569;">発展4：味2種×衣2種（独立60人）</div>
+            <div class="scroll-table-wrap" style="max-height: 290px;">
+  <table>
+    <thead><tr><th>行</th><th><code>Aji</code></th><th><code>Koromo</code></th><th><code>Score</code></th><th style="background:#ccfbf1;color:#0f766e;"><code>AjiKoromo</code></th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>辛口</td><td>クリスピー</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">2</td><td>辛口</td><td>クリスピー</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">3</td><td>辛口</td><td>クリスピー</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">4</td><td>辛口</td><td>クリスピー</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">5</td><td>辛口</td><td>クリスピー</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">6</td><td>辛口</td><td>クリスピー</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">7</td><td>辛口</td><td>クリスピー</td><td>90</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">8</td><td>辛口</td><td>クリスピー</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">9</td><td>辛口</td><td>クリスピー</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">10</td><td>辛口</td><td>クリスピー</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">11</td><td>辛口</td><td>クリスピー</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">12</td><td>辛口</td><td>クリスピー</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">13</td><td>辛口</td><td>クリスピー</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">14</td><td>辛口</td><td>クリスピー</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">15</td><td>辛口</td><td>クリスピー</td><td>90</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口クリスピー</code></td></tr><tr><td style="color:#64748b;">16</td><td>普通味</td><td>クリスピー</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">17</td><td>普通味</td><td>クリスピー</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">18</td><td>普通味</td><td>クリスピー</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">19</td><td>普通味</td><td>クリスピー</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">20</td><td>普通味</td><td>クリスピー</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">21</td><td>普通味</td><td>クリスピー</td><td>60</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">22</td><td>普通味</td><td>クリスピー</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">23</td><td>普通味</td><td>クリスピー</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">24</td><td>普通味</td><td>クリスピー</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">25</td><td>普通味</td><td>クリスピー</td><td>60</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">26</td><td>普通味</td><td>クリスピー</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">27</td><td>普通味</td><td>クリスピー</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">28</td><td>普通味</td><td>クリスピー</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">29</td><td>普通味</td><td>クリスピー</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">30</td><td>普通味</td><td>クリスピー</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味クリスピー</code></td></tr><tr><td style="color:#64748b;">31</td><td>辛口</td><td>普通の衣</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">32</td><td>辛口</td><td>普通の衣</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">33</td><td>辛口</td><td>普通の衣</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">34</td><td>辛口</td><td>普通の衣</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">35</td><td>辛口</td><td>普通の衣</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">36</td><td>辛口</td><td>普通の衣</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">37</td><td>辛口</td><td>普通の衣</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">38</td><td>辛口</td><td>普通の衣</td><td>60</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">39</td><td>辛口</td><td>普通の衣</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">40</td><td>辛口</td><td>普通の衣</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">41</td><td>辛口</td><td>普通の衣</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">42</td><td>辛口</td><td>普通の衣</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">43</td><td>辛口</td><td>普通の衣</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">44</td><td>辛口</td><td>普通の衣</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">45</td><td>辛口</td><td>普通の衣</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>辛口普通の衣</code></td></tr><tr><td style="color:#64748b;">46</td><td>普通味</td><td>普通の衣</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">47</td><td>普通味</td><td>普通の衣</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">48</td><td>普通味</td><td>普通の衣</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">49</td><td>普通味</td><td>普通の衣</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">50</td><td>普通味</td><td>普通の衣</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">51</td><td>普通味</td><td>普通の衣</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">52</td><td>普通味</td><td>普通の衣</td><td>65</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">53</td><td>普通味</td><td>普通の衣</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">54</td><td>普通味</td><td>普通の衣</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">55</td><td>普通味</td><td>普通の衣</td><td>60</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">56</td><td>普通味</td><td>普通の衣</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">57</td><td>普通味</td><td>普通の衣</td><td>75</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">58</td><td>普通味</td><td>普通の衣</td><td>70</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">59</td><td>普通味</td><td>普通の衣</td><td>80</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr><tr><td style="color:#64748b;">60</td><td>普通味</td><td>普通の衣</td><td>85</td><td style="background:#f0fdfa;font-weight:700;color:#0f766e;"><code>普通味普通の衣</code></td></tr>
+    </tbody>
+  </table>
+</div>
+          </div>
+          <div class="card" style="padding: 10px; border-left: 4px solid #7c3aed;">
+            <div style="font-size: 0.85rem; font-weight: 800; color: #6d28d9;">④ <code>kadai3_2.tsv</code> ($N=60$)</div>
+            <div style="font-size: 0.75rem; color: #475569;">発展5：4種×同一パネル15人 (<code>A〜O</code>)</div>
+            <div class="scroll-table-wrap" style="max-height: 290px;">
+  <table>
+    <thead><tr><th>行</th><th><code>AjiKoromo</code></th><th><code>Panel</code></th><th><code>Score</code></th></tr></thead>
+    <tbody>
+      <tr><td style="color:#64748b;">1</td><td>辛口クリスピー</td><td>A</td><td>65</td></tr><tr><td style="color:#64748b;">2</td><td>辛口クリスピー</td><td>B</td><td>85</td></tr><tr><td style="color:#64748b;">3</td><td>辛口クリスピー</td><td>C</td><td>75</td></tr><tr><td style="color:#64748b;">4</td><td>辛口クリスピー</td><td>D</td><td>85</td></tr><tr><td style="color:#64748b;">5</td><td>辛口クリスピー</td><td>E</td><td>75</td></tr><tr><td style="color:#64748b;">6</td><td>辛口クリスピー</td><td>F</td><td>80</td></tr><tr><td style="color:#64748b;">7</td><td>辛口クリスピー</td><td>G</td><td>90</td></tr><tr><td style="color:#64748b;">8</td><td>辛口クリスピー</td><td>H</td><td>75</td></tr><tr><td style="color:#64748b;">9</td><td>辛口クリスピー</td><td>I</td><td>85</td></tr><tr><td style="color:#64748b;">10</td><td>辛口クリスピー</td><td>J</td><td>65</td></tr><tr><td style="color:#64748b;">11</td><td>辛口クリスピー</td><td>K</td><td>75</td></tr><tr><td style="color:#64748b;">12</td><td>辛口クリスピー</td><td>L</td><td>85</td></tr><tr><td style="color:#64748b;">13</td><td>辛口クリスピー</td><td>M</td><td>80</td></tr><tr><td style="color:#64748b;">14</td><td>辛口クリスピー</td><td>N</td><td>85</td></tr><tr><td style="color:#64748b;">15</td><td>辛口クリスピー</td><td>O</td><td>90</td></tr><tr><td style="color:#64748b;">16</td><td>普通味クリスピー</td><td>A</td><td>65</td></tr><tr><td style="color:#64748b;">17</td><td>普通味クリスピー</td><td>B</td><td>70</td></tr><tr><td style="color:#64748b;">18</td><td>普通味クリスピー</td><td>C</td><td>80</td></tr><tr><td style="color:#64748b;">19</td><td>普通味クリスピー</td><td>D</td><td>75</td></tr><tr><td style="color:#64748b;">20</td><td>普通味クリスピー</td><td>E</td><td>70</td></tr><tr><td style="color:#64748b;">21</td><td>普通味クリスピー</td><td>F</td><td>60</td></tr><tr><td style="color:#64748b;">22</td><td>普通味クリスピー</td><td>G</td><td>65</td></tr><tr><td style="color:#64748b;">23</td><td>普通味クリスピー</td><td>H</td><td>70</td></tr><tr><td style="color:#64748b;">24</td><td>普通味クリスピー</td><td>I</td><td>85</td></tr><tr><td style="color:#64748b;">25</td><td>普通味クリスピー</td><td>J</td><td>60</td></tr><tr><td style="color:#64748b;">26</td><td>普通味クリスピー</td><td>K</td><td>65</td></tr><tr><td style="color:#64748b;">27</td><td>普通味クリスピー</td><td>L</td><td>75</td></tr><tr><td style="color:#64748b;">28</td><td>普通味クリスピー</td><td>M</td><td>70</td></tr><tr><td style="color:#64748b;">29</td><td>普通味クリスピー</td><td>N</td><td>80</td></tr><tr><td style="color:#64748b;">30</td><td>普通味クリスピー</td><td>O</td><td>75</td></tr><tr><td style="color:#64748b;">31</td><td>辛口普通の衣</td><td>A</td><td>70</td></tr><tr><td style="color:#64748b;">32</td><td>辛口普通の衣</td><td>B</td><td>65</td></tr><tr><td style="color:#64748b;">33</td><td>辛口普通の衣</td><td>C</td><td>85</td></tr><tr><td style="color:#64748b;">34</td><td>辛口普通の衣</td><td>D</td><td>80</td></tr><tr><td style="color:#64748b;">35</td><td>辛口普通の衣</td><td>E</td><td>75</td></tr><tr><td style="color:#64748b;">36</td><td>辛口普通の衣</td><td>F</td><td>65</td></tr><tr><td style="color:#64748b;">37</td><td>辛口普通の衣</td><td>G</td><td>75</td></tr><tr><td style="color:#64748b;">38</td><td>辛口普通の衣</td><td>H</td><td>60</td></tr><tr><td style="color:#64748b;">39</td><td>辛口普通の衣</td><td>I</td><td>85</td></tr><tr><td style="color:#64748b;">40</td><td>辛口普通の衣</td><td>J</td><td>65</td></tr><tr><td style="color:#64748b;">41</td><td>辛口普通の衣</td><td>K</td><td>75</td></tr><tr><td style="color:#64748b;">42</td><td>辛口普通の衣</td><td>L</td><td>70</td></tr><tr><td style="color:#64748b;">43</td><td>辛口普通の衣</td><td>M</td><td>65</td></tr><tr><td style="color:#64748b;">44</td><td>辛口普通の衣</td><td>N</td><td>80</td></tr><tr><td style="color:#64748b;">45</td><td>辛口普通の衣</td><td>O</td><td>75</td></tr><tr><td style="color:#64748b;">46</td><td>普通味普通の衣</td><td>A</td><td>70</td></tr><tr><td style="color:#64748b;">47</td><td>普通味普通の衣</td><td>B</td><td>70</td></tr><tr><td style="color:#64748b;">48</td><td>普通味普通の衣</td><td>C</td><td>85</td></tr><tr><td style="color:#64748b;">49</td><td>普通味普通の衣</td><td>D</td><td>80</td></tr><tr><td style="color:#64748b;">50</td><td>普通味普通の衣</td><td>E</td><td>65</td></tr><tr><td style="color:#64748b;">51</td><td>普通味普通の衣</td><td>F</td><td>75</td></tr><tr><td style="color:#64748b;">52</td><td>普通味普通の衣</td><td>G</td><td>65</td></tr><tr><td style="color:#64748b;">53</td><td>普通味普通の衣</td><td>H</td><td>85</td></tr><tr><td style="color:#64748b;">54</td><td>普通味普通の衣</td><td>I</td><td>80</td></tr><tr><td style="color:#64748b;">55</td><td>普通味普通の衣</td><td>J</td><td>60</td></tr><tr><td style="color:#64748b;">56</td><td>普通味普通の衣</td><td>K</td><td>70</td></tr><tr><td style="color:#64748b;">57</td><td>普通味普通の衣</td><td>L</td><td>75</td></tr><tr><td style="color:#64748b;">58</td><td>普通味普通の衣</td><td>M</td><td>70</td></tr><tr><td style="color:#64748b;">59</td><td>普通味普通の衣</td><td>N</td><td>80</td></tr><tr><td style="color:#64748b;">60</td><td>普通味普通の衣</td><td>O</td><td>85</td></tr>
+    </tbody>
+  </table>
+</div>
           </div>
         </div>
-        <div class="takeaway">
-          <span class="takeaway-icon">📝</span>
-          <span>どのファイルも3列構成（要因1・要因2・測定値）がすぐ分かるので、チルダ式（<code>測定値 ~ 要因1 * 要因2</code> または <code>+ 要因2</code>）を迷わず組み立てられます！</span>
+        <div class="takeaway" style="padding: 9px 16px; font-size: 0.88rem;">
+          <span class="takeaway-icon">💡</span>
+          <span>すべてのTSVファイルが<strong>「要因1・要因2・測定値」の3列スタック形式</strong>になっています（表の右端の緑色列は、交互作用が有意な課題2・発展4で <code>paste()</code> により追加する連結列です）。</span>
         </div>
       </div>
     </div>

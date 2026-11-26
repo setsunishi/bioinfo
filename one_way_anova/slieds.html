@@ -1214,34 +1214,42 @@ t.test(Y ~ X, var.equal = FALSE)</code></div>
             </ul>
           </div>
         </div>
-        <div class="svg-box">
-          <svg viewBox="0 0 760 110" width="100%" height="104" aria-label="Compact Letter Display (CLD) の読み方図解">
-            <rect x="10" y="6" width="740" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
-            <text x="380" y="24" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e3a8a">CLD（アルファベット表記）の読み方：同じ文字を持っていれば「仲間（有意差なし）」！</text>
-            <!-- Group boxes -->
-            <rect x="35" y="38" width="105" height="52" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
-            <text x="87" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e3a8a">"a"</text>
-            <text x="87" y="78" text-anchor="middle" font-size="10.5" fill="#1e40af">sun_ower / casein</text>
-
-            <rect x="165" y="38" width="105" height="52" rx="6" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
-            <text x="217" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#0369a1">"ac"</text>
-            <text x="217" y="78" text-anchor="middle" font-size="10.5" fill="#0369a1">meatmeal (aとc両方と差なし)</text>
-
-            <rect x="295" y="38" width="105" height="52" rx="6" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
-            <text x="347" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f766e">"c"</text>
-            <text x="347" y="78" text-anchor="middle" font-size="10.5" fill="#0f766e">soybean (aやbと有意差あり)</text>
-
-            <rect x="425" y="38" width="105" height="52" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
-            <text x="477" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b45309">"bc"</text>
-            <text x="477" y="78" text-anchor="middle" font-size="10.5" fill="#b45309">linseed (bとc両方と差なし)</text>
-
-            <rect x="555" y="38" width="105" height="52" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
-            <text x="607" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b91c1c">"b"</text>
-            <text x="607" y="78" text-anchor="middle" font-size="10.5" fill="#b91c1c">horsebean (aやcと有意差あり)</text>
-
-            <text x="705" y="60" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">課題3・発展4で</text>
-            <text x="705" y="76" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">この6群が出る！</text>
-          </svg>
+        <div class="svg-box" style="flex-direction: column; background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 16px; gap: 8px;">
+          <div style="font-size: 0.88rem; font-weight: 700; color: #1e3a8a; text-align: center;">
+            CLD（アルファベット表記）の読み方：同じ文字を持っていれば「仲間（有意差なし）」！（課題3・発展4のニワトリ6群の例）
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%;">
+            <!-- Box 1: "a" -->
+            <div style="background: #dbeafe; border: 1.5px solid #2563eb; border-radius: 6px; padding: 6px 8px; text-align: center;">
+              <div style="font-size: 1.05rem; font-weight: 800; color: #1e3a8a;">"a"</div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: #1e40af; margin-top: 1px;"><code>sun_ower</code> / <code>casein</code></div>
+              <div style="font-size: 0.72rem; color: #1e3a8a;">最高体重グループ</div>
+            </div>
+            <!-- Box 2: "ac" -->
+            <div style="background: #e0f2fe; border: 1.5px solid #0284c7; border-radius: 6px; padding: 6px 8px; text-align: center;">
+              <div style="font-size: 1.05rem; font-weight: 800; color: #0369a1;">"ac"</div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: #0369a1; margin-top: 1px;"><code>meatmeal</code></div>
+              <div style="font-size: 0.72rem; color: #0369a1;"><code>a</code>・<code>c</code> 両方と差なし</div>
+            </div>
+            <!-- Box 3: "c" -->
+            <div style="background: #ccfbf1; border: 1.5px solid #0d9488; border-radius: 6px; padding: 6px 8px; text-align: center;">
+              <div style="font-size: 1.05rem; font-weight: 800; color: #0f766e;">"c"</div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: #0f766e; margin-top: 1px;"><code>soybean</code></div>
+              <div style="font-size: 0.72rem; color: #0f766e;"><code>a</code> や <code>b</code> と有意差あり</div>
+            </div>
+            <!-- Box 4: "bc" -->
+            <div style="background: #fef3c7; border: 1.5px solid #d97706; border-radius: 6px; padding: 6px 8px; text-align: center;">
+              <div style="font-size: 1.05rem; font-weight: 800; color: #b45309;">"bc"</div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: #b45309; margin-top: 1px;"><code>linseed</code></div>
+              <div style="font-size: 0.72rem; color: #b45309;"><code>b</code>・<code>c</code> 両方と差なし</div>
+            </div>
+            <!-- Box 5: "b" -->
+            <div style="background: #fee2e2; border: 1.5px solid #dc2626; border-radius: 6px; padding: 6px 8px; text-align: center;">
+              <div style="font-size: 1.05rem; font-weight: 800; color: #b91c1c;">"b"</div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: #b91c1c; margin-top: 1px;"><code>horsebean</code></div>
+              <div style="font-size: 0.72rem; color: #b91c1c;"><code>a</code> や <code>c</code> と有意差あり</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
